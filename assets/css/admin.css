@@ -1,0 +1,27 @@
+.cpb-top-message,
+.cpb-bottom-message {
+    padding: 10px;
+    background: #f1f1f1;
+    margin: 10px 0;
+}
+
+#cpb-spinner {
+    display: none;
+}
+
+.cpb-accordion .item {
+    border: 1px solid #ccc;
+    margin-bottom: 5px;
+}
+
+.cpb-accordion .item-header {
+    cursor: pointer;
+    padding: 10px;
+    background: #fff;
+}
+
+.cpb-accordion .item-content {
+    display: none;
+    padding: 10px;
+    background: #fafafa;
+}
