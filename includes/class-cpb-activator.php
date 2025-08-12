@@ -39,7 +39,7 @@ class CPB_Activator {
             placeholder_17 decimal(10,2) DEFAULT 0,
             placeholder_18 tinyint(1) DEFAULT 0,
             placeholder_19 tinyint(1) DEFAULT 0,
-            placeholder_20 bigint(20) unsigned DEFAULT NULL,
+            placeholder_20 varchar(191) DEFAULT '',
             created_at datetime NOT NULL,
             updated_at datetime NOT NULL,
             PRIMARY KEY  (id)

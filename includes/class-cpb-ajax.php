@@ -46,7 +46,7 @@ class CPB_Ajax {
             'placeholder_17' => isset( $_POST['placeholder_17'] ) ? floatval( $_POST['placeholder_17'] ) : 0,
             'placeholder_18' => isset( $_POST['placeholder_18'] ) ? intval( $_POST['placeholder_18'] ) : 0,
             'placeholder_19' => isset( $_POST['placeholder_19'] ) ? intval( $_POST['placeholder_19'] ) : 0,
-            'placeholder_20' => isset( $_POST['placeholder_20'] ) ? intval( $_POST['placeholder_20'] ) : 0,
+            'placeholder_20' => sanitize_text_field( $_POST['placeholder_20'] ?? '' ),
             'created_at'     => current_time( 'mysql' ),
             'updated_at'     => current_time( 'mysql' ),
         );
@@ -72,9 +72,6 @@ class CPB_Ajax {
         global $wpdb;
         $table    = $wpdb->prefix . 'cpb_main_entity';
         $entities = $wpdb->get_results( "SELECT * FROM $table ORDER BY id DESC" );
-        foreach ( $entities as &$entity ) {
-            $entity->placeholder_20_url = $entity->placeholder_20 ? wp_get_attachment_url( $entity->placeholder_20 ) : '';
-        }
         $this->maybe_delay( $start );
         wp_send_json_success( array( 'entities' => $entities ) );
     }
