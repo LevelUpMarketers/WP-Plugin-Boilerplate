@@ -33,7 +33,14 @@
 }
 
 .cpb-field {
-    width: 220px;
+    width: 178px;
+}
+
+.cpb-field input,
+.cpb-field select,
+.cpb-field textarea {
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .cpb-field label {
@@ -45,4 +52,27 @@
 
 .cpb-tooltip-icon {
     margin-right: 4px;
+    position: relative;
+    cursor: help;
+}
+
+.cpb-tooltip-icon::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 1000;
+}
+
+.cpb-tooltip-icon:hover::after {
+    opacity: 1;
 }
