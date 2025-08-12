@@ -57,10 +57,10 @@
     border: 0;
 }
 
-<<<<<<< Updated upstream
 .cpb-premium-logo {
     width: 160px;
-=======
+}
+
 .cpb-top-left p {
     text-align: center;
     margin-top: 8px;
@@ -69,7 +69,6 @@
 
 .cpb-premium-logo {
     max-width: 60%;
->>>>>>> Stashed changes
     height: auto;
     display: block;
     margin: 0 auto;
@@ -84,6 +83,17 @@
     text-align: center;
     margin-top: 8px;
     font-size: 13px;
+}
+.cpb-top-left p {
+    text-align: center;
+    margin-top: 8px;
+}
+
+.cpb-premium-logo {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
 }
 
 .cpb-upgrade-button {
