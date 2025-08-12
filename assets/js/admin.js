@@ -37,9 +37,10 @@ jQuery(document).ready(function($){
                     var $content=$('<div class="item-content"></div>');
                     cpbAdmin.placeholders.forEach(function(label,index){
                         var key='placeholder_'+(index+1);
-                        if(index===19){
-                            if(ent.placeholder_20_url){
-                                $content.append('<p><img src="'+ent.placeholder_20_url+'" style="max-width:100px;height:auto;" /></p>');
+                    if(index===25){
+                        var urlKey='placeholder_'+(index+1)+'_url';
+                            if(ent[urlKey]){
+                                $content.append('<p><img src="'+ent[urlKey]+'" style="max-width:100px;height:auto;" /></p>');
                             }
                         }else{
                             $content.append('<p><strong>'+label+':</strong> '+(ent[key]||'')+'</p>');
@@ -70,5 +71,17 @@ jQuery(document).ready(function($){
     $('.cpb-accordion').on('click','.item-header',function(){
         $(this).next('.item-content').slideToggle();
         $(this).parent().toggleClass('open');
+    });
+
+    $(document).on('click','#cpb-add-item',function(){
+        var count = $('#cpb-items-container .cpb-item-row').length + 1;
+        var row = $('<div class="cpb-item-row" style="margin-bottom:8px; display:flex; align-items:center;"></div>');
+          row.append('<input type="text" name="placeholder_24[]" class="regular-text cpb-item-field" placeholder="'+cpbAdmin.itemPlaceholder.replace('%d',count)+'" />');
+        row.append('<button type="button" class="cpb-delete-item" aria-label="Remove" style="background:none;border:none;cursor:pointer;margin-left:8px;"><span class="dashicons dashicons-no-alt"></span></button>');
+        $('#cpb-items-container').append(row);
+    });
+
+    $(document).on('click','.cpb-delete-item',function(){
+        $(this).closest('.cpb-item-row').remove();
     });
 });
