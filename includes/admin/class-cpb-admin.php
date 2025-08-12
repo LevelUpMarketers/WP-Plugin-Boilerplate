@@ -152,24 +152,24 @@ class CPB_Admin {
         echo '<a class="cpb-upgrade-button" href="https://levelupmarketers.com" target="_blank">' . esc_html__( 'Upgrade Now', 'codex-plugin-boilerplate' ) . '</a>';
         echo '</div>';
         echo '</div>';
-        echo '<div class="cpb-top-logo-row">';
-        echo '<a href="https://levelupmarketers.com" target="_blank"><img src="' . esc_url( CPB_PLUGIN_URL . 'assets/images/levelup-logo.svg' ) . '" alt="Level Up Digital Marketing logo" class="cpb-premium-logo" /></a>';
-        $tagline = sprintf(
-            __( 'A Level Up Plugin. Need marketing or custom software development help? Email %1$s or call %2$s now!', 'codex-plugin-boilerplate' ),
-            '<a href="mailto:contact@levelupmarketers.com">contact@levelupmarketers.com</a>',
-            '<a href="tel:18044898188">(804) 489-8188</a>'
-        );
-        echo '<p class="cpb-top-tagline">' . wp_kses_post( $tagline ) . '</p>';
-        echo '</div>';
         echo '</div>';
     }
 
     private function bottom_message_center() {
+        include_once ABSPATH . 'wp-admin/includes/plugin.php';
+        $plugin_data = get_plugin_data( CPB_PLUGIN_DIR . 'codex-plugin-boilerplate.php' );
+        $plugin_name = $plugin_data['Name'];
+
         echo '<div class="cpb-top-message cpb-bottom-message-digital-marketing-section">';
         echo '<div class="cpb-top-logo-row">';
-        echo '<a href="https://levelupmarketers.com" target="_blank"><img src="' . esc_url( CPB_PLUGIN_URL . 'assets/images/levelup-logo.svg' ) . '" alt="Level Up Digital Marketing logo" class="cpb-premium-logo" /></a>';
+        $thanks = sprintf(
+            /* translators: %s: Plugin name. */
+            __( 'Thanks SO MUCH for using %s - a Level Up plugin!', 'codex-plugin-boilerplate' ),
+            esc_html( $plugin_name )
+        );
+        echo wp_kses_post( $thanks ) . '<br />';
         $tagline = sprintf(
-            __( 'A Level Up Plugin. Need marketing or custom software development help? Email %1$s or call %2$s now!', 'codex-plugin-boilerplate' ),
+            __( 'Need marketing or custom software development help? Email %1$s or call %2$s now!', 'codex-plugin-boilerplate' ),
             '<a href="mailto:contact@levelupmarketers.com">contact@levelupmarketers.com</a>',
             '<a href="tel:18044898188">(804) 489-8188</a>'
         );

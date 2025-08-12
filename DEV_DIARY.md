@@ -19,3 +19,4 @@
 17. 2025-08-12: Genericized opt-in option labels, documented form layout guidelines, and redesigned top message with video, premium pitch, and logo.
 18. 2025-08-12: Refactored top banner into two-column layout, moved upgrade button beneath text, and added centered logo row with contact links.
 19. 2025-08-12: Replaced bottom message with logo row variant and added digital marketing section class.
+20. 2025-08-12: Removed top logo row, added thank-you tagline to bottom message, and cleaned up unused premium logo styles.

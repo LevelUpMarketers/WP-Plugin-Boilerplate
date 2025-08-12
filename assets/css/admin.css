@@ -74,22 +74,10 @@
     border: 0;
 }
 
-.cpb-premium-logo {
-    width: 160px;
-}
-
 .cpb-top-left p {
     text-align: center;
     margin-top: 8px;
     color:rgba(1, 58, 81, 1.0);
-}
-
-.cpb-premium-logo {
-    max-width: 60%;
-    height: auto;
-    display: block;
-    margin: 0 auto;
-    margin-bottom: 20px;
 }
 
 .cpb-top-logo-row {
@@ -104,18 +92,6 @@
     font-size: 13px;
     margin-bottom:0;
 }
-.cpb-top-left p {
-    text-align: center;
-    margin-top: 8px;
-}
-
-.cpb-premium-logo {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 0 auto;
-}
-
 .cpb-upgrade-button {
     display: inline-block;
     margin-top: 8px;
