@@ -11,3 +11,4 @@
 9. 2025-08-12: Added custom admin font, ensured all dropdowns default to "Make a Selection...", and widened the image selector button.
 10. 2025-08-12: Swapped in Roobert admin font, restored dashicon tooltips, and added textarea, radio, checkbox, and color placeholders.
 11. 2025-08-12: Removed fixed color picker width, replaced tooltips with placeholder text, and integrated TinyMCE editor for Placeholder 21.
+12. 2025-08-12: Added opt-in preference fieldset, dynamic Items list, full-width Placeholder 25 editor, and fixed color picker width.

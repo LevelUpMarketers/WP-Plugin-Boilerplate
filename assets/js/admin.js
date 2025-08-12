@@ -71,4 +71,16 @@ jQuery(document).ready(function($){
         $(this).next('.item-content').slideToggle();
         $(this).parent().toggleClass('open');
     });
+
+    $(document).on('click','#cpb-add-item',function(){
+        var count = $('#cpb-items-container .cpb-item-row').length + 1;
+        var row = $('<div class="cpb-item-row" style="margin-bottom:8px; display:flex; align-items:center;"></div>');
+        row.append('<input type="text" name="placeholder_24[]" class="regular-text cpb-item-field" placeholder="'+cpbAdmin.itemPlaceholder.replace('%d',count)+'" />');
+        row.append('<button type="button" class="cpb-delete-item" aria-label="Remove" style="background:none;border:none;cursor:pointer;margin-left:8px;"><span class="dashicons dashicons-no-alt"></span></button>');
+        $('#cpb-items-container').append(row);
+    });
+
+    $(document).on('click','.cpb-delete-item',function(){
+        $(this).closest('.cpb-item-row').remove();
+    });
 });

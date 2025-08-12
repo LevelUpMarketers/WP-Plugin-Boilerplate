@@ -57,12 +57,13 @@ class CPB_Admin {
             'none'         => __( 'No entries found.', 'codex-plugin-boilerplate' ),
             'mediaTitle'   => __( 'Select Image', 'codex-plugin-boilerplate' ),
             'mediaButton'  => __( 'Use this image', 'codex-plugin-boilerplate' ),
+            'itemPlaceholder' => __( 'Item #%d', 'codex-plugin-boilerplate' ),
         ) );
     }
 
     private function get_placeholder_labels() {
         $labels = array();
-        for ( $i = 1; $i <= 24; $i++ ) {
+        for ( $i = 1; $i <= 25; $i++ ) {
             $labels[] = sprintf( __( 'Placeholder %d', 'codex-plugin-boilerplate' ), $i );
         }
         return $labels;
@@ -150,6 +151,7 @@ class CPB_Admin {
             'placeholder_22'=> __( 'Tooltip placeholder text for Placeholder 22', 'codex-plugin-boilerplate' ),
             'placeholder_23'=> __( 'Tooltip placeholder text for Placeholder 23', 'codex-plugin-boilerplate' ),
             'placeholder_24'=> __( 'Tooltip placeholder text for Placeholder 24', 'codex-plugin-boilerplate' ),
+            'placeholder_25'=> __( 'Tooltip placeholder text for Placeholder 25', 'codex-plugin-boilerplate' ),
         );
     }
 
@@ -347,7 +349,7 @@ class CPB_Admin {
             array(
                 'name'    => 'placeholder_21',
                 'label'   => __( 'Placeholder 21', 'codex-plugin-boilerplate' ),
-                'type'    => 'editor',
+                'type'    => 'text',
                 'tooltip' => $tooltips['placeholder_21'],
             ),
             array(
@@ -364,19 +366,32 @@ class CPB_Admin {
             array(
                 'name'    => 'placeholder_23',
                 'label'   => __( 'Placeholder 23', 'codex-plugin-boilerplate' ),
-                'type'    => 'checkbox',
+                'type'    => 'opt_in',
                 'tooltip' => $tooltips['placeholder_23'],
+                'full_width' => true,
             ),
             array(
                 'name'    => 'placeholder_24',
                 'label'   => __( 'Placeholder 24', 'codex-plugin-boilerplate' ),
-                'type'    => 'color',
+                'type'    => 'items',
                 'tooltip' => $tooltips['placeholder_24'],
+                'full_width' => true,
+            ),
+            array(
+                'name'    => 'placeholder_25',
+                'label'   => __( 'Placeholder 25', 'codex-plugin-boilerplate' ),
+                'type'    => 'editor',
+                'tooltip' => $tooltips['placeholder_25'],
+                'full_width' => true,
             ),
         );
         echo '<form id="cpb-create-form"><div class="cpb-flex-form">';
         foreach ( $fields as $field ) {
-            echo '<div class="cpb-field">';
+            $classes = 'cpb-field';
+            if ( ! empty( $field['full_width'] ) ) {
+                $classes .= ' cpb-field-full';
+            }
+            echo '<div class="' . $classes . '">';
             echo '<label><span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr( $field['tooltip'] ) . '"></span>' . esc_html( $field['label'] ) . '</label>';
             switch ( $field['type'] ) {
                 case 'select':
@@ -406,6 +421,44 @@ class CPB_Admin {
                     break;
                 case 'editor':
                     wp_editor( '', $field['name'], array( 'textarea_name' => $field['name'] ) );
+                    break;
+                case 'opt_in':
+                    $opts = array(
+                        array(
+                            'name'    => 'opt_in_marketing_email',
+                            'label'   => __( 'Marketing Emails', 'codex-plugin-boilerplate' ),
+                            'tooltip' => __( 'Send promotional emails and newsletters.', 'codex-plugin-boilerplate' ),
+                        ),
+                        array(
+                            'name'    => 'opt_in_marketing_sms',
+                            'label'   => __( 'Marketing Texts/SMS', 'codex-plugin-boilerplate' ),
+                            'tooltip' => __( 'Send promotional text messages.', 'codex-plugin-boilerplate' ),
+                        ),
+                        array(
+                            'name'    => 'opt_in_event_update_email',
+                            'label'   => __( 'Event Update Emails', 'codex-plugin-boilerplate' ),
+                            'tooltip' => __( 'Send event announcements via email.', 'codex-plugin-boilerplate' ),
+                        ),
+                        array(
+                            'name'    => 'opt_in_event_update_sms',
+                            'label'   => __( 'Event Update Texts/SMS', 'codex-plugin-boilerplate' ),
+                            'tooltip' => __( 'Send event announcements via text message.', 'codex-plugin-boilerplate' ),
+                        ),
+                    );
+                    echo '<fieldset>';
+                    foreach ( $opts as $opt ) {
+                        echo '<label><input type="checkbox" name="' . esc_attr( $opt['name'] ) . '" value="1" />';
+                        echo ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr( $opt['tooltip'] ) . '"></span>';
+                        echo esc_html( $opt['label'] ) . '</label><br />';
+                    }
+                    echo '</fieldset>';
+                    break;
+                case 'items':
+                    echo '<div id="cpb-items-container">';
+                    echo '<div class="cpb-item-row" style="margin-bottom:8px; display:flex; align-items:center;">';
+                    echo '<input type="text" name="' . esc_attr( $field['name'] ) . '[]" class="regular-text cpb-item-field" placeholder="' . esc_attr__( 'Item #1', 'codex-plugin-boilerplate' ) . '" />';
+                    echo '</div></div>';
+                    echo '<button type="button" class="button" id="cpb-add-item" style="margin-top:8px;">' . esc_html__( '+ Add Another Item', 'codex-plugin-boilerplate' ) . '</button>';
                     break;
                 case 'textarea':
                     echo '<textarea name="' . esc_attr( $field['name'] ) . '"></textarea>';

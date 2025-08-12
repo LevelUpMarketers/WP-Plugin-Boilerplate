@@ -53,7 +53,11 @@
 }
 
 .cpb-field input[type="color"] {
-    width: auto;
+    width: 50px;
+}
+
+.cpb-field.cpb-field-full {
+    width: 100%;
 }
 
 .cpb-field label {
