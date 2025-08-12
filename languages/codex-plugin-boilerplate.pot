@@ -357,6 +357,22 @@ msgstr ""
 msgid "Select image."
 msgstr ""
 
+#: includes/admin/class-cpb-admin.php:148
+msgid "Enter extended description."
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:149
+msgid "Select an option."
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:150
+msgid "Check if applicable."
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:151
+msgid "Pick a color."
+msgstr ""
+
 #: includes/admin/class-cpb-admin.php:153
 msgid "Watch tutorial"
 msgstr ""
@@ -489,6 +505,22 @@ msgstr ""
 
 #: includes/admin/class-cpb-admin.php:322
 msgid "Placeholder 20"
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:329
+msgid "Placeholder 21"
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:336
+msgid "Placeholder 22"
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:343
+msgid "Placeholder 23"
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:350
+msgid "Placeholder 24"
 msgstr ""
 
 #: includes/admin/class-cpb-admin.php:367

@@ -12,7 +12,7 @@ A performant, extensible boilerplate for building WordPress plugins.
  - Use the shortcode `[cpb-main-entity]` to display main entities.
  - Add the **Main Entity** block in the block editor.
  - Manage entities under **CPB Main Entity**, switching between **Create a Main Entity** and **Edit Main Entity** tabs.
-- The creation form showcases twenty demo fields (**Placeholder 1**–**Placeholder 20**) with varied inputs, tooltips, and an image selector that opens the media library.
+- The creation form showcases twenty-four demo fields (**Placeholder 1**–**Placeholder 24**) with varied inputs (text, textarea, select, radio, checkbox, color), tooltips, and an image selector that opens the media library.
 - Fields share a consistent 178px width, and hovering the help icon reveals centralized, translation-ready tooltips.
 - **Placeholder 14** presents generic options ("Option 1"–"Option 3") with a default "Make a Selection..." prompt.
  - Configure options in **CPB Settings**, switching between **General Settings** and **Style Settings** tabs.

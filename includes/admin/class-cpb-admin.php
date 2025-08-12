@@ -61,7 +61,7 @@ class CPB_Admin {
 
     private function get_placeholder_labels() {
         $labels = array();
-        for ( $i = 1; $i <= 20; $i++ ) {
+        for ( $i = 1; $i <= 24; $i++ ) {
             $labels[] = sprintf( __( 'Placeholder %d', 'codex-plugin-boilerplate' ), $i );
         }
         return $labels;
@@ -145,6 +145,10 @@ class CPB_Admin {
             'placeholder_18'=> __( 'Waitlist available?', 'codex-plugin-boilerplate' ),
             'placeholder_19'=> __( 'Refunds available?', 'codex-plugin-boilerplate' ),
             'placeholder_20'=> __( 'Select image.', 'codex-plugin-boilerplate' ),
+            'placeholder_21'=> __( 'Enter extended description.', 'codex-plugin-boilerplate' ),
+            'placeholder_22'=> __( 'Select an option.', 'codex-plugin-boilerplate' ),
+            'placeholder_23'=> __( 'Check if applicable.', 'codex-plugin-boilerplate' ),
+            'placeholder_24'=> __( 'Pick a color.', 'codex-plugin-boilerplate' ),
         );
     }
 
@@ -206,7 +210,11 @@ class CPB_Admin {
                 'name'    => 'placeholder_3',
                 'label'   => __( 'Placeholder 3', 'codex-plugin-boilerplate' ),
                 'type'    => 'select',
-                'options' => array( '0' => __( 'No', 'codex-plugin-boilerplate' ), '1' => __( 'Yes', 'codex-plugin-boilerplate' ) ),
+                'options' => array(
+                    ''  => __( 'Make a Selection...', 'codex-plugin-boilerplate' ),
+                    '0' => __( 'No', 'codex-plugin-boilerplate' ),
+                    '1' => __( 'Yes', 'codex-plugin-boilerplate' ),
+                ),
                 'tooltip' => $tooltips['placeholder_3'],
             ),
             array(
@@ -225,7 +233,11 @@ class CPB_Admin {
                 'name'    => 'placeholder_6',
                 'label'   => __( 'Placeholder 6', 'codex-plugin-boilerplate' ),
                 'type'    => 'select',
-                'options' => array( '0' => __( 'No', 'codex-plugin-boilerplate' ), '1' => __( 'Yes', 'codex-plugin-boilerplate' ) ),
+                'options' => array(
+                    ''  => __( 'Make a Selection...', 'codex-plugin-boilerplate' ),
+                    '0' => __( 'No', 'codex-plugin-boilerplate' ),
+                    '1' => __( 'Yes', 'codex-plugin-boilerplate' ),
+                ),
                 'tooltip' => $tooltips['placeholder_6'],
             ),
             array(
@@ -307,14 +319,22 @@ class CPB_Admin {
                 'name'    => 'placeholder_18',
                 'label'   => __( 'Placeholder 18', 'codex-plugin-boilerplate' ),
                 'type'    => 'select',
-                'options' => array( '0' => __( 'No', 'codex-plugin-boilerplate' ), '1' => __( 'Yes', 'codex-plugin-boilerplate' ) ),
+                'options' => array(
+                    ''  => __( 'Make a Selection...', 'codex-plugin-boilerplate' ),
+                    '0' => __( 'No', 'codex-plugin-boilerplate' ),
+                    '1' => __( 'Yes', 'codex-plugin-boilerplate' ),
+                ),
                 'tooltip' => $tooltips['placeholder_18'],
             ),
             array(
                 'name'    => 'placeholder_19',
                 'label'   => __( 'Placeholder 19', 'codex-plugin-boilerplate' ),
                 'type'    => 'select',
-                'options' => array( '0' => __( 'No', 'codex-plugin-boilerplate' ), '1' => __( 'Yes', 'codex-plugin-boilerplate' ) ),
+                'options' => array(
+                    ''  => __( 'Make a Selection...', 'codex-plugin-boilerplate' ),
+                    '0' => __( 'No', 'codex-plugin-boilerplate' ),
+                    '1' => __( 'Yes', 'codex-plugin-boilerplate' ),
+                ),
                 'tooltip' => $tooltips['placeholder_19'],
             ),
             array(
@@ -322,6 +342,35 @@ class CPB_Admin {
                 'label'   => __( 'Placeholder 20', 'codex-plugin-boilerplate' ),
                 'type'    => 'image',
                 'tooltip' => $tooltips['placeholder_20'],
+            ),
+            array(
+                'name'    => 'placeholder_21',
+                'label'   => __( 'Placeholder 21', 'codex-plugin-boilerplate' ),
+                'type'    => 'textarea',
+                'tooltip' => $tooltips['placeholder_21'],
+            ),
+            array(
+                'name'    => 'placeholder_22',
+                'label'   => __( 'Placeholder 22', 'codex-plugin-boilerplate' ),
+                'type'    => 'radio',
+                'options' => array(
+                    'option1' => __( 'Option 1', 'codex-plugin-boilerplate' ),
+                    'option2' => __( 'Option 2', 'codex-plugin-boilerplate' ),
+                    'option3' => __( 'Option 3', 'codex-plugin-boilerplate' ),
+                ),
+                'tooltip' => $tooltips['placeholder_22'],
+            ),
+            array(
+                'name'    => 'placeholder_23',
+                'label'   => __( 'Placeholder 23', 'codex-plugin-boilerplate' ),
+                'type'    => 'checkbox',
+                'tooltip' => $tooltips['placeholder_23'],
+            ),
+            array(
+                'name'    => 'placeholder_24',
+                'label'   => __( 'Placeholder 24', 'codex-plugin-boilerplate' ),
+                'type'    => 'color',
+                'tooltip' => $tooltips['placeholder_24'],
             ),
         );
         echo '<form id="cpb-create-form"><div class="cpb-flex-form">';
@@ -343,10 +392,16 @@ class CPB_Admin {
                 case 'state':
                     $states = $this->get_us_states();
                     echo '<select name="' . esc_attr( $field['name'] ) . '">';
+                    echo '<option value="" disabled selected>' . esc_html__( 'Make a Selection...', 'codex-plugin-boilerplate' ) . '</option>';
                     foreach ( $states as $state ) {
                         echo '<option value="' . esc_attr( $state ) . '">' . esc_html( $state ) . '</option>';
                     }
                     echo '</select>';
+                    break;
+                case 'radio':
+                    foreach ( $field['options'] as $value => $label ) {
+                        echo '<label class="cpb-radio-option"><input type="radio" name="' . esc_attr( $field['name'] ) . '" value="' . esc_attr( $value ) . '" /> ' . esc_html( $label ) . '</label>';
+                    }
                     break;
                 case 'textarea':
                     echo '<textarea name="' . esc_attr( $field['name'] ) . '"></textarea>';
