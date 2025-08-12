@@ -180,7 +180,7 @@ class CPB_Admin {
         echo '<a href="https://levelupmarketers.com" target="_blank"><img src="' . esc_url( CPB_PLUGIN_URL . 'assets/images/levelup-logo.svg' ) . '" alt="' . esc_attr__( 'Level Up Digital Marketing logo', 'codex-plugin-boilerplate' ) . '" class="cpb-premium-logo" /></a>';
         $thanks = sprintf(
             /* translators: %s: Plugin name. */
-            __( 'Thanks SO MUCH for using %s - a Level Up plugin!', 'codex-plugin-boilerplate' ),
+            __( 'Thanks <span class="cpb-so-much">SO MUCH</span> for using %s - a Level Up plugin!', 'codex-plugin-boilerplate' ),
             esc_html( $plugin_name )
         );
         echo '<p class="cpb-thanks-message">' . wp_kses_post( $thanks ) . '</p>';
