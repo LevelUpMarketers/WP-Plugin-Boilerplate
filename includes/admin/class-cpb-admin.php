@@ -63,7 +63,7 @@ class CPB_Admin {
 
     private function get_placeholder_labels() {
         $labels = array();
-        for ( $i = 1; $i <= 27; $i++ ) {
+        for ( $i = 1; $i <= 28; $i++ ) {
             $labels[] = sprintf( __( 'Placeholder %d', 'codex-plugin-boilerplate' ), $i );
         }
         return $labels;
@@ -124,9 +124,23 @@ class CPB_Admin {
         );
     }
 
+    private function get_us_states_and_territories() {
+        return array_merge(
+            $this->get_us_states(),
+            array(
+                __( 'District of Columbia', 'codex-plugin-boilerplate' ),
+                __( 'American Samoa', 'codex-plugin-boilerplate' ),
+                __( 'Guam', 'codex-plugin-boilerplate' ),
+                __( 'Northern Mariana Islands', 'codex-plugin-boilerplate' ),
+                __( 'Puerto Rico', 'codex-plugin-boilerplate' ),
+                __( 'U.S. Virgin Islands', 'codex-plugin-boilerplate' ),
+            )
+        );
+    }
+
     private function get_tooltips() {
         $tooltips = array();
-        for ( $i = 1; $i <= 27; $i++ ) {
+        for ( $i = 1; $i <= 28; $i++ ) {
             $tooltips[ 'placeholder_' . $i ] = sprintf(
                 __( 'Tooltip placeholder text for Placeholder %d', 'codex-plugin-boilerplate' ),
                 $i
@@ -150,23 +164,33 @@ class CPB_Admin {
         );
         echo '<p>' . wp_kses_post( $upgrade_text ) . '</p>';
         echo '<a class="cpb-upgrade-button" href="https://levelupmarketers.com" target="_blank">' . esc_html__( 'Upgrade Now', 'codex-plugin-boilerplate' ) . '</a>';
+        echo '<a href="https://levelupmarketers.com" target="_blank"><img src="' . esc_url( CPB_PLUGIN_URL . 'assets/images/levelup-logo.svg' ) . '" alt="' . esc_attr__( 'Level Up Digital Marketing logo', 'codex-plugin-boilerplate' ) . '" class="cpb-premium-logo" /></a>';
         echo '</div>';
-        echo '</div>';
-        echo '<div class="cpb-top-logo-row">';
-        echo '<a href="https://levelupmarketers.com" target="_blank"><img src="' . esc_url( CPB_PLUGIN_URL . 'assets/images/levelup-logo.svg' ) . '" alt="Level Up Digital Marketing logo" class="cpb-premium-logo" /></a>';
-        $tagline = sprintf(
-            __( 'A Level Up Plugin. Need marketing or custom software development help? Email %1$s or call %2$s now!', 'codex-plugin-boilerplate' ),
-            '<a href="mailto:contact@levelupmarketers.com">contact@levelupmarketers.com</a>',
-            '<a href="tel:18044898188">(804) 489-8188</a>'
-        );
-        echo '<p class="cpb-top-tagline">' . wp_kses_post( $tagline ) . '</p>';
         echo '</div>';
         echo '</div>';
     }
 
     private function bottom_message_center() {
-        echo '<div class="cpb-bottom-message">';
-        echo '<p><a href="https://levelupmarketers.com" target="_blank">' . esc_html__( 'Upgrade for more features', 'codex-plugin-boilerplate' ) . '</a></p>';
+        include_once ABSPATH . 'wp-admin/includes/plugin.php';
+        $plugin_data = get_plugin_data( CPB_PLUGIN_DIR . 'codex-plugin-boilerplate.php' );
+        $plugin_name = $plugin_data['Name'];
+
+        echo '<div class="cpb-top-message cpb-bottom-message-digital-marketing-section">';
+        echo '<div class="cpb-top-logo-row">';
+        echo '<a href="https://levelupmarketers.com" target="_blank"><img src="' . esc_url( CPB_PLUGIN_URL . 'assets/images/levelup-logo.svg' ) . '" alt="' . esc_attr__( 'Level Up Digital Marketing logo', 'codex-plugin-boilerplate' ) . '" class="cpb-premium-logo" /></a>';
+        $thanks = sprintf(
+            /* translators: %s: Plugin name. */
+            __( 'Thanks SO MUCH for using %s - a Level Up plugin!', 'codex-plugin-boilerplate' ),
+            esc_html( $plugin_name )
+        );
+        echo '<p class="cpb-thanks-message">' . wp_kses_post( $thanks ) . '</p>';
+        $tagline = sprintf(
+            __( 'Need marketing or custom software development help? Email %1$s or call %2$s now!', 'codex-plugin-boilerplate' ),
+            '<a href="mailto:contact@levelupmarketers.com">contact@levelupmarketers.com</a>',
+            '<a href="tel:18044898188">(804) 489-8188</a>'
+        );
+        echo '<p class="cpb-top-tagline">' . wp_kses_post( $tagline ) . '</p>';
+        echo '</div>';
         echo '</div>';
     }
 
@@ -344,12 +368,19 @@ class CPB_Admin {
             array(
                 'name'    => 'placeholder_21',
                 'label'   => __( 'Placeholder 21', 'codex-plugin-boilerplate' ),
-                'type'    => 'text',
+                'type'    => 'state',
+                'options' => $this->get_us_states_and_territories(),
                 'tooltip' => $tooltips['placeholder_21'],
             ),
             array(
                 'name'    => 'placeholder_22',
                 'label'   => __( 'Placeholder 22', 'codex-plugin-boilerplate' ),
+                'type'    => 'text',
+                'tooltip' => $tooltips['placeholder_22'],
+            ),
+            array(
+                'name'    => 'placeholder_23',
+                'label'   => __( 'Placeholder 23', 'codex-plugin-boilerplate' ),
                 'type'    => 'radio',
                 'options' => array(
                     'option1' => array(
@@ -365,37 +396,38 @@ class CPB_Admin {
                         'tooltip' => __( 'Tooltip placeholder text for Placeholder 22 Option 3', 'codex-plugin-boilerplate' ),
                     ),
                 ),
-                'tooltip' => $tooltips['placeholder_22'],
-            ),
-            array(
-                'name'    => 'placeholder_23',
-                'label'   => __( 'Placeholder 23', 'codex-plugin-boilerplate' ),
-                'type'    => 'opt_in',
                 'tooltip' => $tooltips['placeholder_23'],
             ),
             array(
                 'name'    => 'placeholder_24',
                 'label'   => __( 'Placeholder 24', 'codex-plugin-boilerplate' ),
-                'type'    => 'items',
+                'type'    => 'opt_in',
                 'tooltip' => $tooltips['placeholder_24'],
             ),
             array(
                 'name'    => 'placeholder_25',
                 'label'   => __( 'Placeholder 25', 'codex-plugin-boilerplate' ),
-                'type'    => 'color',
+                'type'    => 'items',
                 'tooltip' => $tooltips['placeholder_25'],
             ),
             array(
                 'name'    => 'placeholder_26',
                 'label'   => __( 'Placeholder 26', 'codex-plugin-boilerplate' ),
-                'type'    => 'image',
+                'type'    => 'color',
+                'attrs'   => 'value="#000000"',
                 'tooltip' => $tooltips['placeholder_26'],
             ),
             array(
                 'name'    => 'placeholder_27',
                 'label'   => __( 'Placeholder 27', 'codex-plugin-boilerplate' ),
-                'type'    => 'editor',
+                'type'    => 'image',
                 'tooltip' => $tooltips['placeholder_27'],
+            ),
+            array(
+                'name'    => 'placeholder_28',
+                'label'   => __( 'Placeholder 28', 'codex-plugin-boilerplate' ),
+                'type'    => 'editor',
+                'tooltip' => $tooltips['placeholder_28'],
                 'full_width' => true,
             ),
         );
@@ -420,7 +452,7 @@ class CPB_Admin {
                     echo '</select>';
                     break;
                 case 'state':
-                    $states = $this->get_us_states();
+                    $states = isset( $field['options'] ) ? $field['options'] : $this->get_us_states();
                     echo '<select name="' . esc_attr( $field['name'] ) . '">';
                     echo '<option value="" disabled selected>' . esc_html__( 'Make a Selection...', 'codex-plugin-boilerplate' ) . '</option>';
                     foreach ( $states as $state ) {

@@ -37,7 +37,7 @@ jQuery(document).ready(function($){
                     var $content=$('<div class="item-content"></div>');
                     cpbAdmin.placeholders.forEach(function(label,index){
                         var key='placeholder_'+(index+1);
-                    if(index===25){
+                    if(index===26){
                         var urlKey='placeholder_'+(index+1)+'_url';
                             if(ent[urlKey]){
                                 $content.append('<p><img src="'+ent[urlKey]+'" style="max-width:100px;height:auto;" /></p>');
@@ -76,7 +76,7 @@ jQuery(document).ready(function($){
     $(document).on('click','#cpb-add-item',function(){
         var count = $('#cpb-items-container .cpb-item-row').length + 1;
         var row = $('<div class="cpb-item-row" style="margin-bottom:8px; display:flex; align-items:center;"></div>');
-          row.append('<input type="text" name="placeholder_24[]" class="regular-text cpb-item-field" placeholder="'+cpbAdmin.itemPlaceholder.replace('%d',count)+'" />');
+          row.append('<input type="text" name="placeholder_25[]" class="regular-text cpb-item-field" placeholder="'+cpbAdmin.itemPlaceholder.replace('%d',count)+'" />');
         row.append('<button type="button" class="cpb-delete-item" aria-label="Remove" style="background:none;border:none;cursor:pointer;margin-left:8px;"><span class="dashicons dashicons-no-alt"></span></button>');
         $('#cpb-items-container').append(row);
     });
