@@ -9,3 +9,4 @@
 7. 2025-08-12: Replaced demo fields with twenty Placeholder inputs, varied types, image selector, and synchronized database schema.
 8. 2025-08-12: Standardized field widths, implemented centralized hover tooltips, and added default options for Placeholder 14.
 9. 2025-08-12: Added custom admin font, ensured all dropdowns default to "Make a Selection...", and widened the image selector button.
+10. 2025-08-12: Swapped in Roobert admin font, restored dashicon tooltips, and added textarea, radio, checkbox, and color placeholders.
