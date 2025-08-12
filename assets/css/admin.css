@@ -1,13 +1,9 @@
 @font-face {
     font-family: 'CPBFont';
     src: url('../fonts/Roboto-Regular.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-}
-
-[class^="cpb-"],
-[class*=" cpb-"] {
-    font-family: 'CPBFont', sans-serif;
+    font-family: 'Roobert';
+    src: url('../fonts/Roobert-Regular.woff2') format('woff2');
+    font-family: 'Roobert', sans-serif;
 }
 
 .cpb-top-message,
@@ -48,7 +44,7 @@
     width: 178px;
 }
 
-.cpb-field input,
+.cpb-field input:not([type="radio"]):not([type="checkbox"]),
 .cpb-field select,
 .cpb-field textarea,
 .cpb-field .cpb-upload {
@@ -64,6 +60,7 @@
 }
 
 .cpb-tooltip-icon {
+    font-family: dashicons;
     margin-right: 4px;
     position: relative;
     cursor: help;
@@ -84,9 +81,14 @@
     pointer-events: none;
     transition: opacity 0.2s;
     z-index: 1000;
-    font-family: 'CPBFont', sans-serif;
+    font-family: 'Roobert', sans-serif;
 }
 
 .cpb-tooltip-icon:hover::after {
     opacity: 1;
+}
+
+.cpb-radio-option {
+    font-weight: 400;
+    display: block;
 }
