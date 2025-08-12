@@ -44,12 +44,16 @@
     width: 178px;
 }
 
-.cpb-field input:not([type="radio"]):not([type="checkbox"]),
+.cpb-field input:not([type="radio"]):not([type="checkbox"]):not([type="color"]),
 .cpb-field select,
 .cpb-field textarea,
 .cpb-field .cpb-upload {
     width: 100%;
     box-sizing: border-box;
+}
+
+.cpb-field input[type="color"] {
+    width: auto;
 }
 
 .cpb-field label {

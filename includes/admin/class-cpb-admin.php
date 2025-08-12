@@ -46,6 +46,7 @@ class CPB_Admin {
         wp_enqueue_style( 'cpb-admin', CPB_PLUGIN_URL . 'assets/css/admin.css', array(), CPB_VERSION );
         wp_enqueue_script( 'cpb-admin', CPB_PLUGIN_URL . 'assets/js/admin.js', array( 'jquery' ), CPB_VERSION, true );
         wp_enqueue_media();
+        wp_enqueue_editor();
         wp_localize_script( 'cpb-admin', 'cpbAjax', array(
             'ajaxurl' => admin_url( 'admin-ajax.php' ),
             'nonce'   => wp_create_nonce( 'cpb_ajax_nonce' ),
@@ -124,31 +125,31 @@ class CPB_Admin {
 
     private function get_tooltips() {
         return array(
-            'name'          => __( 'Enter a name for the entity.', 'codex-plugin-boilerplate' ),
-            'placeholder_1' => __( 'Enter text.', 'codex-plugin-boilerplate' ),
-            'placeholder_2' => __( 'Select a date.', 'codex-plugin-boilerplate' ),
-            'placeholder_3' => __( 'Choose yes or no.', 'codex-plugin-boilerplate' ),
-            'placeholder_4' => __( 'Select start time.', 'codex-plugin-boilerplate' ),
-            'placeholder_5' => __( 'Select end time.', 'codex-plugin-boilerplate' ),
-            'placeholder_6' => __( 'Choose yes or no.', 'codex-plugin-boilerplate' ),
-            'placeholder_7' => __( 'Enter address.', 'codex-plugin-boilerplate' ),
-            'placeholder_8' => __( 'Enter address line 2.', 'codex-plugin-boilerplate' ),
-            'placeholder_9' => __( 'Enter city.', 'codex-plugin-boilerplate' ),
-            'placeholder_10'=> __( 'Select state.', 'codex-plugin-boilerplate' ),
-            'placeholder_11'=> __( 'Enter ZIP.', 'codex-plugin-boilerplate' ),
-            'placeholder_12'=> __( 'Enter venue name.', 'codex-plugin-boilerplate' ),
-            'placeholder_13'=> __( 'Enter venue URL.', 'codex-plugin-boilerplate' ),
-            'placeholder_14'=> __( 'Select event type.', 'codex-plugin-boilerplate' ),
-            'placeholder_15'=> __( 'Base cost.', 'codex-plugin-boilerplate' ),
-            'placeholder_16'=> __( 'Basic member cost.', 'codex-plugin-boilerplate' ),
-            'placeholder_17'=> __( 'Premium member cost.', 'codex-plugin-boilerplate' ),
-            'placeholder_18'=> __( 'Waitlist available?', 'codex-plugin-boilerplate' ),
-            'placeholder_19'=> __( 'Refunds available?', 'codex-plugin-boilerplate' ),
-            'placeholder_20'=> __( 'Select image.', 'codex-plugin-boilerplate' ),
-            'placeholder_21'=> __( 'Enter extended description.', 'codex-plugin-boilerplate' ),
-            'placeholder_22'=> __( 'Select an option.', 'codex-plugin-boilerplate' ),
-            'placeholder_23'=> __( 'Check if applicable.', 'codex-plugin-boilerplate' ),
-            'placeholder_24'=> __( 'Pick a color.', 'codex-plugin-boilerplate' ),
+            'name'          => __( 'Tooltip placeholder text for Name', 'codex-plugin-boilerplate' ),
+            'placeholder_1' => __( 'Tooltip placeholder text for Placeholder 1', 'codex-plugin-boilerplate' ),
+            'placeholder_2' => __( 'Tooltip placeholder text for Placeholder 2', 'codex-plugin-boilerplate' ),
+            'placeholder_3' => __( 'Tooltip placeholder text for Placeholder 3', 'codex-plugin-boilerplate' ),
+            'placeholder_4' => __( 'Tooltip placeholder text for Placeholder 4', 'codex-plugin-boilerplate' ),
+            'placeholder_5' => __( 'Tooltip placeholder text for Placeholder 5', 'codex-plugin-boilerplate' ),
+            'placeholder_6' => __( 'Tooltip placeholder text for Placeholder 6', 'codex-plugin-boilerplate' ),
+            'placeholder_7' => __( 'Tooltip placeholder text for Placeholder 7', 'codex-plugin-boilerplate' ),
+            'placeholder_8' => __( 'Tooltip placeholder text for Placeholder 8', 'codex-plugin-boilerplate' ),
+            'placeholder_9' => __( 'Tooltip placeholder text for Placeholder 9', 'codex-plugin-boilerplate' ),
+            'placeholder_10'=> __( 'Tooltip placeholder text for Placeholder 10', 'codex-plugin-boilerplate' ),
+            'placeholder_11'=> __( 'Tooltip placeholder text for Placeholder 11', 'codex-plugin-boilerplate' ),
+            'placeholder_12'=> __( 'Tooltip placeholder text for Placeholder 12', 'codex-plugin-boilerplate' ),
+            'placeholder_13'=> __( 'Tooltip placeholder text for Placeholder 13', 'codex-plugin-boilerplate' ),
+            'placeholder_14'=> __( 'Tooltip placeholder text for Placeholder 14', 'codex-plugin-boilerplate' ),
+            'placeholder_15'=> __( 'Tooltip placeholder text for Placeholder 15', 'codex-plugin-boilerplate' ),
+            'placeholder_16'=> __( 'Tooltip placeholder text for Placeholder 16', 'codex-plugin-boilerplate' ),
+            'placeholder_17'=> __( 'Tooltip placeholder text for Placeholder 17', 'codex-plugin-boilerplate' ),
+            'placeholder_18'=> __( 'Tooltip placeholder text for Placeholder 18', 'codex-plugin-boilerplate' ),
+            'placeholder_19'=> __( 'Tooltip placeholder text for Placeholder 19', 'codex-plugin-boilerplate' ),
+            'placeholder_20'=> __( 'Tooltip placeholder text for Placeholder 20', 'codex-plugin-boilerplate' ),
+            'placeholder_21'=> __( 'Tooltip placeholder text for Placeholder 21', 'codex-plugin-boilerplate' ),
+            'placeholder_22'=> __( 'Tooltip placeholder text for Placeholder 22', 'codex-plugin-boilerplate' ),
+            'placeholder_23'=> __( 'Tooltip placeholder text for Placeholder 23', 'codex-plugin-boilerplate' ),
+            'placeholder_24'=> __( 'Tooltip placeholder text for Placeholder 24', 'codex-plugin-boilerplate' ),
         );
     }
 
@@ -346,7 +347,7 @@ class CPB_Admin {
             array(
                 'name'    => 'placeholder_21',
                 'label'   => __( 'Placeholder 21', 'codex-plugin-boilerplate' ),
-                'type'    => 'textarea',
+                'type'    => 'editor',
                 'tooltip' => $tooltips['placeholder_21'],
             ),
             array(
@@ -403,6 +404,9 @@ class CPB_Admin {
                         echo '<label class="cpb-radio-option"><input type="radio" name="' . esc_attr( $field['name'] ) . '" value="' . esc_attr( $value ) . '" /> ' . esc_html( $label ) . '</label>';
                     }
                     break;
+                case 'editor':
+                    wp_editor( '', $field['name'], array( 'textarea_name' => $field['name'] ) );
+                    break;
                 case 'textarea':
                     echo '<textarea name="' . esc_attr( $field['name'] ) . '"></textarea>';
                     break;
@@ -450,7 +454,7 @@ class CPB_Admin {
 
     private function render_general_settings_tab() {
         echo '<form id="cpb-general-settings-form">';
-        echo '<label>' . esc_html__( 'Option', 'codex-plugin-boilerplate' ) . ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr__( 'General option.', 'codex-plugin-boilerplate' ) . '"></span></label>';
+        echo '<label>' . esc_html__( 'Option', 'codex-plugin-boilerplate' ) . ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr__( 'Tooltip placeholder text for Option', 'codex-plugin-boilerplate' ) . '"></span></label>';
         echo '<input type="text" name="option" />';
         submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ) );
         echo '</form>';
@@ -459,7 +463,7 @@ class CPB_Admin {
 
     private function render_style_settings_tab() {
         echo '<form id="cpb-style-settings-form">';
-        echo '<label>' . esc_html__( 'Custom CSS', 'codex-plugin-boilerplate' ) . ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr__( 'CSS for styling shortcodes/blocks.', 'codex-plugin-boilerplate' ) . '"></span></label>';
+        echo '<label>' . esc_html__( 'Custom CSS', 'codex-plugin-boilerplate' ) . ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr__( 'Tooltip placeholder text for Custom CSS', 'codex-plugin-boilerplate' ) . '"></span></label>';
         echo '<textarea name="custom_css"></textarea>';
         submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ) );
         echo '</form>';
