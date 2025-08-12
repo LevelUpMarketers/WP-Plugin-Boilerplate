@@ -357,9 +357,18 @@ class CPB_Admin {
                 'label'   => __( 'Placeholder 22', 'codex-plugin-boilerplate' ),
                 'type'    => 'radio',
                 'options' => array(
-                    'option1' => __( 'Option 1', 'codex-plugin-boilerplate' ),
-                    'option2' => __( 'Option 2', 'codex-plugin-boilerplate' ),
-                    'option3' => __( 'Option 3', 'codex-plugin-boilerplate' ),
+                    'option1' => array(
+                        'label'   => __( 'Option 1', 'codex-plugin-boilerplate' ),
+                        'tooltip' => __( 'Tooltip placeholder text for Placeholder 22 Option 1', 'codex-plugin-boilerplate' ),
+                    ),
+                    'option2' => array(
+                        'label'   => __( 'Option 2', 'codex-plugin-boilerplate' ),
+                        'tooltip' => __( 'Tooltip placeholder text for Placeholder 22 Option 2', 'codex-plugin-boilerplate' ),
+                    ),
+                    'option3' => array(
+                        'label'   => __( 'Option 3', 'codex-plugin-boilerplate' ),
+                        'tooltip' => __( 'Tooltip placeholder text for Placeholder 22 Option 3', 'codex-plugin-boilerplate' ),
+                    ),
                 ),
                 'tooltip' => $tooltips['placeholder_22'],
             ),
@@ -368,14 +377,12 @@ class CPB_Admin {
                 'label'   => __( 'Placeholder 23', 'codex-plugin-boilerplate' ),
                 'type'    => 'opt_in',
                 'tooltip' => $tooltips['placeholder_23'],
-                'full_width' => true,
             ),
             array(
                 'name'    => 'placeholder_24',
                 'label'   => __( 'Placeholder 24', 'codex-plugin-boilerplate' ),
                 'type'    => 'items',
                 'tooltip' => $tooltips['placeholder_24'],
-                'full_width' => true,
             ),
             array(
                 'name'    => 'placeholder_25',
@@ -415,8 +422,10 @@ class CPB_Admin {
                     echo '</select>';
                     break;
                 case 'radio':
-                    foreach ( $field['options'] as $value => $label ) {
-                        echo '<label class="cpb-radio-option"><input type="radio" name="' . esc_attr( $field['name'] ) . '" value="' . esc_attr( $value ) . '" /> ' . esc_html( $label ) . '</label>';
+                    foreach ( $field['options'] as $value => $opt ) {
+                        echo '<label class="cpb-radio-option"><input type="radio" name="' . esc_attr( $field['name'] ) . '" value="' . esc_attr( $value ) . '" />';
+                        echo ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr( $opt['tooltip'] ) . '"></span>';
+                        echo esc_html( $opt['label'] ) . '</label>';
                     }
                     break;
                 case 'editor':
@@ -427,29 +436,29 @@ class CPB_Admin {
                         array(
                             'name'    => 'opt_in_marketing_email',
                             'label'   => __( 'Marketing Emails', 'codex-plugin-boilerplate' ),
-                            'tooltip' => __( 'Send promotional emails and newsletters.', 'codex-plugin-boilerplate' ),
+                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 1', 'codex-plugin-boilerplate' ),
                         ),
                         array(
                             'name'    => 'opt_in_marketing_sms',
                             'label'   => __( 'Marketing Texts/SMS', 'codex-plugin-boilerplate' ),
-                            'tooltip' => __( 'Send promotional text messages.', 'codex-plugin-boilerplate' ),
+                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 2', 'codex-plugin-boilerplate' ),
                         ),
                         array(
                             'name'    => 'opt_in_event_update_email',
                             'label'   => __( 'Event Update Emails', 'codex-plugin-boilerplate' ),
-                            'tooltip' => __( 'Send event announcements via email.', 'codex-plugin-boilerplate' ),
+                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 3', 'codex-plugin-boilerplate' ),
                         ),
                         array(
                             'name'    => 'opt_in_event_update_sms',
                             'label'   => __( 'Event Update Texts/SMS', 'codex-plugin-boilerplate' ),
-                            'tooltip' => __( 'Send event announcements via text message.', 'codex-plugin-boilerplate' ),
+                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 4', 'codex-plugin-boilerplate' ),
                         ),
                     );
                     echo '<fieldset>';
                     foreach ( $opts as $opt ) {
-                        echo '<label><input type="checkbox" name="' . esc_attr( $opt['name'] ) . '" value="1" />';
+                        echo '<label class="cpb-opt-in-option"><input type="checkbox" name="' . esc_attr( $opt['name'] ) . '" value="1" />';
                         echo ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr( $opt['tooltip'] ) . '"></span>';
-                        echo esc_html( $opt['label'] ) . '</label><br />';
+                        echo esc_html( $opt['label'] ) . '</label>';
                     }
                     echo '</fieldset>';
                     break;
