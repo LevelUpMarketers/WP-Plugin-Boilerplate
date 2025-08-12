@@ -63,7 +63,7 @@ class CPB_Admin {
 
     private function get_placeholder_labels() {
         $labels = array();
-        for ( $i = 1; $i <= 26; $i++ ) {
+        for ( $i = 1; $i <= 27; $i++ ) {
             $labels[] = sprintf( __( 'Placeholder %d', 'codex-plugin-boilerplate' ), $i );
         }
         return $labels;
@@ -125,10 +125,8 @@ class CPB_Admin {
     }
 
     private function get_tooltips() {
-        $tooltips = array(
-            'name' => __( 'Tooltip placeholder text for Name', 'codex-plugin-boilerplate' ),
-        );
-        for ( $i = 1; $i <= 26; $i++ ) {
+        $tooltips = array();
+        for ( $i = 1; $i <= 27; $i++ ) {
             $tooltips[ 'placeholder_' . $i ] = sprintf(
                 __( 'Tooltip placeholder text for Placeholder %d', 'codex-plugin-boilerplate' ),
                 $i
@@ -174,12 +172,6 @@ class CPB_Admin {
         $tooltips = $this->get_tooltips();
         $fields    = array(
             array(
-                'name'    => 'name',
-                'label'   => __( 'Name', 'codex-plugin-boilerplate' ),
-                'type'    => 'text',
-                'tooltip' => $tooltips['name'],
-            ),
-            array(
                 'name'    => 'placeholder_1',
                 'label'   => __( 'Placeholder 1', 'codex-plugin-boilerplate' ),
                 'type'    => 'text',
@@ -188,24 +180,24 @@ class CPB_Admin {
             array(
                 'name'    => 'placeholder_2',
                 'label'   => __( 'Placeholder 2', 'codex-plugin-boilerplate' ),
-                'type'    => 'date',
+                'type'    => 'text',
                 'tooltip' => $tooltips['placeholder_2'],
             ),
             array(
                 'name'    => 'placeholder_3',
                 'label'   => __( 'Placeholder 3', 'codex-plugin-boilerplate' ),
+                'type'    => 'date',
+                'tooltip' => $tooltips['placeholder_3'],
+            ),
+            array(
+                'name'    => 'placeholder_4',
+                'label'   => __( 'Placeholder 4', 'codex-plugin-boilerplate' ),
                 'type'    => 'select',
                 'options' => array(
                     ''  => __( 'Make a Selection...', 'codex-plugin-boilerplate' ),
                     '0' => __( 'No', 'codex-plugin-boilerplate' ),
                     '1' => __( 'Yes', 'codex-plugin-boilerplate' ),
                 ),
-                'tooltip' => $tooltips['placeholder_3'],
-            ),
-            array(
-                'name'    => 'placeholder_4',
-                'label'   => __( 'Placeholder 4', 'codex-plugin-boilerplate' ),
-                'type'    => 'time',
                 'tooltip' => $tooltips['placeholder_4'],
             ),
             array(
@@ -217,18 +209,18 @@ class CPB_Admin {
             array(
                 'name'    => 'placeholder_6',
                 'label'   => __( 'Placeholder 6', 'codex-plugin-boilerplate' ),
+                'type'    => 'time',
+                'tooltip' => $tooltips['placeholder_6'],
+            ),
+            array(
+                'name'    => 'placeholder_7',
+                'label'   => __( 'Placeholder 7', 'codex-plugin-boilerplate' ),
                 'type'    => 'select',
                 'options' => array(
                     ''  => __( 'Make a Selection...', 'codex-plugin-boilerplate' ),
                     '0' => __( 'No', 'codex-plugin-boilerplate' ),
                     '1' => __( 'Yes', 'codex-plugin-boilerplate' ),
                 ),
-                'tooltip' => $tooltips['placeholder_6'],
-            ),
-            array(
-                'name'    => 'placeholder_7',
-                'label'   => __( 'Placeholder 7', 'codex-plugin-boilerplate' ),
-                'type'    => 'text',
                 'tooltip' => $tooltips['placeholder_7'],
             ),
             array(
@@ -246,13 +238,13 @@ class CPB_Admin {
             array(
                 'name'    => 'placeholder_10',
                 'label'   => __( 'Placeholder 10', 'codex-plugin-boilerplate' ),
-                'type'    => 'state',
+                'type'    => 'text',
                 'tooltip' => $tooltips['placeholder_10'],
             ),
             array(
                 'name'    => 'placeholder_11',
                 'label'   => __( 'Placeholder 11', 'codex-plugin-boilerplate' ),
-                'type'    => 'text',
+                'type'    => 'state',
                 'tooltip' => $tooltips['placeholder_11'],
             ),
             array(
@@ -264,12 +256,18 @@ class CPB_Admin {
             array(
                 'name'    => 'placeholder_13',
                 'label'   => __( 'Placeholder 13', 'codex-plugin-boilerplate' ),
-                'type'    => 'url',
+                'type'    => 'text',
                 'tooltip' => $tooltips['placeholder_13'],
             ),
             array(
                 'name'    => 'placeholder_14',
                 'label'   => __( 'Placeholder 14', 'codex-plugin-boilerplate' ),
+                'type'    => 'url',
+                'tooltip' => $tooltips['placeholder_14'],
+            ),
+            array(
+                'name'    => 'placeholder_15',
+                'label'   => __( 'Placeholder 15', 'codex-plugin-boilerplate' ),
                 'type'    => 'select',
                 'options' => array(
                     ''        => __( 'Make a Selection...', 'codex-plugin-boilerplate' ),
@@ -277,13 +275,6 @@ class CPB_Admin {
                     'option2' => __( 'Option 2', 'codex-plugin-boilerplate' ),
                     'option3' => __( 'Option 3', 'codex-plugin-boilerplate' ),
                 ),
-                'tooltip' => $tooltips['placeholder_14'],
-            ),
-            array(
-                'name'    => 'placeholder_15',
-                'label'   => __( 'Placeholder 15', 'codex-plugin-boilerplate' ),
-                'type'    => 'number',
-                'attrs'   => 'step="0.01" min="0"',
                 'tooltip' => $tooltips['placeholder_15'],
             ),
             array(
@@ -303,12 +294,8 @@ class CPB_Admin {
             array(
                 'name'    => 'placeholder_18',
                 'label'   => __( 'Placeholder 18', 'codex-plugin-boilerplate' ),
-                'type'    => 'select',
-                'options' => array(
-                    ''  => __( 'Make a Selection...', 'codex-plugin-boilerplate' ),
-                    '0' => __( 'No', 'codex-plugin-boilerplate' ),
-                    '1' => __( 'Yes', 'codex-plugin-boilerplate' ),
-                ),
+                'type'    => 'number',
+                'attrs'   => 'step="0.01" min="0"',
                 'tooltip' => $tooltips['placeholder_18'],
             ),
             array(
@@ -325,58 +312,69 @@ class CPB_Admin {
             array(
                 'name'    => 'placeholder_20',
                 'label'   => __( 'Placeholder 20', 'codex-plugin-boilerplate' ),
-                'type'    => 'text',
+                'type'    => 'select',
+                'options' => array(
+                    ''  => __( 'Make a Selection...', 'codex-plugin-boilerplate' ),
+                    '0' => __( 'No', 'codex-plugin-boilerplate' ),
+                    '1' => __( 'Yes', 'codex-plugin-boilerplate' ),
+                ),
                 'tooltip' => $tooltips['placeholder_20'],
             ),
             array(
                 'name'    => 'placeholder_21',
                 'label'   => __( 'Placeholder 21', 'codex-plugin-boilerplate' ),
-                'type'    => 'radio',
-                'options' => array(
-                    'option1' => array(
-                        'label'   => __( 'Option 1', 'codex-plugin-boilerplate' ),
-                        'tooltip' => __( 'Tooltip placeholder text for Placeholder 21 Option 1', 'codex-plugin-boilerplate' ),
-                    ),
-                    'option2' => array(
-                        'label'   => __( 'Option 2', 'codex-plugin-boilerplate' ),
-                        'tooltip' => __( 'Tooltip placeholder text for Placeholder 21 Option 2', 'codex-plugin-boilerplate' ),
-                    ),
-                    'option3' => array(
-                        'label'   => __( 'Option 3', 'codex-plugin-boilerplate' ),
-                        'tooltip' => __( 'Tooltip placeholder text for Placeholder 21 Option 3', 'codex-plugin-boilerplate' ),
-                    ),
-                ),
+                'type'    => 'text',
                 'tooltip' => $tooltips['placeholder_21'],
             ),
             array(
                 'name'    => 'placeholder_22',
                 'label'   => __( 'Placeholder 22', 'codex-plugin-boilerplate' ),
-                'type'    => 'opt_in',
+                'type'    => 'radio',
+                'options' => array(
+                    'option1' => array(
+                        'label'   => __( 'Option 1', 'codex-plugin-boilerplate' ),
+                        'tooltip' => __( 'Tooltip placeholder text for Placeholder 22 Option 1', 'codex-plugin-boilerplate' ),
+                    ),
+                    'option2' => array(
+                        'label'   => __( 'Option 2', 'codex-plugin-boilerplate' ),
+                        'tooltip' => __( 'Tooltip placeholder text for Placeholder 22 Option 2', 'codex-plugin-boilerplate' ),
+                    ),
+                    'option3' => array(
+                        'label'   => __( 'Option 3', 'codex-plugin-boilerplate' ),
+                        'tooltip' => __( 'Tooltip placeholder text for Placeholder 22 Option 3', 'codex-plugin-boilerplate' ),
+                    ),
+                ),
                 'tooltip' => $tooltips['placeholder_22'],
             ),
             array(
                 'name'    => 'placeholder_23',
                 'label'   => __( 'Placeholder 23', 'codex-plugin-boilerplate' ),
-                'type'    => 'items',
+                'type'    => 'opt_in',
                 'tooltip' => $tooltips['placeholder_23'],
             ),
             array(
                 'name'    => 'placeholder_24',
                 'label'   => __( 'Placeholder 24', 'codex-plugin-boilerplate' ),
-                'type'    => 'color',
+                'type'    => 'items',
                 'tooltip' => $tooltips['placeholder_24'],
             ),
             array(
                 'name'    => 'placeholder_25',
                 'label'   => __( 'Placeholder 25', 'codex-plugin-boilerplate' ),
-                'type'    => 'image',
+                'type'    => 'color',
                 'tooltip' => $tooltips['placeholder_25'],
             ),
             array(
                 'name'    => 'placeholder_26',
                 'label'   => __( 'Placeholder 26', 'codex-plugin-boilerplate' ),
-                'type'    => 'editor',
+                'type'    => 'image',
                 'tooltip' => $tooltips['placeholder_26'],
+            ),
+            array(
+                'name'    => 'placeholder_27',
+                'label'   => __( 'Placeholder 27', 'codex-plugin-boilerplate' ),
+                'type'    => 'editor',
+                'tooltip' => $tooltips['placeholder_27'],
                 'full_width' => true,
             ),
         );
@@ -424,22 +422,22 @@ class CPB_Admin {
                         array(
                             'name'    => 'opt_in_marketing_email',
                             'label'   => __( 'Marketing Emails', 'codex-plugin-boilerplate' ),
-                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 22 Option 1', 'codex-plugin-boilerplate' ),
+                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 1', 'codex-plugin-boilerplate' ),
                         ),
                         array(
                             'name'    => 'opt_in_marketing_sms',
                             'label'   => __( 'Marketing Texts/SMS', 'codex-plugin-boilerplate' ),
-                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 22 Option 2', 'codex-plugin-boilerplate' ),
+                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 2', 'codex-plugin-boilerplate' ),
                         ),
                         array(
                             'name'    => 'opt_in_event_update_email',
                             'label'   => __( 'Event Update Emails', 'codex-plugin-boilerplate' ),
-                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 22 Option 3', 'codex-plugin-boilerplate' ),
+                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 3', 'codex-plugin-boilerplate' ),
                         ),
                         array(
                             'name'    => 'opt_in_event_update_sms',
                             'label'   => __( 'Event Update Texts/SMS', 'codex-plugin-boilerplate' ),
-                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 22 Option 4', 'codex-plugin-boilerplate' ),
+                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 4', 'codex-plugin-boilerplate' ),
                         ),
                     );
                     echo '<fieldset>';

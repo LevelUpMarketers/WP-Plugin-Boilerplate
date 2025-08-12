@@ -393,10 +393,6 @@ msgstr ""
 msgid "Edit Main Entity"
 msgstr ""
 
-#: includes/admin/class-cpb-admin.php:189
-msgid "Name"
-msgstr ""
-
 #: includes/admin/class-cpb-admin.php:195
 msgid "Placeholder 1"
 msgstr ""
@@ -521,6 +517,18 @@ msgstr ""
 
 #: includes/admin/class-cpb-admin.php:350
 msgid "Placeholder 24"
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:372
+msgid "Placeholder 25"
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:378
+msgid "Placeholder 26"
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:384
+msgid "Placeholder 27"
 msgstr ""
 
 #: includes/admin/class-cpb-admin.php:367
