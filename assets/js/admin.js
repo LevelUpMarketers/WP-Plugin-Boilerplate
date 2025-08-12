@@ -15,6 +15,18 @@ jQuery(document).ready(function($){
     handleForm('#cpb-general-settings-form','cpb_save_main_entity');
     handleForm('#cpb-style-settings-form','cpb_save_main_entity');
 
+    $(document).on('click','.cpb-upload',function(e){
+        e.preventDefault();
+        var target=$(this).data('target');
+        var frame=wp.media({title:cpbAdmin.mediaTitle,button:{text:cpbAdmin.mediaButton},multiple:false});
+        frame.on('select',function(){
+            var attachment=frame.state().get('selection').first().toJSON();
+            $(target).val(attachment.id);
+            $(target+'-preview').html('<img src="'+attachment.url+'" style="max-width:100px;height:auto;" />');
+        });
+        frame.open();
+    });
+
     if($('#cpb-entity-list').length){
         $.post(cpbAjax.ajaxurl,{action:'cpb_read_main_entity',_ajax_nonce:cpbAjax.nonce},function(response){
             var $list=$('#cpb-entity-list');
@@ -23,9 +35,16 @@ jQuery(document).ready(function($){
                     var $item=$('<div class="item"></div>');
                     var $header=$('<div class="item-header"></div>').text(ent.name);
                     var $content=$('<div class="item-content"></div>');
-                    $content.append('<p><strong>'+cpbAdmin.placeholder1+':</strong> '+ent.placeholder_1+'</p>');
-                    $content.append('<p><strong>'+cpbAdmin.thing1+':</strong> '+ent.thing_1+'</p>');
-                    $content.append('<p><strong>'+cpbAdmin.thing2+':</strong> '+ent.thing_2+'</p>');
+                    cpbAdmin.placeholders.forEach(function(label,index){
+                        var key='placeholder_'+(index+1);
+                        if(index===19){
+                            if(ent.placeholder_20_url){
+                                $content.append('<p><img src="'+ent.placeholder_20_url+'" style="max-width:100px;height:auto;" /></p>');
+                            }
+                        }else{
+                            $content.append('<p><strong>'+label+':</strong> '+(ent[key]||'')+'</p>');
+                        }
+                    });
                     $content.append('<button type="button" class="button cpb-delete" data-id="'+ent.id+'">'+cpbAdmin.delete+'</button>');
                     $item.append($header).append($content);
                     $list.append($item);

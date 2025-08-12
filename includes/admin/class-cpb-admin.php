@@ -45,17 +45,81 @@ class CPB_Admin {
         }
         wp_enqueue_style( 'cpb-admin', CPB_PLUGIN_URL . 'assets/css/admin.css', array(), CPB_VERSION );
         wp_enqueue_script( 'cpb-admin', CPB_PLUGIN_URL . 'assets/js/admin.js', array( 'jquery' ), CPB_VERSION, true );
+        wp_enqueue_media();
         wp_localize_script( 'cpb-admin', 'cpbAjax', array(
             'ajaxurl' => admin_url( 'admin-ajax.php' ),
             'nonce'   => wp_create_nonce( 'cpb_ajax_nonce' ),
         ) );
         wp_localize_script( 'cpb-admin', 'cpbAdmin', array(
-            'placeholder1' => __( 'Placeholder 1', 'codex-plugin-boilerplate' ),
-            'thing1'       => __( 'Thing 1', 'codex-plugin-boilerplate' ),
-            'thing2'       => __( 'Thing 2', 'codex-plugin-boilerplate' ),
+            'placeholders' => $this->get_placeholder_labels(),
             'delete'       => __( 'Delete', 'codex-plugin-boilerplate' ),
             'none'         => __( 'No entries found.', 'codex-plugin-boilerplate' ),
+            'mediaTitle'   => __( 'Select Image', 'codex-plugin-boilerplate' ),
+            'mediaButton'  => __( 'Use this image', 'codex-plugin-boilerplate' ),
         ) );
+    }
+
+    private function get_placeholder_labels() {
+        $labels = array();
+        for ( $i = 1; $i <= 20; $i++ ) {
+            $labels[] = sprintf( __( 'Placeholder %d', 'codex-plugin-boilerplate' ), $i );
+        }
+        return $labels;
+    }
+
+    private function get_us_states() {
+        return array(
+            __( 'Alabama', 'codex-plugin-boilerplate' ),
+            __( 'Alaska', 'codex-plugin-boilerplate' ),
+            __( 'Arizona', 'codex-plugin-boilerplate' ),
+            __( 'Arkansas', 'codex-plugin-boilerplate' ),
+            __( 'California', 'codex-plugin-boilerplate' ),
+            __( 'Colorado', 'codex-plugin-boilerplate' ),
+            __( 'Connecticut', 'codex-plugin-boilerplate' ),
+            __( 'Delaware', 'codex-plugin-boilerplate' ),
+            __( 'Florida', 'codex-plugin-boilerplate' ),
+            __( 'Georgia', 'codex-plugin-boilerplate' ),
+            __( 'Hawaii', 'codex-plugin-boilerplate' ),
+            __( 'Idaho', 'codex-plugin-boilerplate' ),
+            __( 'Illinois', 'codex-plugin-boilerplate' ),
+            __( 'Indiana', 'codex-plugin-boilerplate' ),
+            __( 'Iowa', 'codex-plugin-boilerplate' ),
+            __( 'Kansas', 'codex-plugin-boilerplate' ),
+            __( 'Kentucky', 'codex-plugin-boilerplate' ),
+            __( 'Louisiana', 'codex-plugin-boilerplate' ),
+            __( 'Maine', 'codex-plugin-boilerplate' ),
+            __( 'Maryland', 'codex-plugin-boilerplate' ),
+            __( 'Massachusetts', 'codex-plugin-boilerplate' ),
+            __( 'Michigan', 'codex-plugin-boilerplate' ),
+            __( 'Minnesota', 'codex-plugin-boilerplate' ),
+            __( 'Mississippi', 'codex-plugin-boilerplate' ),
+            __( 'Missouri', 'codex-plugin-boilerplate' ),
+            __( 'Montana', 'codex-plugin-boilerplate' ),
+            __( 'Nebraska', 'codex-plugin-boilerplate' ),
+            __( 'Nevada', 'codex-plugin-boilerplate' ),
+            __( 'New Hampshire', 'codex-plugin-boilerplate' ),
+            __( 'New Jersey', 'codex-plugin-boilerplate' ),
+            __( 'New Mexico', 'codex-plugin-boilerplate' ),
+            __( 'New York', 'codex-plugin-boilerplate' ),
+            __( 'North Carolina', 'codex-plugin-boilerplate' ),
+            __( 'North Dakota', 'codex-plugin-boilerplate' ),
+            __( 'Ohio', 'codex-plugin-boilerplate' ),
+            __( 'Oklahoma', 'codex-plugin-boilerplate' ),
+            __( 'Oregon', 'codex-plugin-boilerplate' ),
+            __( 'Pennsylvania', 'codex-plugin-boilerplate' ),
+            __( 'Rhode Island', 'codex-plugin-boilerplate' ),
+            __( 'South Carolina', 'codex-plugin-boilerplate' ),
+            __( 'South Dakota', 'codex-plugin-boilerplate' ),
+            __( 'Tennessee', 'codex-plugin-boilerplate' ),
+            __( 'Texas', 'codex-plugin-boilerplate' ),
+            __( 'Utah', 'codex-plugin-boilerplate' ),
+            __( 'Vermont', 'codex-plugin-boilerplate' ),
+            __( 'Virginia', 'codex-plugin-boilerplate' ),
+            __( 'Washington', 'codex-plugin-boilerplate' ),
+            __( 'West Virginia', 'codex-plugin-boilerplate' ),
+            __( 'Wisconsin', 'codex-plugin-boilerplate' ),
+            __( 'Wyoming', 'codex-plugin-boilerplate' ),
+        );
     }
 
     private function top_message_center() {
@@ -92,23 +156,181 @@ class CPB_Admin {
     }
 
     private function render_create_tab() {
+        $fields = array(
+            array(
+                'name'    => 'name',
+                'label'   => __( 'Name', 'codex-plugin-boilerplate' ),
+                'type'    => 'text',
+                'tooltip' => __( 'Enter a name for the entity.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_1',
+                'label'   => __( 'Placeholder 1', 'codex-plugin-boilerplate' ),
+                'type'    => 'text',
+                'tooltip' => __( 'Enter text.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_2',
+                'label'   => __( 'Placeholder 2', 'codex-plugin-boilerplate' ),
+                'type'    => 'date',
+                'tooltip' => __( 'Select a date.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_3',
+                'label'   => __( 'Placeholder 3', 'codex-plugin-boilerplate' ),
+                'type'    => 'select',
+                'options' => array( '0' => __( 'No', 'codex-plugin-boilerplate' ), '1' => __( 'Yes', 'codex-plugin-boilerplate' ) ),
+                'tooltip' => __( 'Choose yes or no.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_4',
+                'label'   => __( 'Placeholder 4', 'codex-plugin-boilerplate' ),
+                'type'    => 'time',
+                'tooltip' => __( 'Select start time.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_5',
+                'label'   => __( 'Placeholder 5', 'codex-plugin-boilerplate' ),
+                'type'    => 'time',
+                'tooltip' => __( 'Select end time.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_6',
+                'label'   => __( 'Placeholder 6', 'codex-plugin-boilerplate' ),
+                'type'    => 'select',
+                'options' => array( '0' => __( 'No', 'codex-plugin-boilerplate' ), '1' => __( 'Yes', 'codex-plugin-boilerplate' ) ),
+                'tooltip' => __( 'Choose yes or no.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_7',
+                'label'   => __( 'Placeholder 7', 'codex-plugin-boilerplate' ),
+                'type'    => 'text',
+                'tooltip' => __( 'Enter address.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_8',
+                'label'   => __( 'Placeholder 8', 'codex-plugin-boilerplate' ),
+                'type'    => 'text',
+                'tooltip' => __( 'Enter address line 2.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_9',
+                'label'   => __( 'Placeholder 9', 'codex-plugin-boilerplate' ),
+                'type'    => 'text',
+                'tooltip' => __( 'Enter city.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_10',
+                'label'   => __( 'Placeholder 10', 'codex-plugin-boilerplate' ),
+                'type'    => 'state',
+                'tooltip' => __( 'Select state.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_11',
+                'label'   => __( 'Placeholder 11', 'codex-plugin-boilerplate' ),
+                'type'    => 'text',
+                'tooltip' => __( 'Enter ZIP.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_12',
+                'label'   => __( 'Placeholder 12', 'codex-plugin-boilerplate' ),
+                'type'    => 'text',
+                'tooltip' => __( 'Enter venue name.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_13',
+                'label'   => __( 'Placeholder 13', 'codex-plugin-boilerplate' ),
+                'type'    => 'url',
+                'tooltip' => __( 'Enter venue URL.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_14',
+                'label'   => __( 'Placeholder 14', 'codex-plugin-boilerplate' ),
+                'type'    => 'select',
+                'options' => array(
+                    'free'       => __( 'Open Event', 'codex-plugin-boilerplate' ),
+                    'paid'       => __( 'Basic Membership Required', 'codex-plugin-boilerplate' ),
+                    'memberonly' => __( 'Premium Membership Required', 'codex-plugin-boilerplate' ),
+                ),
+                'tooltip' => __( 'Select event type.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_15',
+                'label'   => __( 'Placeholder 15', 'codex-plugin-boilerplate' ),
+                'type'    => 'number',
+                'attrs'   => 'step="0.01" min="0"',
+                'tooltip' => __( 'Base cost.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_16',
+                'label'   => __( 'Placeholder 16', 'codex-plugin-boilerplate' ),
+                'type'    => 'number',
+                'attrs'   => 'step="0.01" min="0"',
+                'tooltip' => __( 'Basic member cost.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_17',
+                'label'   => __( 'Placeholder 17', 'codex-plugin-boilerplate' ),
+                'type'    => 'number',
+                'attrs'   => 'step="0.01" min="0"',
+                'tooltip' => __( 'Premium member cost.', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_18',
+                'label'   => __( 'Placeholder 18', 'codex-plugin-boilerplate' ),
+                'type'    => 'select',
+                'options' => array( '0' => __( 'No', 'codex-plugin-boilerplate' ), '1' => __( 'Yes', 'codex-plugin-boilerplate' ) ),
+                'tooltip' => __( 'Waitlist available?', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_19',
+                'label'   => __( 'Placeholder 19', 'codex-plugin-boilerplate' ),
+                'type'    => 'select',
+                'options' => array( '0' => __( 'No', 'codex-plugin-boilerplate' ), '1' => __( 'Yes', 'codex-plugin-boilerplate' ) ),
+                'tooltip' => __( 'Refunds available?', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'name'    => 'placeholder_20',
+                'label'   => __( 'Placeholder 20', 'codex-plugin-boilerplate' ),
+                'type'    => 'image',
+                'tooltip' => __( 'Select image.', 'codex-plugin-boilerplate' ),
+            ),
+        );
         echo '<form id="cpb-create-form"><div class="cpb-flex-form">';
-        echo '<div class="cpb-field">';
-        echo '<label><span class="cpb-tooltip-icon dashicons dashicons-editor-help" title="' . esc_attr__( 'Enter a name for the entity.', 'codex-plugin-boilerplate' ) . '"></span>' . esc_html__( 'Name', 'codex-plugin-boilerplate' ) . '</label>';
-        echo '<input type="text" name="name" />';
-        echo '</div>';
-        echo '<div class="cpb-field">';
-        echo '<label><span class="cpb-tooltip-icon dashicons dashicons-editor-help" title="' . esc_attr__( 'Placeholder field', 'codex-plugin-boilerplate' ) . '"></span>' . esc_html__( 'Placeholder 1', 'codex-plugin-boilerplate' ) . '</label>';
-        echo '<input type="text" name="placeholder_1" />';
-        echo '</div>';
-        echo '<div class="cpb-field">';
-        echo '<label><span class="cpb-tooltip-icon dashicons dashicons-editor-help" title="' . esc_attr__( 'Select a date', 'codex-plugin-boilerplate' ) . '"></span>' . esc_html__( 'Thing 1', 'codex-plugin-boilerplate' ) . '</label>';
-        echo '<input type="date" name="thing_1" />';
-        echo '</div>';
-        echo '<div class="cpb-field">';
-        echo '<label><span class="cpb-tooltip-icon dashicons dashicons-editor-help" title="' . esc_attr__( 'Choose an option', 'codex-plugin-boilerplate' ) . '"></span>' . esc_html__( 'Thing 2', 'codex-plugin-boilerplate' ) . '</label>';
-        echo '<select name="thing_2"><option value="option1">' . esc_html__( 'Option 1', 'codex-plugin-boilerplate' ) . '</option><option value="option2">' . esc_html__( 'Option 2', 'codex-plugin-boilerplate' ) . '</option></select>';
-        echo '</div>';
+        foreach ( $fields as $field ) {
+            echo '<div class="cpb-field">';
+            echo '<label><span class="cpb-tooltip-icon dashicons dashicons-editor-help" title="' . esc_attr( $field['tooltip'] ) . '"></span>' . esc_html( $field['label'] ) . '</label>';
+            switch ( $field['type'] ) {
+                case 'select':
+                    echo '<select name="' . esc_attr( $field['name'] ) . '">';
+                    foreach ( $field['options'] as $value => $label ) {
+                        echo '<option value="' . esc_attr( $value ) . '">' . esc_html( $label ) . '</option>';
+                    }
+                    echo '</select>';
+                    break;
+                case 'state':
+                    $states = $this->get_us_states();
+                    echo '<select name="' . esc_attr( $field['name'] ) . '">';
+                    foreach ( $states as $state ) {
+                        echo '<option value="' . esc_attr( $state ) . '">' . esc_html( $state ) . '</option>';
+                    }
+                    echo '</select>';
+                    break;
+                case 'textarea':
+                    echo '<textarea name="' . esc_attr( $field['name'] ) . '"></textarea>';
+                    break;
+                case 'image':
+                    echo '<input type="hidden" name="' . esc_attr( $field['name'] ) . '" id="' . esc_attr( $field['name'] ) . '" />';
+                    echo '<button type="button" class="button cpb-upload" data-target="#' . esc_attr( $field['name'] ) . '">' . esc_html__( 'Select Image', 'codex-plugin-boilerplate' ) . '</button>';
+                    echo '<div id="' . esc_attr( $field['name'] ) . '-preview" style="margin-top:10px;"></div>';
+                    break;
+                default:
+                    $attrs = isset( $field['attrs'] ) ? ' ' . $field['attrs'] : '';
+                    echo '<input type="' . esc_attr( $field['type'] ) . '" name="' . esc_attr( $field['name'] ) . '"' . $attrs . ' />';
+                    break;
+            }
+            echo '</div>';
+        }
         echo '</div>';
         submit_button( __( 'Save', 'codex-plugin-boilerplate' ) );
         echo '</form>';

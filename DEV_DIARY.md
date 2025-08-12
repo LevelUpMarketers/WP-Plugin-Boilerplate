@@ -6,3 +6,4 @@
 4. 2025-08-12: Moved top message center beneath navigation tabs on admin pages.
 5. 2025-08-12: Split Settings into General and Style tabs and promoted Settings and Logs to top-level menus.
 6. 2025-08-12: Expanded Main Entity schema with placeholder fields and added responsive, tooltip-enabled form layout.
+7. 2025-08-12: Replaced demo fields with twenty Placeholder inputs, varied types, image selector, and synchronized database schema.
