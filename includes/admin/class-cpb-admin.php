@@ -22,19 +22,17 @@ class CPB_Admin {
             array( $this, 'render_main_entity_page' )
         );
 
-        add_submenu_page(
-            'cpb-main-entity',
-            __( 'Settings', 'codex-plugin-boilerplate' ),
-            __( 'Settings', 'codex-plugin-boilerplate' ),
+        add_menu_page(
+            __( 'CPB Settings', 'codex-plugin-boilerplate' ),
+            __( 'CPB Settings', 'codex-plugin-boilerplate' ),
             'manage_options',
             'cpb-settings',
             array( $this, 'render_settings_page' )
         );
 
-        add_submenu_page(
-            'cpb-main-entity',
-            __( 'Logs', 'codex-plugin-boilerplate' ),
-            __( 'Logs', 'codex-plugin-boilerplate' ),
+        add_menu_page(
+            __( 'CPB Logs', 'codex-plugin-boilerplate' ),
+            __( 'CPB Logs', 'codex-plugin-boilerplate' ),
             'manage_options',
             'cpb-logs',
             array( $this, 'render_logs_page' )
@@ -101,25 +99,45 @@ class CPB_Admin {
     }
 
     public function render_settings_page() {
-        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'codex-plugin-boilerplate' ) . '</h1>';
+        $active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( $_GET['tab'] ) : 'general';
+        echo '<div class="wrap"><h1>' . esc_html__( 'CPB Settings', 'codex-plugin-boilerplate' ) . '</h1>';
+        echo '<h2 class="nav-tab-wrapper">';
+        echo '<a href="?page=cpb-settings&tab=general" class="nav-tab ' . ( 'general' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'General Settings', 'codex-plugin-boilerplate' ) . '</a>';
+        echo '<a href="?page=cpb-settings&tab=style" class="nav-tab ' . ( 'style' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Style Settings', 'codex-plugin-boilerplate' ) . '</a>';
+        echo '</h2>';
         $this->top_message_center();
-        echo '<form id="cpb-settings-form">';
-        echo '<h2>' . esc_html__( 'General Settings', 'codex-plugin-boilerplate' ) . '</h2>';
+
+        if ( 'style' === $active_tab ) {
+            $this->render_style_settings_tab();
+        } else {
+            $this->render_general_settings_tab();
+        }
+
+        $this->bottom_message_center();
+        echo '</div>';
+    }
+
+    private function render_general_settings_tab() {
+        echo '<form id="cpb-general-settings-form">';
         echo '<label>' . esc_html__( 'Option', 'codex-plugin-boilerplate' ) . ' <span title="' . esc_attr__( 'General option.', 'codex-plugin-boilerplate' ) . '">?</span></label>';
         echo '<input type="text" name="option" />';
-        echo '<h2>' . esc_html__( 'Style Settings', 'codex-plugin-boilerplate' ) . '</h2>';
+        submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ) );
+        echo '</form>';
+        echo '<div id="cpb-feedback"></div><div id="cpb-spinner" class="spinner"></div>';
+    }
+
+    private function render_style_settings_tab() {
+        echo '<form id="cpb-style-settings-form">';
         echo '<label>' . esc_html__( 'Custom CSS', 'codex-plugin-boilerplate' ) . ' <span title="' . esc_attr__( 'CSS for styling shortcodes/blocks.', 'codex-plugin-boilerplate' ) . '">?</span></label>';
         echo '<textarea name="custom_css"></textarea>';
         submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ) );
         echo '</form>';
         echo '<div id="cpb-feedback"></div><div id="cpb-spinner" class="spinner"></div>';
-        $this->bottom_message_center();
-        echo '</div>';
     }
 
     public function render_logs_page() {
         $active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( $_GET['tab'] ) : 'generated_content';
-        echo '<div class="wrap"><h1>' . esc_html__( 'Logs', 'codex-plugin-boilerplate' ) . '</h1>';
+        echo '<div class="wrap"><h1>' . esc_html__( 'CPB Logs', 'codex-plugin-boilerplate' ) . '</h1>';
         echo '<h2 class="nav-tab-wrapper">';
         echo '<a href="?page=cpb-logs&tab=generated_content" class="nav-tab ' . ( 'generated_content' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Generated Content', 'codex-plugin-boilerplate' ) . '</a>';
         echo '</h2>';

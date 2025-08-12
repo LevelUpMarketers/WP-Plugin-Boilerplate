@@ -4,3 +4,4 @@
 2. 2025-08-12: Added content logging table, logger class, and admin tab for generated pages/posts.
 3. 2025-08-12: Converted Main Entity admin page to use tabs for creating and editing entries.
 4. 2025-08-12: Moved top message center beneath navigation tabs on admin pages.
+5. 2025-08-12: Split Settings into General and Style tabs and promoted Settings and Logs to top-level menus.
