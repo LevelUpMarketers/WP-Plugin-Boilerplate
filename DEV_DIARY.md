@@ -20,3 +20,4 @@
 18. 2025-08-12: Refactored top banner into two-column layout, moved upgrade button beneath text, and added centered logo row with contact links.
 19. 2025-08-12: Replaced bottom message with logo row variant and added digital marketing section class.
 20. 2025-08-12: Removed top logo row, added thank-you tagline to bottom message, and cleaned up unused premium logo styles.
+21. 2025-08-12: Reintroduced logos, added US states and territories placeholder, and refreshed styles and scripts.
