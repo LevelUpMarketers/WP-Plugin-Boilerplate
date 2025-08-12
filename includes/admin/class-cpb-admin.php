@@ -137,9 +137,18 @@ class CPB_Admin {
 
     private function top_message_center() {
         echo '<div class="cpb-top-message">';
-        echo '<p><a href="https://www.youtube.com" target="_blank">' . esc_html__( 'Watch tutorial', 'codex-plugin-boilerplate' ) . '</a> | ';
-        echo esc_html__( 'Premium support available.', 'codex-plugin-boilerplate' ) . ' ';
-        echo '<a href="https://levelupmarketers.com" target="_blank">levelupmarketers.com</a></p>';
+        echo '<div class="cpb-top-left">';
+        echo '<div class="cpb-video-container"><iframe width="100%" height="200" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>';
+        echo '<p>' . esc_html__( 'Need help? Watch the Tutorial video!', 'codex-plugin-boilerplate' ) . '</p>';
+        echo '</div>';
+        echo '<div class="cpb-top-middle">';
+        echo '<h3>' . esc_html__( 'Upgrade to Premium Today', 'codex-plugin-boilerplate' ) . '</h3>';
+        echo '<p>' . esc_html__( 'Upgrade to the Premium version of Codex Plugin Boilerplate today and receive additional features, options, priority customer support, and a dedicated hour of setup and customization! Click here to upgrade now.', 'codex-plugin-boilerplate' ) . '</p>';
+        echo '</div>';
+        echo '<div class="cpb-top-right">';
+        echo '<a href="https://levelupmarketers.com" target="_blank"><img src="' . esc_url( CPB_PLUGIN_URL . 'assets/images/levelup-logo.svg' ) . '" alt="Level Up Digital Marketing logo" class="cpb-premium-logo" /></a>';
+        echo '<a class="cpb-upgrade-button" href="https://levelupmarketers.com" target="_blank">' . esc_html__( 'Upgrade Now', 'codex-plugin-boilerplate' ) . '</a>';
+        echo '</div>';
         echo '</div>';
     }
 
@@ -421,22 +430,22 @@ class CPB_Admin {
                     $opts = array(
                         array(
                             'name'    => 'opt_in_marketing_email',
-                            'label'   => __( 'Marketing Emails', 'codex-plugin-boilerplate' ),
+                            'label'   => __( 'Option 1', 'codex-plugin-boilerplate' ),
                             'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 1', 'codex-plugin-boilerplate' ),
                         ),
                         array(
                             'name'    => 'opt_in_marketing_sms',
-                            'label'   => __( 'Marketing Texts/SMS', 'codex-plugin-boilerplate' ),
+                            'label'   => __( 'Option 2', 'codex-plugin-boilerplate' ),
                             'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 2', 'codex-plugin-boilerplate' ),
                         ),
                         array(
                             'name'    => 'opt_in_event_update_email',
-                            'label'   => __( 'Event Update Emails', 'codex-plugin-boilerplate' ),
+                            'label'   => __( 'Option 3', 'codex-plugin-boilerplate' ),
                             'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 3', 'codex-plugin-boilerplate' ),
                         ),
                         array(
                             'name'    => 'opt_in_event_update_sms',
-                            'label'   => __( 'Event Update Texts/SMS', 'codex-plugin-boilerplate' ),
+                            'label'   => __( 'Option 4', 'codex-plugin-boilerplate' ),
                             'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 4', 'codex-plugin-boilerplate' ),
                         ),
                     );

@@ -16,3 +16,4 @@
 14. 2025-08-12: Restored color picker as Placeholder 25, introduced separate Add Media button and TinyMCE editor as Placeholders 26 and 27, and updated scripts for new placeholders.
 15. 2025-08-12: Removed Placeholder 20, shifted subsequent placeholders, updated tooltips and scripts, and adjusted schema accordingly.
 16. 2025-08-12: Renamed initial field to Placeholder 1, shifted labels through Placeholder 27, and fixed the color picker width.
+17. 2025-08-12: Genericized opt-in option labels, documented form layout guidelines, and redesigned top message with video, premium pitch, and logo.

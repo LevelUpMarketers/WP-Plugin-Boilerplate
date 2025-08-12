@@ -479,6 +479,10 @@ msgstr ""
 msgid "Option 3"
 msgstr ""
 
+#: includes/admin/class-cpb-admin.php:443
+msgid "Option 4"
+msgstr ""
+
 #: includes/admin/class-cpb-admin.php:287
 msgid "Placeholder 15"
 msgstr ""
@@ -529,6 +533,22 @@ msgstr ""
 
 #: includes/admin/class-cpb-admin.php:384
 msgid "Placeholder 27"
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:145
+msgid "Need help? Watch the Tutorial video!"
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:147
+msgid "Upgrade to Premium Today"
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:148
+msgid "Upgrade to the Premium version of Codex Plugin Boilerplate today and receive additional features, options, priority customer support, and a dedicated hour of setup and customization! Click here to upgrade now."
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:150
+msgid "Upgrade Now"
 msgstr ""
 
 #: includes/admin/class-cpb-admin.php:367
