@@ -65,6 +65,11 @@
     margin-top: 0;
 }
 
+.cpb-so-much {
+    font-weight: 700;
+    font-style: italic;
+}
+
 .cpb-top-tagline, .cpb-thanks-message{
     font-size:16px;
 }
