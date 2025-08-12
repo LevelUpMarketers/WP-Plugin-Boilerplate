@@ -1,0 +1,78 @@
+.cpb-top-message,
+.cpb-bottom-message {
+    padding: 10px;
+    background: #f1f1f1;
+    margin: 10px 0;
+}
+
+#cpb-spinner {
+    display: none;
+}
+
+.cpb-accordion .item {
+    border: 1px solid #ccc;
+    margin-bottom: 5px;
+}
+
+.cpb-accordion .item-header {
+    cursor: pointer;
+    padding: 10px;
+    background: #fff;
+}
+
+.cpb-accordion .item-content {
+    display: none;
+    padding: 10px;
+    background: #fafafa;
+}
+
+.cpb-flex-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.cpb-field {
+    width: 178px;
+}
+
+.cpb-field input,
+.cpb-field select,
+.cpb-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.cpb-field label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.cpb-tooltip-icon {
+    margin-right: 4px;
+    position: relative;
+    cursor: help;
+}
+
+.cpb-tooltip-icon::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 1000;
+}
+
+.cpb-tooltip-icon:hover::after {
+    opacity: 1;
+}
