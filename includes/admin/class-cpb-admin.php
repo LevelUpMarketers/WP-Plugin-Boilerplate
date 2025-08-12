@@ -49,6 +49,13 @@ class CPB_Admin {
             'ajaxurl' => admin_url( 'admin-ajax.php' ),
             'nonce'   => wp_create_nonce( 'cpb_ajax_nonce' ),
         ) );
+        wp_localize_script( 'cpb-admin', 'cpbAdmin', array(
+            'placeholder1' => __( 'Placeholder 1', 'codex-plugin-boilerplate' ),
+            'thing1'       => __( 'Thing 1', 'codex-plugin-boilerplate' ),
+            'thing2'       => __( 'Thing 2', 'codex-plugin-boilerplate' ),
+            'delete'       => __( 'Delete', 'codex-plugin-boilerplate' ),
+            'none'         => __( 'No entries found.', 'codex-plugin-boilerplate' ),
+        ) );
     }
 
     private function top_message_center() {
@@ -85,9 +92,24 @@ class CPB_Admin {
     }
 
     private function render_create_tab() {
-        echo '<form id="cpb-create-form">';
-        echo '<label>' . esc_html__( 'Name', 'codex-plugin-boilerplate' ) . ' <span title="' . esc_attr__( 'Enter a name for the entity.', 'codex-plugin-boilerplate' ) . '">?</span></label>';
+        echo '<form id="cpb-create-form"><div class="cpb-flex-form">';
+        echo '<div class="cpb-field">';
+        echo '<label><span class="cpb-tooltip-icon dashicons dashicons-editor-help" title="' . esc_attr__( 'Enter a name for the entity.', 'codex-plugin-boilerplate' ) . '"></span>' . esc_html__( 'Name', 'codex-plugin-boilerplate' ) . '</label>';
         echo '<input type="text" name="name" />';
+        echo '</div>';
+        echo '<div class="cpb-field">';
+        echo '<label><span class="cpb-tooltip-icon dashicons dashicons-editor-help" title="' . esc_attr__( 'Placeholder field', 'codex-plugin-boilerplate' ) . '"></span>' . esc_html__( 'Placeholder 1', 'codex-plugin-boilerplate' ) . '</label>';
+        echo '<input type="text" name="placeholder_1" />';
+        echo '</div>';
+        echo '<div class="cpb-field">';
+        echo '<label><span class="cpb-tooltip-icon dashicons dashicons-editor-help" title="' . esc_attr__( 'Select a date', 'codex-plugin-boilerplate' ) . '"></span>' . esc_html__( 'Thing 1', 'codex-plugin-boilerplate' ) . '</label>';
+        echo '<input type="date" name="thing_1" />';
+        echo '</div>';
+        echo '<div class="cpb-field">';
+        echo '<label><span class="cpb-tooltip-icon dashicons dashicons-editor-help" title="' . esc_attr__( 'Choose an option', 'codex-plugin-boilerplate' ) . '"></span>' . esc_html__( 'Thing 2', 'codex-plugin-boilerplate' ) . '</label>';
+        echo '<select name="thing_2"><option value="option1">' . esc_html__( 'Option 1', 'codex-plugin-boilerplate' ) . '</option><option value="option2">' . esc_html__( 'Option 2', 'codex-plugin-boilerplate' ) . '</option></select>';
+        echo '</div>';
+        echo '</div>';
         submit_button( __( 'Save', 'codex-plugin-boilerplate' ) );
         echo '</form>';
         echo '<div id="cpb-feedback"></div><div id="cpb-spinner" class="spinner"></div>';

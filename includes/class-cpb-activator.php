@@ -20,6 +20,9 @@ class CPB_Activator {
         $sql_main = "CREATE TABLE $main_table (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             name text NOT NULL,
+            placeholder_1 varchar(191) DEFAULT '',
+            thing_1 date DEFAULT NULL,
+            thing_2 varchar(191) DEFAULT '',
             created_at datetime NOT NULL,
             updated_at datetime NOT NULL,
             PRIMARY KEY  (id)

@@ -3,3 +3,24 @@ msgstr ""
 "Project-Id-Version: Codex Plugin Boilerplate 0.1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Language: en_US\n"
+
+msgid "Placeholder 1"
+msgstr ""
+
+msgid "Thing 1"
+msgstr ""
+
+msgid "Thing 2"
+msgstr ""
+
+msgid "Option 1"
+msgstr ""
+
+msgid "Option 2"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "No entries found."
+msgstr ""

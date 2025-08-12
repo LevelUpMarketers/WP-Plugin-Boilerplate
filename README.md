@@ -12,6 +12,7 @@ A performant, extensible boilerplate for building WordPress plugins.
  - Use the shortcode `[cpb-main-entity]` to display main entities.
  - Add the **Main Entity** block in the block editor.
  - Manage entities under **CPB Main Entity**, switching between **Create a Main Entity** and **Edit Main Entity** tabs.
+ - The creation form demonstrates a responsive layout with tooltip icons and fields such as **Placeholder 1**, **Thing 1**, and **Thing 2**.
  - Configure options in **CPB Settings**, switching between **General Settings** and **Style Settings** tabs.
  - View plugin-generated pages or posts under **CPB Logs → Generated Content**.
 
