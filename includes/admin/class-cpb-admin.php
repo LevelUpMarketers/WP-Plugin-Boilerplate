@@ -63,7 +63,7 @@ class CPB_Admin {
 
     private function get_placeholder_labels() {
         $labels = array();
-        for ( $i = 1; $i <= 25; $i++ ) {
+        for ( $i = 1; $i <= 27; $i++ ) {
             $labels[] = sprintf( __( 'Placeholder %d', 'codex-plugin-boilerplate' ), $i );
         }
         return $labels;
@@ -152,6 +152,8 @@ class CPB_Admin {
             'placeholder_23'=> __( 'Tooltip placeholder text for Placeholder 23', 'codex-plugin-boilerplate' ),
             'placeholder_24'=> __( 'Tooltip placeholder text for Placeholder 24', 'codex-plugin-boilerplate' ),
             'placeholder_25'=> __( 'Tooltip placeholder text for Placeholder 25', 'codex-plugin-boilerplate' ),
+            'placeholder_26'=> __( 'Tooltip placeholder text for Placeholder 26', 'codex-plugin-boilerplate' ),
+            'placeholder_27'=> __( 'Tooltip placeholder text for Placeholder 27', 'codex-plugin-boilerplate' ),
         );
     }
 
@@ -387,8 +389,20 @@ class CPB_Admin {
             array(
                 'name'    => 'placeholder_25',
                 'label'   => __( 'Placeholder 25', 'codex-plugin-boilerplate' ),
-                'type'    => 'editor',
+                'type'    => 'color',
                 'tooltip' => $tooltips['placeholder_25'],
+            ),
+            array(
+                'name'    => 'placeholder_26',
+                'label'   => __( 'Placeholder 26', 'codex-plugin-boilerplate' ),
+                'type'    => 'image',
+                'tooltip' => $tooltips['placeholder_26'],
+            ),
+            array(
+                'name'    => 'placeholder_27',
+                'label'   => __( 'Placeholder 27', 'codex-plugin-boilerplate' ),
+                'type'    => 'editor',
+                'tooltip' => $tooltips['placeholder_27'],
                 'full_width' => true,
             ),
         );

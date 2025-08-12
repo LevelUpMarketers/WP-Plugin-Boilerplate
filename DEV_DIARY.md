@@ -13,3 +13,4 @@
 11. 2025-08-12: Removed fixed color picker width, replaced tooltips with placeholder text, and integrated TinyMCE editor for Placeholder 21.
 12. 2025-08-12: Added opt-in preference fieldset, dynamic Items list, full-width Placeholder 25 editor, and fixed color picker width.
 13. 2025-08-12: Tweaked placeholder widths, refined tooltip styling and layering, added per-option tooltips for Placeholder 22, and cleaned up opt-in markup.
+14. 2025-08-12: Restored color picker as Placeholder 25, introduced separate Add Media button and TinyMCE editor as Placeholders 26 and 27, and updated scripts for new placeholders.

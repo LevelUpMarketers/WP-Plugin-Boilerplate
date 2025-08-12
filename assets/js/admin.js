@@ -37,9 +37,10 @@ jQuery(document).ready(function($){
                     var $content=$('<div class="item-content"></div>');
                     cpbAdmin.placeholders.forEach(function(label,index){
                         var key='placeholder_'+(index+1);
-                        if(index===19){
-                            if(ent.placeholder_20_url){
-                                $content.append('<p><img src="'+ent.placeholder_20_url+'" style="max-width:100px;height:auto;" /></p>');
+                        if(index===19 || index===25){
+                            var urlKey='placeholder_'+(index+1)+'_url';
+                            if(ent[urlKey]){
+                                $content.append('<p><img src="'+ent[urlKey]+'" style="max-width:100px;height:auto;" /></p>');
                             }
                         }else{
                             $content.append('<p><strong>'+label+':</strong> '+(ent[key]||'')+'</p>');
