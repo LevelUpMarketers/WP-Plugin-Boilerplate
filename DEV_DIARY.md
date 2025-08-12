@@ -10,3 +10,11 @@
 8. 2025-08-12: Standardized field widths, implemented centralized hover tooltips, and added default options for Placeholder 14.
 9. 2025-08-12: Added custom admin font, ensured all dropdowns default to "Make a Selection...", and widened the image selector button.
 10. 2025-08-12: Swapped in Roobert admin font, restored dashicon tooltips, and added textarea, radio, checkbox, and color placeholders.
+11. 2025-08-12: Removed fixed color picker width, replaced tooltips with placeholder text, and integrated TinyMCE editor for Placeholder 21.
+12. 2025-08-12: Added opt-in preference fieldset, dynamic Items list, full-width Placeholder 25 editor, and fixed color picker width.
+13. 2025-08-12: Tweaked placeholder widths, refined tooltip styling and layering, added per-option tooltips for Placeholder 22, and cleaned up opt-in markup.
+14. 2025-08-12: Restored color picker as Placeholder 25, introduced separate Add Media button and TinyMCE editor as Placeholders 26 and 27, and updated scripts for new placeholders.
+15. 2025-08-12: Removed Placeholder 20, shifted subsequent placeholders, updated tooltips and scripts, and adjusted schema accordingly.
+16. 2025-08-12: Renamed initial field to Placeholder 1, shifted labels through Placeholder 27, and fixed the color picker width.
+17. 2025-08-12: Genericized opt-in option labels, documented form layout guidelines, and redesigned top message with video, premium pitch, and logo.
+18. 2025-08-12: Refactored top banner into two-column layout, moved upgrade button beneath text, and added centered logo row with contact links.
