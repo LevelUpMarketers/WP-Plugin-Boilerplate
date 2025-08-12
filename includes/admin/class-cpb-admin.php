@@ -137,17 +137,29 @@ class CPB_Admin {
 
     private function top_message_center() {
         echo '<div class="cpb-top-message">';
+        echo '<div class="cpb-top-row">';
         echo '<div class="cpb-top-left">';
+        echo '<h3>' . esc_html__( 'Need help? Watch the Tutorial video!', 'codex-plugin-boilerplate' ) . '</h3>';
         echo '<div class="cpb-video-container"><iframe width="100%" height="200" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>';
-        echo '<p>' . esc_html__( 'Need help? Watch the Tutorial video!', 'codex-plugin-boilerplate' ) . '</p>';
-        echo '</div>';
-        echo '<div class="cpb-top-middle">';
-        echo '<h3>' . esc_html__( 'Upgrade to Premium Today', 'codex-plugin-boilerplate' ) . '</h3>';
-        echo '<p>' . esc_html__( 'Upgrade to the Premium version of Codex Plugin Boilerplate today and receive additional features, options, priority customer support, and a dedicated hour of setup and customization! Click here to upgrade now.', 'codex-plugin-boilerplate' ) . '</p>';
         echo '</div>';
         echo '<div class="cpb-top-right">';
-        echo '<a href="https://levelupmarketers.com" target="_blank"><img src="' . esc_url( CPB_PLUGIN_URL . 'assets/images/levelup-logo.svg' ) . '" alt="Level Up Digital Marketing logo" class="cpb-premium-logo" /></a>';
+        echo '<h3>' . esc_html__( 'Upgrade to Premium Today', 'codex-plugin-boilerplate' ) . '</h3>';
+        $upgrade_text = sprintf(
+            __( 'Upgrade to the Premium version of Codex Plugin Boilerplate today and receive additional features, options, priority customer support, and a dedicated hour of setup and customization! %s', 'codex-plugin-boilerplate' ),
+            '<a href="https://levelupmarketers.com" target="_blank">' . esc_html__( 'Click here to upgrade now.', 'codex-plugin-boilerplate' ) . '</a>'
+        );
+        echo '<p>' . wp_kses_post( $upgrade_text ) . '</p>';
         echo '<a class="cpb-upgrade-button" href="https://levelupmarketers.com" target="_blank">' . esc_html__( 'Upgrade Now', 'codex-plugin-boilerplate' ) . '</a>';
+        echo '</div>';
+        echo '</div>';
+        echo '<div class="cpb-top-logo-row">';
+        echo '<a href="https://levelupmarketers.com" target="_blank"><img src="' . esc_url( CPB_PLUGIN_URL . 'assets/images/levelup-logo.svg' ) . '" alt="Level Up Digital Marketing logo" class="cpb-premium-logo" /></a>';
+        $tagline = sprintf(
+            __( 'A Level Up Plugin. Need marketing or custom software development help? Email %1$s or call %2$s now!', 'codex-plugin-boilerplate' ),
+            '<a href="mailto:contact@levelupmarketers.com">contact@levelupmarketers.com</a>',
+            '<a href="tel:18044898188">(804) 489-8188</a>'
+        );
+        echo '<p class="cpb-top-tagline">' . wp_kses_post( $tagline ) . '</p>';
         echo '</div>';
         echo '</div>';
     }

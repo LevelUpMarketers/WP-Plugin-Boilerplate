@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-08-12T11:53:33+00:00\n"
+"POT-Creation-Date: 2025-08-12T16:00:00+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: codex-plugin-boilerplate\n"
@@ -535,20 +535,30 @@ msgstr ""
 msgid "Placeholder 27"
 msgstr ""
 
-#: includes/admin/class-cpb-admin.php:145
+#: includes/admin/class-cpb-admin.php:142
 msgid "Need help? Watch the Tutorial video!"
 msgstr ""
 
-#: includes/admin/class-cpb-admin.php:147
+#: includes/admin/class-cpb-admin.php:146
 msgid "Upgrade to Premium Today"
 msgstr ""
 
 #: includes/admin/class-cpb-admin.php:148
-msgid "Upgrade to the Premium version of Codex Plugin Boilerplate today and receive additional features, options, priority customer support, and a dedicated hour of setup and customization! Click here to upgrade now."
+#, php-format
+msgid "Upgrade to the Premium version of Codex Plugin Boilerplate today and receive additional features, options, priority customer support, and a dedicated hour of setup and customization! %s"
 msgstr ""
 
-#: includes/admin/class-cpb-admin.php:150
+#: includes/admin/class-cpb-admin.php:149
+msgid "Click here to upgrade now."
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:152
 msgid "Upgrade Now"
+msgstr ""
+
+#: includes/admin/class-cpb-admin.php:158
+#, php-format
+msgid "A Level Up Plugin. Need marketing or custom software development help? Email %1$s or call %2$s now!"
 msgstr ""
 
 #: includes/admin/class-cpb-admin.php:367
