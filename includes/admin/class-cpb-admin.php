@@ -206,7 +206,11 @@ class CPB_Admin {
                 'name'    => 'placeholder_3',
                 'label'   => __( 'Placeholder 3', 'codex-plugin-boilerplate' ),
                 'type'    => 'select',
-                'options' => array( '0' => __( 'No', 'codex-plugin-boilerplate' ), '1' => __( 'Yes', 'codex-plugin-boilerplate' ) ),
+                'options' => array(
+                    ''  => __( 'Make a Selection...', 'codex-plugin-boilerplate' ),
+                    '0' => __( 'No', 'codex-plugin-boilerplate' ),
+                    '1' => __( 'Yes', 'codex-plugin-boilerplate' ),
+                ),
                 'tooltip' => $tooltips['placeholder_3'],
             ),
             array(
@@ -225,7 +229,11 @@ class CPB_Admin {
                 'name'    => 'placeholder_6',
                 'label'   => __( 'Placeholder 6', 'codex-plugin-boilerplate' ),
                 'type'    => 'select',
-                'options' => array( '0' => __( 'No', 'codex-plugin-boilerplate' ), '1' => __( 'Yes', 'codex-plugin-boilerplate' ) ),
+                'options' => array(
+                    ''  => __( 'Make a Selection...', 'codex-plugin-boilerplate' ),
+                    '0' => __( 'No', 'codex-plugin-boilerplate' ),
+                    '1' => __( 'Yes', 'codex-plugin-boilerplate' ),
+                ),
                 'tooltip' => $tooltips['placeholder_6'],
             ),
             array(
@@ -307,14 +315,22 @@ class CPB_Admin {
                 'name'    => 'placeholder_18',
                 'label'   => __( 'Placeholder 18', 'codex-plugin-boilerplate' ),
                 'type'    => 'select',
-                'options' => array( '0' => __( 'No', 'codex-plugin-boilerplate' ), '1' => __( 'Yes', 'codex-plugin-boilerplate' ) ),
+                'options' => array(
+                    ''  => __( 'Make a Selection...', 'codex-plugin-boilerplate' ),
+                    '0' => __( 'No', 'codex-plugin-boilerplate' ),
+                    '1' => __( 'Yes', 'codex-plugin-boilerplate' ),
+                ),
                 'tooltip' => $tooltips['placeholder_18'],
             ),
             array(
                 'name'    => 'placeholder_19',
                 'label'   => __( 'Placeholder 19', 'codex-plugin-boilerplate' ),
                 'type'    => 'select',
-                'options' => array( '0' => __( 'No', 'codex-plugin-boilerplate' ), '1' => __( 'Yes', 'codex-plugin-boilerplate' ) ),
+                'options' => array(
+                    ''  => __( 'Make a Selection...', 'codex-plugin-boilerplate' ),
+                    '0' => __( 'No', 'codex-plugin-boilerplate' ),
+                    '1' => __( 'Yes', 'codex-plugin-boilerplate' ),
+                ),
                 'tooltip' => $tooltips['placeholder_19'],
             ),
             array(
@@ -343,6 +359,7 @@ class CPB_Admin {
                 case 'state':
                     $states = $this->get_us_states();
                     echo '<select name="' . esc_attr( $field['name'] ) . '">';
+                    echo '<option value="" disabled selected>' . esc_html__( 'Make a Selection...', 'codex-plugin-boilerplate' ) . '</option>';
                     foreach ( $states as $state ) {
                         echo '<option value="' . esc_attr( $state ) . '">' . esc_html( $state ) . '</option>';
                     }
