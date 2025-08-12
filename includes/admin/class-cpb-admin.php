@@ -70,11 +70,11 @@ class CPB_Admin {
     public function render_main_entity_page() {
         $active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( $_GET['tab'] ) : 'create';
         echo '<div class="wrap"><h1>' . esc_html__( 'CPB Main Entity', 'codex-plugin-boilerplate' ) . '</h1>';
-        $this->top_message_center();
         echo '<h2 class="nav-tab-wrapper">';
         echo '<a href="?page=cpb-main-entity&tab=create" class="nav-tab ' . ( 'create' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Create a Main Entity', 'codex-plugin-boilerplate' ) . '</a>';
         echo '<a href="?page=cpb-main-entity&tab=edit" class="nav-tab ' . ( 'edit' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Edit Main Entity', 'codex-plugin-boilerplate' ) . '</a>';
         echo '</h2>';
+        $this->top_message_center();
 
         if ( 'edit' === $active_tab ) {
             $this->render_edit_tab();
@@ -120,10 +120,10 @@ class CPB_Admin {
     public function render_logs_page() {
         $active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( $_GET['tab'] ) : 'generated_content';
         echo '<div class="wrap"><h1>' . esc_html__( 'Logs', 'codex-plugin-boilerplate' ) . '</h1>';
-        $this->top_message_center();
         echo '<h2 class="nav-tab-wrapper">';
         echo '<a href="?page=cpb-logs&tab=generated_content" class="nav-tab ' . ( 'generated_content' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Generated Content', 'codex-plugin-boilerplate' ) . '</a>';
         echo '</h2>';
+        $this->top_message_center();
 
         if ( 'generated_content' === $active_tab ) {
             $this->render_generated_content_log();
