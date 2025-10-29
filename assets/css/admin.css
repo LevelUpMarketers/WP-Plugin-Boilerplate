@@ -242,7 +242,6 @@
 .cpb-accordion-group--table {
     border: 1px solid #dcdcde;
     border-radius: 4px;
-    overflow: hidden;
 }
 
 .cpb-accordion-table {
@@ -284,11 +283,6 @@
 .cpb-accordion__summary-row {
     cursor: pointer;
     transition: background-color 0.2s ease-in-out;
-}
-
-.cpb-accordion__summary-row:focus {
-    outline: 2px solid #2271b1;
-    outline-offset: -2px;
 }
 
 .cpb-accordion__summary-row.is-open,

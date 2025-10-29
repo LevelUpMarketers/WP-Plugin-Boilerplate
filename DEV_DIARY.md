@@ -36,3 +36,4 @@
 34. 2025-08-12: Converted communications metadata rows to a responsive grid so columns align while labels hug their values without extra spacing.
 35. 2025-08-12: Rebuilt the Communications email accordion into a table-based layout with aligned columns and row toggles that mirror WordPress list tables.
 36. 2025-08-12: Lightened the first communications template header and added visual separators between accordion rows for improved scanning.
+37. 2025-08-12: Removed the communications row focus outline and allowed accordion groups to overflow so tooltips remain fully visible.
