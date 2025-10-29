@@ -291,8 +291,8 @@
 }
 
 .cpb-accordion__meta {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 12px;
     font-size: 13px;
     color: #50575e;
@@ -300,13 +300,23 @@
 
 .cpb-accordion__meta-item {
     display: flex;
-    gap: 4px;
-    align-items: baseline;
+    align-items: flex-start;
+    gap: 6px;
+    min-width: 0;
 }
 
 .cpb-accordion__meta-label {
+    flex: 0 0 110px;
     font-weight: 600;
     color: #2c3338;
+    white-space: nowrap;
+}
+
+.cpb-accordion__meta-value {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-left: 4px;
+    word-break: break-word;
 }
 
 .cpb-accordion__icon {
