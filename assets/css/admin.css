@@ -291,11 +291,11 @@
 }
 
 .cpb-accordion__meta {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    display: flex;
     gap: 12px;
     font-size: 13px;
     color: #50575e;
+    flex-wrap: wrap;
 }
 
 .cpb-accordion__meta-item {
@@ -303,6 +303,7 @@
     align-items: flex-start;
     gap: 6px;
     min-width: 0;
+    flex: 1 1 0;
 }
 
 .cpb-accordion__meta-label {
