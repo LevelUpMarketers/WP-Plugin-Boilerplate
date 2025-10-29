@@ -293,29 +293,31 @@
 }
 
 .cpb-accordion__meta {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 12px;
     font-size: 13px;
     color: #50575e;
-    flex-wrap: wrap;
 }
 
 .cpb-accordion__meta-item {
     display: flex;
-    align-items: flex-start;
+    align-items: baseline;
     gap: 0;
     min-width: 0;
-    flex: 1 1 0;
-    word-break: break-word;
 }
 
 .cpb-accordion__meta-label {
-    flex: 0 0 130px;
     font-weight: 600;
     color: #2c3338;
-    display: inline-flex;
+    margin-right: 4px;
     white-space: nowrap;
-    padding-right: 8px;
+}
+
+.cpb-accordion__meta-value {
+    flex: 1 1 auto;
+    min-width: 0;
+    word-break: break-word;
 }
 
 .cpb-accordion__icon {
