@@ -527,14 +527,16 @@ class CPB_Admin {
             echo '</div>';
         }
         echo '</div>';
-        submit_button( __( 'Save', 'codex-plugin-boilerplate' ) );
+        $submit_button = get_submit_button( __( 'Save', 'codex-plugin-boilerplate' ), 'primary', 'submit', false );
+        echo '<p class="submit">' . $submit_button;
+        echo '<span class="cpb-feedback-area cpb-feedback-area--inline"><span id="cpb-spinner" class="spinner" aria-hidden="true"></span><span id="cpb-feedback" role="status" aria-live="polite"></span></span>';
+        echo '</p>';
         echo '</form>';
-        echo '<div class="cpb-feedback-area"><div id="cpb-spinner" class="spinner" aria-hidden="true"></div><div id="cpb-feedback" role="status" aria-live="polite"></div></div>';
     }
 
     private function render_edit_tab() {
         echo '<div id="cpb-entity-list" class="cpb-accordion"></div>';
-        echo '<div class="cpb-feedback-area"><div id="cpb-spinner" class="spinner" aria-hidden="true"></div><div id="cpb-feedback" role="status" aria-live="polite"></div></div>';
+        echo '<div class="cpb-feedback-area cpb-feedback-area--block"><span id="cpb-spinner" class="spinner" aria-hidden="true"></span><span id="cpb-feedback" role="status" aria-live="polite"></span></div>';
     }
 
     public function render_settings_page() {
@@ -563,18 +565,22 @@ class CPB_Admin {
         echo '<form id="cpb-general-settings-form">';
         echo '<label>' . esc_html__( 'Option', 'codex-plugin-boilerplate' ) . ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr__( 'Tooltip placeholder text for Option', 'codex-plugin-boilerplate' ) . '"></span></label>';
         echo '<input type="text" name="option" />';
-        submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ) );
+        $submit_button = get_submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ), 'primary', 'submit', false );
+        echo '<p class="submit">' . $submit_button;
+        echo '<span class="cpb-feedback-area cpb-feedback-area--inline"><span id="cpb-spinner" class="spinner" aria-hidden="true"></span><span id="cpb-feedback" role="status" aria-live="polite"></span></span>';
+        echo '</p>';
         echo '</form>';
-        echo '<div class="cpb-feedback-area"><div id="cpb-spinner" class="spinner" aria-hidden="true"></div><div id="cpb-feedback" role="status" aria-live="polite"></div></div>';
     }
 
     private function render_style_settings_tab() {
         echo '<form id="cpb-style-settings-form">';
         echo '<label>' . esc_html__( 'Custom CSS', 'codex-plugin-boilerplate' ) . ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr__( 'Tooltip placeholder text for Custom CSS', 'codex-plugin-boilerplate' ) . '"></span></label>';
         echo '<textarea name="custom_css"></textarea>';
-        submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ) );
+        $submit_button = get_submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ), 'primary', 'submit', false );
+        echo '<p class="submit">' . $submit_button;
+        echo '<span class="cpb-feedback-area cpb-feedback-area--inline"><span id="cpb-spinner" class="spinner" aria-hidden="true"></span><span id="cpb-feedback" role="status" aria-live="polite"></span></span>';
+        echo '</p>';
         echo '</form>';
-        echo '<div class="cpb-feedback-area"><div id="cpb-spinner" class="spinner" aria-hidden="true"></div><div id="cpb-feedback" role="status" aria-live="polite"></div></div>';
     }
 
     private function render_cron_jobs_tab() {
