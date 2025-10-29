@@ -60,6 +60,7 @@ class CPB_Admin {
             'mediaTitle'   => __( 'Select Image', 'codex-plugin-boilerplate' ),
             'mediaButton'  => __( 'Use this image', 'codex-plugin-boilerplate' ),
             'itemPlaceholder' => __( 'Item #%d', 'codex-plugin-boilerplate' ),
+            'error'        => __( 'Something went wrong. Please try again.', 'codex-plugin-boilerplate' ),
         ) );
     }
 
@@ -528,12 +529,12 @@ class CPB_Admin {
         echo '</div>';
         submit_button( __( 'Save', 'codex-plugin-boilerplate' ) );
         echo '</form>';
-        echo '<div id="cpb-feedback"></div><div id="cpb-spinner" class="spinner"></div>';
+        echo '<div class="cpb-feedback-area"><div id="cpb-spinner" class="spinner" aria-hidden="true"></div><div id="cpb-feedback" role="status" aria-live="polite"></div></div>';
     }
 
     private function render_edit_tab() {
         echo '<div id="cpb-entity-list" class="cpb-accordion"></div>';
-        echo '<div id="cpb-feedback"></div><div id="cpb-spinner" class="spinner"></div>';
+        echo '<div class="cpb-feedback-area"><div id="cpb-spinner" class="spinner" aria-hidden="true"></div><div id="cpb-feedback" role="status" aria-live="polite"></div></div>';
     }
 
     public function render_settings_page() {
@@ -564,7 +565,7 @@ class CPB_Admin {
         echo '<input type="text" name="option" />';
         submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ) );
         echo '</form>';
-        echo '<div id="cpb-feedback"></div><div id="cpb-spinner" class="spinner"></div>';
+        echo '<div class="cpb-feedback-area"><div id="cpb-spinner" class="spinner" aria-hidden="true"></div><div id="cpb-feedback" role="status" aria-live="polite"></div></div>';
     }
 
     private function render_style_settings_tab() {
@@ -573,7 +574,7 @@ class CPB_Admin {
         echo '<textarea name="custom_css"></textarea>';
         submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ) );
         echo '</form>';
-        echo '<div id="cpb-feedback"></div><div id="cpb-spinner" class="spinner"></div>';
+        echo '<div class="cpb-feedback-area"><div id="cpb-spinner" class="spinner" aria-hidden="true"></div><div id="cpb-feedback" role="status" aria-live="polite"></div></div>';
     }
 
     private function render_cron_jobs_tab() {

@@ -25,3 +25,4 @@
 23. 2025-08-12: Added Cron Jobs tab with automatic cpb_ hook discovery, manual run/delete controls, countdowns, and demo event.
 24. 2025-08-12: Documented translation coverage expectations and cron tooltip description requirements for future work.
 25. 2025-08-12: Enabled AJAX spinner transitions by toggling WordPress's is-active class to show progress without shifting the layout.
+26. 2025-08-12: Wrapped spinner and feedback in a fixed-height container, added inline fade transitions, and surfaced a generic error message when AJAX requests fail.

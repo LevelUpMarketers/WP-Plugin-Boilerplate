@@ -4,11 +4,24 @@ jQuery(document).ready(function($){
             e.preventDefault();
             var data = $(this).serialize();
             var $spinner = $('#cpb-spinner');
+            var $feedback = $('#cpb-feedback');
+            if ($feedback.length) {
+                $feedback.removeClass('is-visible').text('');
+            }
             $spinner.addClass('is-active');
             $.post(cpbAjax.ajaxurl, data + '&action=' + action + '&_ajax_nonce=' + cpbAjax.nonce)
                 .done(function(response){
-                    var $fb = $('#cpb-feedback');
-                    $fb.hide().text(response.data.message).fadeIn();
+                    if ($feedback.length && response && response.data) {
+                        var message = response.data.message || response.data.error;
+                        if (message) {
+                            $feedback.text(message).addClass('is-visible');
+                        }
+                    }
+                })
+                .fail(function(){
+                    if ($feedback.length && cpbAdmin.error) {
+                        $feedback.text(cpbAdmin.error).addClass('is-visible');
+                    }
                 })
                 .always(function(){
                     $spinner.removeClass('is-active');

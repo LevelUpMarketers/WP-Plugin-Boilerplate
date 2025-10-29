@@ -150,8 +150,17 @@
     background: #00976c;
 }
 
+.cpb-feedback-area {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 28px;
+    margin-top: 12px;
+}
+
 #cpb-spinner {
     display: inline-block;
+    flex-shrink: 0;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.2s ease-in-out;
@@ -160,6 +169,16 @@
 #cpb-spinner.is-active {
     opacity: 1;
     visibility: visible;
+}
+
+#cpb-feedback {
+    min-height: 1em;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+#cpb-feedback.is-visible {
+    opacity: 1;
 }
 
 .cpb-accordion .item {
