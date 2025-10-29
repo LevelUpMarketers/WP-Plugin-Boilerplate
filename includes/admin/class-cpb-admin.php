@@ -11,6 +11,8 @@ class CPB_Admin {
         add_action( 'admin_menu', array( $this, 'add_menu' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
         add_action( 'admin_post_cpb_delete_generated_content', array( $this, 'handle_delete_generated_content' ) );
+        add_action( 'admin_post_cpb_delete_cron_event', array( $this, 'handle_delete_cron_event' ) );
+        add_action( 'admin_post_cpb_run_cron_event', array( $this, 'handle_run_cron_event' ) );
     }
 
     public function add_menu() {
@@ -540,11 +542,14 @@ class CPB_Admin {
         echo '<h2 class="nav-tab-wrapper">';
         echo '<a href="?page=cpb-settings&tab=general" class="nav-tab ' . ( 'general' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'General Settings', 'codex-plugin-boilerplate' ) . '</a>';
         echo '<a href="?page=cpb-settings&tab=style" class="nav-tab ' . ( 'style' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Style Settings', 'codex-plugin-boilerplate' ) . '</a>';
+        echo '<a href="?page=cpb-settings&tab=cron" class="nav-tab ' . ( 'cron' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Cron Jobs', 'codex-plugin-boilerplate' ) . '</a>';
         echo '</h2>';
         $this->top_message_center();
 
         if ( 'style' === $active_tab ) {
             $this->render_style_settings_tab();
+        } elseif ( 'cron' === $active_tab ) {
+            $this->render_cron_jobs_tab();
         } else {
             $this->render_general_settings_tab();
         }
@@ -569,6 +574,251 @@ class CPB_Admin {
         submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ) );
         echo '</form>';
         echo '<div id="cpb-feedback"></div><div id="cpb-spinner" class="spinner"></div>';
+    }
+
+    private function render_cron_jobs_tab() {
+        $messages = array(
+            'deleted'       => array(
+                'type'    => 'success',
+                'message' => __( 'Cron event deleted successfully.', 'codex-plugin-boilerplate' ),
+            ),
+            'delete_failed' => array(
+                'type'    => 'error',
+                'message' => __( 'Unable to delete the cron event. Please try again.', 'codex-plugin-boilerplate' ),
+            ),
+            'run'           => array(
+                'type'    => 'success',
+                'message' => __( 'Cron event executed immediately.', 'codex-plugin-boilerplate' ),
+            ),
+            'run_failed'    => array(
+                'type'    => 'error',
+                'message' => __( 'Unable to execute the cron event. Ensure the hook is registered.', 'codex-plugin-boilerplate' ),
+            ),
+        );
+
+        $notice_key = isset( $_GET['cpb_cron_message'] ) ? sanitize_text_field( wp_unslash( $_GET['cpb_cron_message'] ) ) : '';
+
+        if ( $notice_key && isset( $messages[ $notice_key ] ) ) {
+            $notice = $messages[ $notice_key ];
+            printf(
+                '<div class="notice notice-%1$s"><p>%2$s</p></div>',
+                esc_attr( $notice['type'] ),
+                esc_html( $notice['message'] )
+            );
+        }
+
+        $events    = CPB_Cron_Manager::get_plugin_cron_events();
+        $per_page  = 20;
+        $total     = count( $events );
+        $page      = isset( $_GET['cpb_cron_page'] ) ? max( 1, absint( wp_unslash( $_GET['cpb_cron_page'] ) ) ) : 1;
+        $max_pages = max( 1, (int) ceil( $total / $per_page ) );
+
+        if ( $page > $max_pages ) {
+            $page = $max_pages;
+        }
+
+        $offset          = ( $page - 1 ) * $per_page;
+        $displayed_events = array_slice( $events, $offset, $per_page );
+
+        $pagination_base = add_query_arg(
+            array(
+                'page' => 'cpb-settings',
+                'tab'  => 'cron',
+                'cpb_cron_page' => '%#%',
+            ),
+            admin_url( 'admin.php' )
+        );
+
+        $pagination = paginate_links(
+            array(
+                'base'      => $pagination_base,
+                'format'    => '%#%',
+                'current'   => $page,
+                'total'     => $max_pages,
+                'prev_text' => __( '&laquo; Previous', 'codex-plugin-boilerplate' ),
+                'next_text' => __( 'Next &raquo;', 'codex-plugin-boilerplate' ),
+                'type'      => 'list',
+            )
+        );
+
+        echo '<p>' . esc_html__( 'Review and manage every scheduled cron event created by Codex Plugin Boilerplate. Each row is populated automatically from events that use the cpb_ hook prefix.', 'codex-plugin-boilerplate' ) . '</p>';
+
+        if ( $pagination ) {
+            echo '<div class="tablenav"><div class="tablenav-pages">' . wp_kses_post( $pagination ) . '</div></div>';
+        }
+
+        echo '<table class="widefat striped cpb-cron-table">';
+        echo '<thead><tr>';
+        echo '<th>' . esc_html__( 'Cron Job', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Description', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Type', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Schedule', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Hook', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Next Run', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Countdown', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Arguments', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Actions', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '</tr></thead><tbody>';
+
+        if ( empty( $displayed_events ) ) {
+            echo '<tr><td colspan="9">' . esc_html__( 'No cron events found for Codex Plugin Boilerplate.', 'codex-plugin-boilerplate' ) . '</td></tr>';
+        } else {
+            $redirect = add_query_arg(
+                array(
+                    'page' => 'cpb-settings',
+                    'tab'  => 'cron',
+                ),
+                admin_url( 'admin.php' )
+            );
+
+            if ( $page > 1 ) {
+                $redirect = add_query_arg( 'cpb_cron_page', $page, $redirect );
+            }
+
+            foreach ( $displayed_events as $event ) {
+                $hook_data      = CPB_Cron_Manager::get_hook_display_data( $event['hook'] );
+                $type_label     = CPB_Cron_Manager::is_recurring( $event['schedule'] ) ? esc_html__( 'Recurring', 'codex-plugin-boilerplate' ) : esc_html__( 'One-off', 'codex-plugin-boilerplate' );
+                $schedule_label = CPB_Cron_Manager::get_schedule_label( $event['schedule'], $event['interval'] );
+                $next_run       = CPB_Cron_Manager::format_timestamp( $event['timestamp'] );
+                $countdown      = CPB_Cron_Manager::get_countdown( $event['timestamp'] );
+                $args_display   = empty( $event['args'] ) ? '&mdash;' : esc_html( wp_json_encode( $event['args'] ) );
+                $args_encoded   = base64_encode( wp_json_encode( $event['args'] ) );
+
+                if ( false === $args_encoded ) {
+                    $args_encoded = '';
+                }
+
+                echo '<tr>';
+                echo '<td><strong>' . esc_html( $hook_data['name'] ) . '</strong> <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr( $hook_data['description'] ) . '"></span></td>';
+                echo '<td>' . esc_html( $hook_data['description'] ) . '</td>';
+                echo '<td>' . esc_html( $type_label ) . '</td>';
+                echo '<td>' . esc_html( $schedule_label ) . '</td>';
+                echo '<td><code>' . esc_html( $event['hook'] ) . '</code></td>';
+                echo '<td>' . esc_html( $next_run ) . '</td>';
+                echo '<td>' . esc_html( $countdown ) . '</td>';
+                echo '<td>' . ( empty( $event['args'] ) ? '&mdash;' : $args_display ) . '</td>';
+                echo '<td>';
+                echo '<div class="cpb-cron-actions">';
+                echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="cpb-cron-action-form">';
+                wp_nonce_field( 'cpb_run_cron_event', 'cpb_run_cron_event_nonce' );
+                echo '<input type="hidden" name="action" value="cpb_run_cron_event" />';
+                echo '<input type="hidden" name="hook" value="' . esc_attr( $event['hook'] ) . '" />';
+                echo '<input type="hidden" name="args" value="' . esc_attr( $args_encoded ) . '" />';
+                echo '<input type="hidden" name="redirect" value="' . esc_attr( $redirect ) . '" />';
+                echo '<button type="submit" class="button button-secondary">' . esc_html__( 'Run Now', 'codex-plugin-boilerplate' ) . '</button>';
+                echo '</form>';
+
+                $confirm = esc_js( __( 'Are you sure you want to delete this cron event?', 'codex-plugin-boilerplate' ) );
+
+                echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="cpb-cron-action-form" onsubmit="return confirm(\'' . $confirm . '\');">';
+                wp_nonce_field( 'cpb_delete_cron_event', 'cpb_delete_cron_event_nonce' );
+                echo '<input type="hidden" name="action" value="cpb_delete_cron_event" />';
+                echo '<input type="hidden" name="hook" value="' . esc_attr( $event['hook'] ) . '" />';
+                echo '<input type="hidden" name="timestamp" value="' . esc_attr( $event['timestamp'] ) . '" />';
+                echo '<input type="hidden" name="args" value="' . esc_attr( $args_encoded ) . '" />';
+                echo '<input type="hidden" name="redirect" value="' . esc_attr( $redirect ) . '" />';
+                echo '<button type="submit" class="button button-link-delete">' . esc_html__( 'Delete Event', 'codex-plugin-boilerplate' ) . '</button>';
+                echo '</form>';
+                echo '</div>';
+                echo '</td>';
+                echo '</tr>';
+            }
+        }
+
+        echo '</tbody></table>';
+
+        if ( $pagination ) {
+            echo '<div class="tablenav"><div class="tablenav-pages">' . wp_kses_post( $pagination ) . '</div></div>';
+        }
+    }
+
+    private function decode_cron_args( $encoded ) {
+        if ( empty( $encoded ) ) {
+            return array();
+        }
+
+        $decoded = base64_decode( wp_unslash( $encoded ), true );
+
+        if ( false === $decoded ) {
+            return array();
+        }
+
+        $args = json_decode( $decoded, true );
+
+        return is_array( $args ) ? $args : array();
+    }
+
+    private function get_cron_redirect_url() {
+        $fallback = add_query_arg(
+            array(
+                'page' => 'cpb-settings',
+                'tab'  => 'cron',
+            ),
+            admin_url( 'admin.php' )
+        );
+
+        if ( empty( $_POST['redirect'] ) ) {
+            return $fallback;
+        }
+
+        $redirect = esc_url_raw( wp_unslash( $_POST['redirect'] ) );
+
+        return $redirect ? $redirect : $fallback;
+    }
+
+    private function redirect_with_cron_message( $redirect, $message ) {
+        $url = add_query_arg( 'cpb_cron_message', $message, $redirect );
+        wp_safe_redirect( $url );
+        exit;
+    }
+
+    public function handle_delete_cron_event() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Insufficient permissions.', 'codex-plugin-boilerplate' ) );
+        }
+
+        check_admin_referer( 'cpb_delete_cron_event', 'cpb_delete_cron_event_nonce' );
+
+        $redirect = $this->get_cron_redirect_url();
+        $hook     = isset( $_POST['hook'] ) ? sanitize_text_field( wp_unslash( $_POST['hook'] ) ) : '';
+        $timestamp = isset( $_POST['timestamp'] ) ? absint( wp_unslash( $_POST['timestamp'] ) ) : 0;
+        $args     = $this->decode_cron_args( isset( $_POST['args'] ) ? $_POST['args'] : '' );
+
+        if ( empty( $hook ) || 0 !== strpos( $hook, CPB_Cron_Manager::HOOK_PREFIX ) || empty( $timestamp ) ) {
+            $this->redirect_with_cron_message( $redirect, 'delete_failed' );
+        }
+
+        $deleted = wp_unschedule_event( $timestamp, $hook, $args );
+
+        if ( $deleted ) {
+            $this->redirect_with_cron_message( $redirect, 'deleted' );
+        }
+
+        $this->redirect_with_cron_message( $redirect, 'delete_failed' );
+    }
+
+    public function handle_run_cron_event() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Insufficient permissions.', 'codex-plugin-boilerplate' ) );
+        }
+
+        check_admin_referer( 'cpb_run_cron_event', 'cpb_run_cron_event_nonce' );
+
+        $redirect = $this->get_cron_redirect_url();
+        $hook     = isset( $_POST['hook'] ) ? sanitize_text_field( wp_unslash( $_POST['hook'] ) ) : '';
+        $args     = $this->decode_cron_args( isset( $_POST['args'] ) ? $_POST['args'] : '' );
+
+        if ( empty( $hook ) || 0 !== strpos( $hook, CPB_Cron_Manager::HOOK_PREFIX ) ) {
+            $this->redirect_with_cron_message( $redirect, 'run_failed' );
+        }
+
+        if ( ! has_action( $hook ) ) {
+            $this->redirect_with_cron_message( $redirect, 'run_failed' );
+        }
+
+        do_action_ref_array( $hook, $args );
+
+        $this->redirect_with_cron_message( $redirect, 'run' );
     }
 
     public function render_logs_page() {

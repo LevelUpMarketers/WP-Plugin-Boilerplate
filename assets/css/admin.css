@@ -243,3 +243,13 @@
     align-items: center;
     margin-bottom: 10px;
 }
+
+.cpb-cron-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.cpb-cron-action-form {
+    margin: 0;
+}

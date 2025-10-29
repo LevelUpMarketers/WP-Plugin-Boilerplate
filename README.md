@@ -16,6 +16,7 @@ A performant, extensible boilerplate for building WordPress plugins.
 - Fields share a consistent 178px width, and hovering the help icon reveals centralized, translation-ready tooltips.
 - **Placeholder 14** presents generic options ("Option 1"–"Option 3") with a default "Make a Selection..." prompt.
 - Configure options in **CPB Settings**, switching between **General Settings** and **Style Settings** tabs.
+- Monitor scheduled tasks in **CPB Settings → Cron Jobs**, where you can review countdowns, run hooks immediately, or delete plugin-created cron events.
 - View plugin-generated pages or posts under **CPB Logs → Generated Content**.
 
 ## Admin Form Guidelines
