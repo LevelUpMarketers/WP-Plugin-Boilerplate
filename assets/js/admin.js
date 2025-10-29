@@ -1,5 +1,6 @@
 jQuery(document).ready(function($){
     function handleForm(selector, action){
+        var spinnerHideTimer;
         $(selector).on('submit', function(e){
             e.preventDefault();
             var data = $(this).serialize();
@@ -7,6 +8,9 @@ jQuery(document).ready(function($){
             var $feedback = $('#cpb-feedback');
             if ($feedback.length) {
                 $feedback.removeClass('is-visible').text('');
+            }
+            if (spinnerHideTimer) {
+                clearTimeout(spinnerHideTimer);
             }
             $spinner.addClass('is-active');
             $.post(cpbAjax.ajaxurl, data + '&action=' + action + '&_ajax_nonce=' + cpbAjax.nonce)
@@ -24,7 +28,9 @@ jQuery(document).ready(function($){
                     }
                 })
                 .always(function(){
-                    $spinner.removeClass('is-active');
+                    spinnerHideTimer = setTimeout(function(){
+                        $spinner.removeClass('is-active');
+                    }, 150);
                 });
         });
     }
