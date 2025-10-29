@@ -3,12 +3,16 @@ jQuery(document).ready(function($){
         $(selector).on('submit', function(e){
             e.preventDefault();
             var data = $(this).serialize();
-            $('#cpb-spinner').fadeIn();
-            $.post(cpbAjax.ajaxurl, data + '&action=' + action + '&_ajax_nonce=' + cpbAjax.nonce, function(response){
-                $('#cpb-spinner').fadeOut();
-                var $fb = $('#cpb-feedback');
-                $fb.hide().text(response.data.message).fadeIn();
-            });
+            var $spinner = $('#cpb-spinner');
+            $spinner.addClass('is-active');
+            $.post(cpbAjax.ajaxurl, data + '&action=' + action + '&_ajax_nonce=' + cpbAjax.nonce)
+                .done(function(response){
+                    var $fb = $('#cpb-feedback');
+                    $fb.hide().text(response.data.message).fadeIn();
+                })
+                .always(function(){
+                    $spinner.removeClass('is-active');
+                });
         });
     }
     handleForm('#cpb-create-form','cpb_save_main_entity');
@@ -58,13 +62,17 @@ jQuery(document).ready(function($){
         $('#cpb-entity-list').on('click','.cpb-delete',function(){
             var id=$(this).data('id');
             var $row=$(this).closest('.item');
-            $('#cpb-spinner').fadeIn();
-            $.post(cpbAjax.ajaxurl,{action:'cpb_delete_main_entity',id:id,_ajax_nonce:cpbAjax.nonce},function(resp){
-                $('#cpb-spinner').fadeOut();
-                if(resp.success){
-                    $row.remove();
-                }
-            });
+            var $spinner = $('#cpb-spinner');
+            $spinner.addClass('is-active');
+            $.post(cpbAjax.ajaxurl,{action:'cpb_delete_main_entity',id:id,_ajax_nonce:cpbAjax.nonce})
+                .done(function(resp){
+                    if(resp.success){
+                        $row.remove();
+                    }
+                })
+                .always(function(){
+                    $spinner.removeClass('is-active');
+                });
         });
     }
 
