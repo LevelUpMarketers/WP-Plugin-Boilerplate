@@ -29,3 +29,4 @@
 27. 2025-08-12: Moved the feedback container beside form submit buttons, keeping the spinner and status text inline without triggering layout shifts on save.
 28. 2025-08-12: Centered inline feedback controls with submit buttons and overlapped spinner fade-outs with status fade-ins for smoother confirmation cues.
 29. 2025-08-12: Documented the inline spinner-and-message layout as the standard pattern for all admin feedback areas.
+30. 2025-08-12: Added a Communications menu with an Email Templates accordion demo and placeholder notices for upcoming tabs.

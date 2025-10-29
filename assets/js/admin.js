@@ -100,6 +100,63 @@ jQuery(document).ready(function($){
         $(this).parent().toggleClass('open');
     });
 
+    function initCommunicationsAccordions(){
+        $('.cpb-accordion-group').each(function(){
+            var $group = $(this);
+
+            $group.find('.cpb-accordion__item').each(function(){
+                var $item = $(this);
+                var $panel = $item.find('.cpb-accordion__panel');
+
+                if ($item.hasClass('is-open')) {
+                    $item.find('.cpb-accordion__header').attr('aria-expanded', 'true');
+                    $panel.attr('aria-hidden', 'false').show();
+                } else {
+                    $item.find('.cpb-accordion__header').attr('aria-expanded', 'false');
+                    $panel.attr('aria-hidden', 'true').hide();
+                }
+            });
+
+            $group.on('click', '.cpb-accordion__header', function(e){
+                e.preventDefault();
+
+                var $button = $(this);
+                var $item = $button.closest('.cpb-accordion__item');
+                var panelId = $button.attr('aria-controls');
+                var $panel = $('#' + panelId);
+                var isOpen = $item.hasClass('is-open');
+
+                $group.find('.cpb-accordion__item').not($item).each(function(){
+                    var $openItem = $(this);
+
+                    if (!$openItem.hasClass('is-open')) {
+                        return;
+                    }
+
+                    var $openButton = $openItem.find('.cpb-accordion__header');
+                    var openPanelId = $openButton.attr('aria-controls');
+                    var $openPanel = $('#' + openPanelId);
+
+                    $openItem.removeClass('is-open');
+                    $openButton.attr('aria-expanded', 'false');
+                    $openPanel.stop(true, true).slideUp(200).attr('aria-hidden', 'true');
+                });
+
+                if (isOpen) {
+                    $item.removeClass('is-open');
+                    $button.attr('aria-expanded', 'false');
+                    $panel.stop(true, true).slideUp(200).attr('aria-hidden', 'true');
+                } else {
+                    $item.addClass('is-open');
+                    $button.attr('aria-expanded', 'true');
+                    $panel.stop(true, true).slideDown(200).attr('aria-hidden', 'false');
+                }
+            });
+        });
+    }
+
+    initCommunicationsAccordions();
+
     $(document).on('click','#cpb-add-item',function(){
         var count = $('#cpb-items-container .cpb-item-row').length + 1;
         var row = $('<div class="cpb-item-row" style="margin-bottom:8px; display:flex; align-items:center;"></div>');

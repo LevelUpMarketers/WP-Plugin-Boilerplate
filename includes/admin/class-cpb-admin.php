@@ -33,11 +33,206 @@ class CPB_Admin {
         );
 
         add_menu_page(
+            __( 'CPB Communications', 'codex-plugin-boilerplate' ),
+            __( 'CPB Communications', 'codex-plugin-boilerplate' ),
+            'manage_options',
+            'cpb-communications',
+            array( $this, 'render_communications_page' )
+        );
+
+        add_menu_page(
             __( 'CPB Logs', 'codex-plugin-boilerplate' ),
             __( 'CPB Logs', 'codex-plugin-boilerplate' ),
             'manage_options',
             'cpb-logs',
             array( $this, 'render_logs_page' )
+        );
+    }
+
+    public function render_communications_page() {
+        $tabs = array(
+            'email-templates' => __( 'Email Templates', 'codex-plugin-boilerplate' ),
+            'email-logs'      => __( 'Email Logs', 'codex-plugin-boilerplate' ),
+            'sms-templates'   => __( 'SMS Templates', 'codex-plugin-boilerplate' ),
+            'sms-logs'        => __( 'SMS Logs', 'codex-plugin-boilerplate' ),
+        );
+
+        $active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'email-templates';
+
+        if ( ! array_key_exists( $active_tab, $tabs ) ) {
+            $active_tab = 'email-templates';
+        }
+
+        echo '<div class="wrap"><h1>' . esc_html__( 'CPB Communications', 'codex-plugin-boilerplate' ) . '</h1>';
+        echo '<h2 class="nav-tab-wrapper">';
+
+        foreach ( $tabs as $tab_slug => $label ) {
+            $classes = array( 'nav-tab' );
+
+            if ( $tab_slug === $active_tab ) {
+                $classes[] = 'nav-tab-active';
+            }
+
+            printf(
+                '<a href="%1$s" class="%2$s">%3$s</a>',
+                esc_url( add_query_arg( array( 'page' => 'cpb-communications', 'tab' => $tab_slug ), admin_url( 'admin.php' ) ) ),
+                esc_attr( implode( ' ', $classes ) ),
+                esc_html( $label )
+            );
+        }
+
+        echo '</h2>';
+
+        $this->top_message_center();
+
+        if ( 'email-templates' === $active_tab ) {
+            $this->render_email_templates_tab();
+        } elseif ( 'email-logs' === $active_tab ) {
+            $this->render_communications_placeholder_tab(
+                __( 'Email history tooling is coming soon.', 'codex-plugin-boilerplate' )
+            );
+        } elseif ( 'sms-templates' === $active_tab ) {
+            $this->render_communications_placeholder_tab(
+                __( 'SMS template management is coming soon.', 'codex-plugin-boilerplate' )
+            );
+        } else {
+            $this->render_communications_placeholder_tab(
+                __( 'SMS log history is coming soon.', 'codex-plugin-boilerplate' )
+            );
+        }
+
+        $this->bottom_message_center();
+        echo '</div>';
+    }
+
+    private function render_email_templates_tab() {
+        $templates    = $this->get_sample_email_templates();
+        $meta_labels  = array(
+            'trigger'             => __( 'Trigger', 'codex-plugin-boilerplate' ),
+            'communication_type'  => __( 'Communication Type', 'codex-plugin-boilerplate' ),
+            'category'            => __( 'Category', 'codex-plugin-boilerplate' ),
+        );
+
+        echo '<div class="cpb-communications">';
+        echo '<p class="description">' . esc_html__( 'Review placeholder email templates that demonstrate how communications can be grouped for future automation requests.', 'codex-plugin-boilerplate' ) . '</p>';
+        echo '<div class="cpb-accordion-group" data-cpb-accordion-group="communications">';
+
+        foreach ( $templates as $template ) {
+            $item_id    = sanitize_html_class( $template['id'] );
+            $panel_id   = $item_id . '-panel';
+            $header_id  = $item_id . '-header';
+            $tooltip    = isset( $template['tooltip'] ) ? $template['tooltip'] : '';
+            $meta_items = isset( $template['meta'] ) ? $template['meta'] : array();
+
+            echo '<div class="cpb-accordion__item">';
+            printf(
+                '<button type="button" id="%1$s" class="cpb-accordion__header" aria-expanded="false" aria-controls="%2$s">',
+                esc_attr( $header_id ),
+                esc_attr( $panel_id )
+            );
+
+            echo '<span class="cpb-accordion__summary">';
+            echo '<span class="cpb-accordion__primary">';
+
+            if ( $tooltip ) {
+                printf(
+                    '<span class="dashicons dashicons-info cpb-tooltip-icon" aria-hidden="true" data-tooltip="%1$s"></span><span class="screen-reader-text">%2$s</span>',
+                    esc_attr( $tooltip ),
+                    esc_html( $tooltip )
+                );
+            }
+
+            echo '<span class="cpb-accordion__title">' . esc_html( $template['title'] ) . '</span>';
+            echo '</span>';
+
+            if ( ! empty( $meta_items ) ) {
+                echo '<span class="cpb-accordion__meta">';
+
+                foreach ( $meta_items as $meta_key => $meta_value ) {
+                    if ( empty( $meta_value ) || ! isset( $meta_labels[ $meta_key ] ) ) {
+                        continue;
+                    }
+
+                    printf(
+                        '<span class="cpb-accordion__meta-item"><span class="cpb-accordion__meta-label">%1$s:</span> %2$s</span>',
+                        esc_html( $meta_labels[ $meta_key ] ),
+                        esc_html( $meta_value )
+                    );
+                }
+
+                echo '</span>';
+            }
+
+            echo '</span>';
+            echo '<span class="dashicons dashicons-arrow-down-alt2 cpb-accordion__icon" aria-hidden="true"></span>';
+            echo '</button>';
+
+            printf(
+                '<div id="%1$s" class="cpb-accordion__panel" role="region" aria-labelledby="%2$s" aria-hidden="true">',
+                esc_attr( $panel_id ),
+                esc_attr( $header_id )
+            );
+            echo '<p>' . esc_html( $template['content'] ) . '</p>';
+            echo '</div>';
+            echo '</div>';
+        }
+
+        echo '</div>';
+        echo '</div>';
+    }
+
+    private function render_communications_placeholder_tab( $message ) {
+        echo '<div class="cpb-communications cpb-communications--placeholder">';
+        echo '<p>' . esc_html( $message ) . '</p>';
+        echo '</div>';
+    }
+
+    private function get_sample_email_templates() {
+        return array(
+            array(
+                'id'       => 'cpb-email-welcome',
+                'title'    => __( 'Welcome Aboard', 'codex-plugin-boilerplate' ),
+                'tooltip'  => __( 'Sent after a customer signs up to introduce key onboarding steps.', 'codex-plugin-boilerplate' ),
+                'meta'     => array(
+                    'trigger'            => __( 'New registration', 'codex-plugin-boilerplate' ),
+                    'communication_type' => __( 'External', 'codex-plugin-boilerplate' ),
+                    'category'           => __( 'Onboarding', 'codex-plugin-boilerplate' ),
+                ),
+                'content'  => __( 'Test text', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'id'       => 'cpb-email-follow-up',
+                'title'    => __( 'Consultation Follow Up', 'codex-plugin-boilerplate' ),
+                'tooltip'  => __( 'Delivers recap notes and next steps after a discovery call wraps up.', 'codex-plugin-boilerplate' ),
+                'meta'     => array(
+                    'trigger'            => __( 'Completed consultation', 'codex-plugin-boilerplate' ),
+                    'communication_type' => __( 'External', 'codex-plugin-boilerplate' ),
+                    'category'           => __( 'Sales Enablement', 'codex-plugin-boilerplate' ),
+                ),
+                'content'  => __( 'Test text', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'id'       => 'cpb-email-renewal',
+                'title'    => __( 'Membership Renewal Reminder', 'codex-plugin-boilerplate' ),
+                'tooltip'  => __( 'Warns members that their plan expires soon and outlines renewal options.', 'codex-plugin-boilerplate' ),
+                'meta'     => array(
+                    'trigger'            => __( 'Approaching renewal date', 'codex-plugin-boilerplate' ),
+                    'communication_type' => __( 'External', 'codex-plugin-boilerplate' ),
+                    'category'           => __( 'Retention', 'codex-plugin-boilerplate' ),
+                ),
+                'content'  => __( 'Test text', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'id'       => 'cpb-email-alert',
+                'title'    => __( 'Internal Alert: Payment Review', 'codex-plugin-boilerplate' ),
+                'tooltip'  => __( 'Flags the support team when a payment requires manual approval.', 'codex-plugin-boilerplate' ),
+                'meta'     => array(
+                    'trigger'            => __( 'Payment pending review', 'codex-plugin-boilerplate' ),
+                    'communication_type' => __( 'Internal', 'codex-plugin-boilerplate' ),
+                    'category'           => __( 'Operations', 'codex-plugin-boilerplate' ),
+                ),
+                'content'  => __( 'Test text', 'codex-plugin-boilerplate' ),
+            ),
         );
     }
 

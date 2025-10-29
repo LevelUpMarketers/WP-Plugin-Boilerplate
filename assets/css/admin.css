@@ -227,6 +227,117 @@
     background: #fafafa;
 }
 
+.cpb-communications {
+    margin-top: 24px;
+}
+
+.cpb-communications .description {
+    margin-bottom: 16px;
+}
+
+.cpb-accordion-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cpb-accordion__item {
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    background: #fff;
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.cpb-accordion__item.is-open {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.cpb-accordion__header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    padding: 18px 20px;
+    font-size: 15px;
+    line-height: 1.4;
+    text-align: left;
+    color: inherit;
+}
+
+.cpb-accordion__header:focus {
+    outline: 2px solid #2271b1;
+    outline-offset: 2px;
+}
+
+.cpb-accordion__summary {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 16px;
+}
+
+.cpb-accordion__primary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cpb-accordion__title {
+    font-weight: 600;
+}
+
+.cpb-accordion__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 13px;
+    color: #50575e;
+}
+
+.cpb-accordion__meta-item {
+    display: flex;
+    gap: 4px;
+    align-items: baseline;
+}
+
+.cpb-accordion__meta-label {
+    font-weight: 600;
+    color: #2c3338;
+}
+
+.cpb-accordion__icon {
+    font-size: 18px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.cpb-accordion__item.is-open .cpb-accordion__icon {
+    transform: rotate(-180deg);
+}
+
+.cpb-accordion__panel {
+    display: none;
+    padding: 20px;
+    border-top: 1px solid #dcdcde;
+    background: #f6f7f7;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.cpb-accordion__item.is-open .cpb-accordion__panel {
+    display: block;
+}
+
+.cpb-communications--placeholder {
+    margin-top: 24px;
+    padding: 24px;
+    border: 1px dashed #c3c4c7;
+    background: #fff;
+}
+
 .cpb-flex-form {
     display: flex;
     flex-wrap: wrap;
