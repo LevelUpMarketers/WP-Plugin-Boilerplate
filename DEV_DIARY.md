@@ -37,3 +37,4 @@
 35. 2025-08-12: Rebuilt the Communications email accordion into a table-based layout with aligned columns and row toggles that mirror WordPress list tables.
 36. 2025-08-12: Lightened the first communications template header and added visual separators between accordion rows for improved scanning.
 37. 2025-08-12: Removed the communications row focus outline and allowed accordion groups to overflow so tooltips remain fully visible.
+38. 2025-08-12: Enlarged tooltip text styling and standardized a reusable title-and-description intro across every admin tab.

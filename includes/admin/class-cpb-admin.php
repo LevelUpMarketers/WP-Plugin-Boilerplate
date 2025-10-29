@@ -85,6 +85,17 @@ class CPB_Admin {
 
         $this->top_message_center();
 
+        $tab_descriptions = array(
+            'email-templates' => __( 'Review placeholder email templates that demonstrate how communications can be grouped for future automation requests.', 'codex-plugin-boilerplate' ),
+            'email-logs'      => __( 'Monitor outgoing email history and export records once log tooling is connected.', 'codex-plugin-boilerplate' ),
+            'sms-templates'   => __( 'Prepare SMS templates that mirror your email workflows so every touchpoint stays consistent.', 'codex-plugin-boilerplate' ),
+            'sms-logs'        => __( 'Audit sent SMS messages and spot delivery issues as soon as log data becomes available.', 'codex-plugin-boilerplate' ),
+        );
+
+        $description = isset( $tab_descriptions[ $active_tab ] ) ? $tab_descriptions[ $active_tab ] : '';
+
+        $this->render_tab_intro( $tabs[ $active_tab ], $description );
+
         if ( 'email-templates' === $active_tab ) {
             $this->render_email_templates_tab();
         } elseif ( 'email-logs' === $active_tab ) {
@@ -116,7 +127,6 @@ class CPB_Admin {
         $column_count = count( $meta_order ) + 2; // Title and actions columns.
 
         echo '<div class="cpb-communications">';
-        echo '<p class="description">' . esc_html__( 'Review placeholder email templates that demonstrate how communications can be grouped for future automation requests.', 'codex-plugin-boilerplate' ) . '</p>';
         echo '<div class="cpb-accordion-group cpb-accordion-group--table" data-cpb-accordion-group="communications">';
         echo '<table class="wp-list-table widefat striped cpb-accordion-table">';
         echo '<thead>';
@@ -422,6 +432,24 @@ class CPB_Admin {
         echo '</div>';
     }
 
+    private function render_tab_intro( $title, $description ) {
+        if ( empty( $title ) && empty( $description ) ) {
+            return;
+        }
+
+        echo '<div class="cpb-tab-intro">';
+
+        if ( $title ) {
+            echo '<h2 class="cpb-tab-intro__title">' . esc_html( $title ) . '</h2>';
+        }
+
+        if ( $description ) {
+            echo '<p class="cpb-tab-intro__description">' . esc_html( $description ) . '</p>';
+        }
+
+        echo '</div>';
+    }
+
     public function render_main_entity_page() {
         $active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( $_GET['tab'] ) : 'create';
         echo '<div class="wrap"><h1>' . esc_html__( 'CPB Main Entity', 'codex-plugin-boilerplate' ) . '</h1>';
@@ -430,6 +458,21 @@ class CPB_Admin {
         echo '<a href="?page=cpb-main-entity&tab=edit" class="nav-tab ' . ( 'edit' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Edit Main Entity', 'codex-plugin-boilerplate' ) . '</a>';
         echo '</h2>';
         $this->top_message_center();
+
+        $tab_titles = array(
+            'create' => __( 'Create a Main Entity', 'codex-plugin-boilerplate' ),
+            'edit'   => __( 'Edit Main Entity', 'codex-plugin-boilerplate' ),
+        );
+
+        $tab_descriptions = array(
+            'create' => __( 'Build a new main entity record by completing the placeholder fields and saving your changes.', 'codex-plugin-boilerplate' ),
+            'edit'   => __( 'Review saved entities to confirm their data, trigger edits, or remove records you no longer need.', 'codex-plugin-boilerplate' ),
+        );
+
+        $title       = isset( $tab_titles[ $active_tab ] ) ? $tab_titles[ $active_tab ] : '';
+        $description = isset( $tab_descriptions[ $active_tab ] ) ? $tab_descriptions[ $active_tab ] : '';
+
+        $this->render_tab_intro( $title, $description );
 
         if ( 'edit' === $active_tab ) {
             $this->render_edit_tab();
@@ -774,6 +817,23 @@ class CPB_Admin {
         echo '</h2>';
         $this->top_message_center();
 
+        $tab_titles = array(
+            'general' => __( 'General Settings', 'codex-plugin-boilerplate' ),
+            'style'   => __( 'Style Settings', 'codex-plugin-boilerplate' ),
+            'cron'    => __( 'Cron Jobs', 'codex-plugin-boilerplate' ),
+        );
+
+        $tab_descriptions = array(
+            'general' => __( 'Adjust the baseline configuration values that control how Codex Plugin Boilerplate behaves across your site.', 'codex-plugin-boilerplate' ),
+            'style'   => __( 'Apply design tweaks and CSS overrides to align the boilerplate output with your brand guidelines.', 'codex-plugin-boilerplate' ),
+            'cron'    => __( 'Review and manage every scheduled cron event created by Codex Plugin Boilerplate, including running or deleting hooks on demand.', 'codex-plugin-boilerplate' ),
+        );
+
+        $title       = isset( $tab_titles[ $active_tab ] ) ? $tab_titles[ $active_tab ] : '';
+        $description = isset( $tab_descriptions[ $active_tab ] ) ? $tab_descriptions[ $active_tab ] : '';
+
+        $this->render_tab_intro( $title, $description );
+
         if ( 'style' === $active_tab ) {
             $this->render_style_settings_tab();
         } elseif ( 'cron' === $active_tab ) {
@@ -872,8 +932,6 @@ class CPB_Admin {
                 'type'      => 'list',
             )
         );
-
-        echo '<p>' . esc_html__( 'Review and manage every scheduled cron event created by Codex Plugin Boilerplate. Each row is populated automatically from events that use the cpb_ hook prefix.', 'codex-plugin-boilerplate' ) . '</p>';
 
         if ( $pagination ) {
             echo '<div class="tablenav"><div class="tablenav-pages">' . wp_kses_post( $pagination ) . '</div></div>';
@@ -1060,6 +1118,19 @@ class CPB_Admin {
         echo '<a href="?page=cpb-logs&tab=generated_content" class="nav-tab ' . ( 'generated_content' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Generated Content', 'codex-plugin-boilerplate' ) . '</a>';
         echo '</h2>';
         $this->top_message_center();
+
+        $tab_titles = array(
+            'generated_content' => __( 'Generated Content', 'codex-plugin-boilerplate' ),
+        );
+
+        $tab_descriptions = array(
+            'generated_content' => __( 'Inspect saved content entries and jump to editing, viewing, or deleting items created by the logger.', 'codex-plugin-boilerplate' ),
+        );
+
+        $title       = isset( $tab_titles[ $active_tab ] ) ? $tab_titles[ $active_tab ] : '';
+        $description = isset( $tab_descriptions[ $active_tab ] ) ? $tab_descriptions[ $active_tab ] : '';
+
+        $this->render_tab_intro( $title, $description );
 
         if ( 'generated_content' === $active_tab ) {
             $this->render_generated_content_log();

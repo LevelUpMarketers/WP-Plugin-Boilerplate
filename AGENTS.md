@@ -24,3 +24,4 @@ Welcome to the Codex Plugin Boilerplate repository.
 - Align all backend feedback/status areas with the current inline spinner + message pattern that sits beside action buttons to prevent layout shifts.
 - The Communications page currently ships with sample accordion data—remove these demos and supply real templates before shipping to clients or WordPress.org.
 - Reuse the Communications accordion pattern whenever you need expandable admin sections; mirror the current list-table layout, keep tooltip-ready descriptions, and retain the rotating indicator arrow.
+- Every admin tab should include the standardized title-and-description block (see `render_tab_intro()`), placed after `.cpb-top-message` and before tab-specific content.
