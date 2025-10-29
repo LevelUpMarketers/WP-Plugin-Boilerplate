@@ -869,6 +869,8 @@ class CPB_Admin {
     }
 
     private function render_cron_jobs_tab() {
+        echo '<div class="cpb-cron-tab">';
+
         $messages = array(
             'deleted'       => array(
                 'type'    => 'success',
@@ -1020,6 +1022,8 @@ class CPB_Admin {
         if ( $pagination ) {
             echo '<div class="tablenav"><div class="tablenav-pages">' . wp_kses_post( $pagination ) . '</div></div>';
         }
+
+        echo '</div>';
     }
 
     private function decode_cron_args( $encoded ) {

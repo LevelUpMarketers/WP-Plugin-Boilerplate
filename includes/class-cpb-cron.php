@@ -14,17 +14,110 @@ class CPB_Cron_Manager {
      * Bootstraps the cron manager.
      */
     public function register() {
-        add_action( 'init', array( $this, 'ensure_demo_event_scheduled' ) );
+        add_action( 'init', array( $this, 'maintain_demo_event' ) );
         add_action( self::DEMO_HOOK, array( $this, 'handle_demo_event' ) );
     }
 
     /**
-     * Ensures the demo cron event remains scheduled.
+     * Ensures the demo cron event remains scheduled without duplicating entries.
      */
-    public function ensure_demo_event_scheduled() {
-        if ( ! wp_next_scheduled( self::DEMO_HOOK ) ) {
-            wp_schedule_event( time() + HOUR_IN_SECONDS, 'hourly', self::DEMO_HOOK, array( 'demo' => true ) );
+    public function maintain_demo_event() {
+        $args = array( 'demo' => true );
+
+        $has_valid_event = $this->prune_demo_event_duplicates( $args );
+
+        if ( function_exists( 'wp_get_scheduled_event' ) ) {
+            $event = wp_get_scheduled_event( self::DEMO_HOOK, $args );
+
+            if ( $event && ! empty( $event->schedule ) ) {
+                wp_unschedule_event( $event->timestamp, self::DEMO_HOOK, $args );
+                $event           = false;
+                $has_valid_event = false;
+            } else {
+                $has_valid_event = (bool) $event;
+            }
         }
+
+        if ( ! $has_valid_event ) {
+            $this->schedule_demo_event( $args );
+        }
+    }
+
+    /**
+     * Removes duplicate demo events so only one sample cron remains.
+     *
+     * @param array $args Demo event arguments.
+     *
+     * @return bool Whether a valid demo event remains scheduled.
+     */
+    private function prune_demo_event_duplicates( $args ) {
+        $cron_array = _get_cron_array();
+
+        if ( empty( $cron_array ) || ! is_array( $cron_array ) ) {
+            return false;
+        }
+
+        $events = array();
+
+        foreach ( $cron_array as $timestamp => $hooks ) {
+            if ( empty( $hooks[ self::DEMO_HOOK ] ) ) {
+                continue;
+            }
+
+            foreach ( $hooks[ self::DEMO_HOOK ] as $instance ) {
+                $event_args = isset( $instance['args'] ) ? (array) $instance['args'] : array();
+
+                $events[] = array(
+                    'timestamp' => (int) $timestamp,
+                    'args'      => $event_args,
+                    'schedule'  => isset( $instance['schedule'] ) ? $instance['schedule'] : '',
+                );
+            }
+        }
+
+        if ( empty( $events ) ) {
+            return false;
+        }
+
+        usort(
+            $events,
+            function ( $a, $b ) {
+                if ( $a['timestamp'] === $b['timestamp'] ) {
+                    return 0;
+                }
+
+                return ( $a['timestamp'] < $b['timestamp'] ) ? -1 : 1;
+            }
+        );
+
+        $keep = array_shift( $events );
+
+        foreach ( $events as $event ) {
+            wp_unschedule_event( $event['timestamp'], self::DEMO_HOOK, $event['args'] );
+        }
+
+        $has_valid_event = true;
+
+        if ( $keep['timestamp'] < time() ) {
+            wp_unschedule_event( $keep['timestamp'], self::DEMO_HOOK, $keep['args'] );
+            $has_valid_event = false;
+        } elseif ( ! empty( $keep['schedule'] ) ) {
+            wp_unschedule_event( $keep['timestamp'], self::DEMO_HOOK, $keep['args'] );
+            $has_valid_event = false;
+        }
+
+        return $has_valid_event;
+    }
+
+    /**
+     * Schedules the demo event approximately six months in the future.
+     *
+     * @param array $args Demo event arguments.
+     */
+    private function schedule_demo_event( $args ) {
+        $timestamp = time() + ( 6 * MONTH_IN_SECONDS );
+
+        wp_schedule_single_event( $timestamp, self::DEMO_HOOK, $args );
     }
 
     /**
