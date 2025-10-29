@@ -267,6 +267,20 @@
     vertical-align: middle;
 }
 
+.cpb-accordion__summary-row > .cpb-accordion__cell {
+    border-bottom: 1px solid #dcdcde;
+    background-color: #fff;
+}
+
+.cpb-accordion__summary-row:not(:first-of-type) > .cpb-accordion__cell {
+    border-top: 10px solid #f6f7f7;
+}
+
+#cpb-email-welcome-header,
+#cpb-email-welcome-header .cpb-accordion__cell {
+    background-color: #ffffff;
+}
+
 .cpb-accordion__summary-row {
     cursor: pointer;
     transition: background-color 0.2s ease-in-out;
@@ -337,7 +351,12 @@
 .cpb-accordion__panel-row td {
     padding: 0;
     border-top: 1px solid #dcdcde;
+    border-bottom: 1px solid #dcdcde;
     background: #f6f7f7;
+}
+
+.cpb-accordion__panel-row + .cpb-accordion__summary-row > .cpb-accordion__cell {
+    border-top: 10px solid #f6f7f7;
 }
 
 .cpb-accordion__panel {
