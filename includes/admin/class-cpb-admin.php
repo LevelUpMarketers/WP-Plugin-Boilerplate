@@ -106,16 +106,39 @@ class CPB_Admin {
     }
 
     private function render_email_templates_tab() {
-        $templates    = $this->get_sample_email_templates();
-        $meta_labels  = array(
+        $templates   = $this->get_sample_email_templates();
+        $meta_labels = array(
             'trigger'             => __( 'Trigger', 'codex-plugin-boilerplate' ),
             'communication_type'  => __( 'Communication Type', 'codex-plugin-boilerplate' ),
             'category'            => __( 'Category', 'codex-plugin-boilerplate' ),
         );
+        $meta_order  = array( 'trigger', 'communication_type', 'category' );
+        $column_count = count( $meta_order ) + 2; // Title and actions columns.
 
         echo '<div class="cpb-communications">';
         echo '<p class="description">' . esc_html__( 'Review placeholder email templates that demonstrate how communications can be grouped for future automation requests.', 'codex-plugin-boilerplate' ) . '</p>';
-        echo '<div class="cpb-accordion-group" data-cpb-accordion-group="communications">';
+        echo '<div class="cpb-accordion-group cpb-accordion-group--table" data-cpb-accordion-group="communications">';
+        echo '<table class="wp-list-table widefat striped cpb-accordion-table">';
+        echo '<thead>';
+        echo '<tr>';
+        echo '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--title">' . esc_html__( 'Communication Name', 'codex-plugin-boilerplate' ) . '</th>';
+
+        foreach ( $meta_order as $meta_key ) {
+            if ( ! isset( $meta_labels[ $meta_key ] ) ) {
+                continue;
+            }
+
+            printf(
+                '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--%1$s">%2$s</th>',
+                esc_attr( $meta_key ),
+                esc_html( $meta_labels[ $meta_key ] )
+            );
+        }
+
+        echo '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--actions">' . esc_html__( 'Actions', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '</tr>';
+        echo '</thead>';
+        echo '<tbody>';
 
         foreach ( $templates as $template ) {
             $item_id    = sanitize_html_class( $template['id'] );
@@ -124,15 +147,13 @@ class CPB_Admin {
             $tooltip    = isset( $template['tooltip'] ) ? $template['tooltip'] : '';
             $meta_items = isset( $template['meta'] ) ? $template['meta'] : array();
 
-            echo '<div class="cpb-accordion__item">';
             printf(
-                '<button type="button" id="%1$s" class="cpb-accordion__header" aria-expanded="false" aria-controls="%2$s">',
+                '<tr id="%1$s" class="cpb-accordion__summary-row" tabindex="0" role="button" aria-expanded="false" aria-controls="%2$s">',
                 esc_attr( $header_id ),
                 esc_attr( $panel_id )
             );
 
-            echo '<span class="cpb-accordion__summary">';
-            echo '<span class="cpb-accordion__primary">';
+            echo '<td class="cpb-accordion__cell cpb-accordion__cell--title">';
 
             if ( $tooltip ) {
                 printf(
@@ -142,41 +163,50 @@ class CPB_Admin {
                 );
             }
 
-            echo '<span class="cpb-accordion__title">' . esc_html( $template['title'] ) . '</span>';
-            echo '</span>';
+            echo '<span class="cpb-accordion__title-text">' . esc_html( $template['title'] ) . '</span>';
+            echo '</td>';
 
-            if ( ! empty( $meta_items ) ) {
-                echo '<span class="cpb-accordion__meta">';
+            foreach ( $meta_order as $meta_key ) {
+                $label      = isset( $meta_labels[ $meta_key ] ) ? $meta_labels[ $meta_key ] : '';
+                $meta_value = isset( $meta_items[ $meta_key ] ) ? $meta_items[ $meta_key ] : '';
 
-                foreach ( $meta_items as $meta_key => $meta_value ) {
-                    if ( empty( $meta_value ) || ! isset( $meta_labels[ $meta_key ] ) ) {
-                        continue;
-                    }
+                echo '<td class="cpb-accordion__cell cpb-accordion__cell--meta">';
 
+                if ( $label ) {
                     printf(
-                        '<span class="cpb-accordion__meta-item"><span class="cpb-accordion__meta-label">%1$s:</span><span class="cpb-accordion__meta-value">%2$s</span></span>',
-                        esc_html( $meta_labels[ $meta_key ] ),
-                        esc_html( $meta_value )
+                        '<span class="cpb-accordion__meta-text"><span class="cpb-accordion__meta-label">%1$s:</span> <span class="cpb-accordion__meta-value">%2$s</span></span>',
+                        esc_html( $label ),
+                        $meta_value ? esc_html( $meta_value ) : '&mdash;'
                     );
                 }
 
-                echo '</span>';
+                echo '</td>';
             }
 
-            echo '</span>';
+            echo '<td class="cpb-accordion__cell cpb-accordion__cell--actions">';
             echo '<span class="dashicons dashicons-arrow-down-alt2 cpb-accordion__icon" aria-hidden="true"></span>';
-            echo '</button>';
+            echo '<span class="screen-reader-text">' . esc_html__( 'Toggle template details', 'codex-plugin-boilerplate' ) . '</span>';
+            echo '</td>';
+            echo '</tr>';
 
             printf(
-                '<div id="%1$s" class="cpb-accordion__panel" role="region" aria-labelledby="%2$s" aria-hidden="true">',
+                '<tr id="%1$s" class="cpb-accordion__panel-row" role="region" aria-labelledby="%2$s" aria-hidden="true">',
                 esc_attr( $panel_id ),
                 esc_attr( $header_id )
             );
+            printf(
+                '<td colspan="%1$d">',
+                absint( $column_count )
+            );
+            echo '<div class="cpb-accordion__panel">';
             echo '<p>' . esc_html( $template['content'] ) . '</p>';
             echo '</div>';
-            echo '</div>';
+            echo '</td>';
+            echo '</tr>';
         }
 
+        echo '</tbody>';
+        echo '</table>';
         echo '</div>';
         echo '</div>';
     }

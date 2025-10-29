@@ -101,55 +101,79 @@ jQuery(document).ready(function($){
     });
 
     function initCommunicationsAccordions(){
-        $('.cpb-accordion-group').each(function(){
+        $('[data-cpb-accordion-group="communications"]').each(function(){
             var $group = $(this);
 
-            $group.find('.cpb-accordion__item').each(function(){
-                var $item = $(this);
-                var $panel = $item.find('.cpb-accordion__panel');
-
-                if ($item.hasClass('is-open')) {
-                    $item.find('.cpb-accordion__header').attr('aria-expanded', 'true');
-                    $panel.attr('aria-hidden', 'false').show();
-                } else {
-                    $item.find('.cpb-accordion__header').attr('aria-expanded', 'false');
-                    $panel.attr('aria-hidden', 'true').hide();
+            function closeRow($summary, $panelRow){
+                if (!$summary.length || !$panelRow.length) {
+                    return;
                 }
-            });
 
-            $group.on('click', '.cpb-accordion__header', function(e){
-                e.preventDefault();
+                $summary.removeClass('is-open').attr('aria-expanded', 'false');
 
-                var $button = $(this);
-                var $item = $button.closest('.cpb-accordion__item');
-                var panelId = $button.attr('aria-controls');
-                var $panel = $('#' + panelId);
-                var isOpen = $item.hasClass('is-open');
+                var $panel = $panelRow.find('.cpb-accordion__panel');
 
-                $group.find('.cpb-accordion__item').not($item).each(function(){
-                    var $openItem = $(this);
-
-                    if (!$openItem.hasClass('is-open')) {
-                        return;
-                    }
-
-                    var $openButton = $openItem.find('.cpb-accordion__header');
-                    var openPanelId = $openButton.attr('aria-controls');
-                    var $openPanel = $('#' + openPanelId);
-
-                    $openItem.removeClass('is-open');
-                    $openButton.attr('aria-expanded', 'false');
-                    $openPanel.stop(true, true).slideUp(200).attr('aria-hidden', 'true');
+                $panel.stop(true, true).slideUp(200, function(){
+                    $panelRow.hide();
                 });
 
-                if (isOpen) {
-                    $item.removeClass('is-open');
-                    $button.attr('aria-expanded', 'false');
-                    $panel.stop(true, true).slideUp(200).attr('aria-hidden', 'true');
-                } else {
-                    $item.addClass('is-open');
-                    $button.attr('aria-expanded', 'true');
-                    $panel.stop(true, true).slideDown(200).attr('aria-hidden', 'false');
+                $panelRow.attr('aria-hidden', 'true');
+            }
+
+            $group.find('.cpb-accordion__summary-row').each(function(){
+                var $summary = $(this);
+                var panelId = $summary.attr('aria-controls');
+                var $panelRow = $('#' + panelId);
+
+                if (!$panelRow.length) {
+                    return;
+                }
+
+                $summary.removeClass('is-open').attr('aria-expanded', 'false');
+                $panelRow.hide().attr('aria-hidden', 'true');
+                $panelRow.find('.cpb-accordion__panel').hide();
+            });
+
+            function toggleRow($summary){
+                var panelId = $summary.attr('aria-controls');
+                var $panelRow = $('#' + panelId);
+
+                if (!$panelRow.length) {
+                    return;
+                }
+
+                if ($summary.hasClass('is-open')) {
+                    closeRow($summary, $panelRow);
+                    return;
+                }
+
+                $group.find('.cpb-accordion__summary-row.is-open').each(function(){
+                    var $openSummary = $(this);
+                    var openPanelId = $openSummary.attr('aria-controls');
+                    var $openPanelRow = $('#' + openPanelId);
+
+                    closeRow($openSummary, $openPanelRow);
+                });
+
+                $summary.addClass('is-open').attr('aria-expanded', 'true');
+                $panelRow.show().attr('aria-hidden', 'false');
+                $panelRow.find('.cpb-accordion__panel').stop(true, true).slideDown(200);
+            }
+
+            $group.on('click', '.cpb-accordion__summary-row', function(e){
+                if ($(e.target).closest('a, button, input, textarea, select, label').length) {
+                    return;
+                }
+
+                toggleRow($(this));
+            });
+
+            $group.on('keydown', '.cpb-accordion__summary-row', function(e){
+                var key = e.key || e.keyCode;
+
+                if (key === 'Enter' || key === ' ' || key === 13 || key === 32) {
+                    e.preventDefault();
+                    toggleRow($(this));
                 }
             });
         });

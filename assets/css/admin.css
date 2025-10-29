@@ -236,88 +236,89 @@
 }
 
 .cpb-accordion-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    margin-top: 0;
 }
 
-.cpb-accordion__item {
+.cpb-accordion-group--table {
     border: 1px solid #dcdcde;
     border-radius: 4px;
-    background: #fff;
-    transition: box-shadow 0.2s ease-in-out;
+    overflow: hidden;
 }
 
-.cpb-accordion__item.is-open {
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-}
-
-.cpb-accordion__header {
+.cpb-accordion-table {
     width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    border: 0;
-    background: none;
-    cursor: pointer;
-    padding: 18px 20px;
-    font-size: 15px;
-    line-height: 1.4;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.cpb-accordion-table thead th {
+    background: #f6f7f7;
+    font-weight: 600;
+    padding: 12px 16px;
     text-align: left;
-    color: inherit;
 }
 
-.cpb-accordion__header:focus {
+.cpb-accordion__heading--actions {
+    text-align: right;
+}
+
+.cpb-accordion-table tbody td {
+    padding: 14px 16px;
+    vertical-align: middle;
+}
+
+.cpb-accordion__summary-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.cpb-accordion__summary-row:focus {
     outline: 2px solid #2271b1;
-    outline-offset: 2px;
+    outline-offset: -2px;
 }
 
-.cpb-accordion__summary {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    gap: 16px;
+.cpb-accordion__summary-row.is-open,
+.cpb-accordion__summary-row:hover {
+    background-color: #f0f6fc;
 }
 
-.cpb-accordion__primary {
+.cpb-accordion__cell--title {
+    font-weight: 600;
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.cpb-accordion__title {
-    font-weight: 600;
-    flex: 0 0 100px;
-    width: 100px;
+.cpb-accordion__title-text {
+    display: inline-block;
+    min-width: 0;
 }
 
-.cpb-accordion__meta {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
+.cpb-accordion__cell--meta {
     font-size: 13px;
     color: #50575e;
 }
 
-.cpb-accordion__meta-item {
-    display: flex;
-    align-items: baseline;
-    gap: 0;
-    min-width: 0;
+.cpb-accordion__meta-text {
+    display: inline;
 }
 
 .cpb-accordion__meta-label {
     font-weight: 600;
     color: #2c3338;
-    margin-right: 4px;
-    white-space: nowrap;
+}
+
+.cpb-accordion__meta-label::after {
+    content: '\00a0';
 }
 
 .cpb-accordion__meta-value {
-    flex: 1 1 auto;
-    min-width: 0;
     word-break: break-word;
+}
+
+.cpb-accordion__cell--actions {
+    width: 90px;
+    text-align: right;
 }
 
 .cpb-accordion__icon {
@@ -325,21 +326,25 @@
     transition: transform 0.2s ease-in-out;
 }
 
-.cpb-accordion__item.is-open .cpb-accordion__icon {
+.cpb-accordion__summary-row.is-open .cpb-accordion__icon {
     transform: rotate(-180deg);
+}
+
+.cpb-accordion__panel-row {
+    display: none;
+}
+
+.cpb-accordion__panel-row td {
+    padding: 0;
+    border-top: 1px solid #dcdcde;
+    background: #f6f7f7;
 }
 
 .cpb-accordion__panel {
     display: none;
     padding: 20px;
-    border-top: 1px solid #dcdcde;
-    background: #f6f7f7;
     font-size: 14px;
     line-height: 1.6;
-}
-
-.cpb-accordion__item.is-open .cpb-accordion__panel {
-    display: block;
 }
 
 .cpb-communications--placeholder {
