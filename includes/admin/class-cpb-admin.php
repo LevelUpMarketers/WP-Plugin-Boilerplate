@@ -154,7 +154,7 @@ class CPB_Admin {
                     }
 
                     printf(
-                        '<span class="cpb-accordion__meta-item"><span class="cpb-accordion__meta-label">%1$s:</span><span class="cpb-accordion__meta-value">%2$s</span></span>',
+                        '<span class="cpb-accordion__meta-item"><span class="cpb-accordion__meta-label">%1$s: </span>%2$s</span>',
                         esc_html( $meta_labels[ $meta_key ] ),
                         esc_html( $meta_value )
                     );

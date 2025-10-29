@@ -32,3 +32,4 @@
 30. 2025-08-12: Added a Communications menu with an Email Templates accordion demo and placeholder notices for upcoming tabs.
 31. 2025-08-12: Realigned Communications accordion metadata with equal-width columns and wrapped values for consistent headers.
 32. 2025-08-12: Kept accordion metadata items inline with evenly distributed widths while allowing long values to wrap cleanly.
+33. 2025-08-12: Fixed accordion metadata labels to sit with their values, added a 100px title column, and removed gaps that split label/value pairs.
