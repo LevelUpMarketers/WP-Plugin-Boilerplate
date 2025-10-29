@@ -14,7 +14,10 @@ Welcome to the Codex Plugin Boilerplate repository.
 
 ## Notes
 - Keep code modular and translation ready.
+- Treat every new or modified string as translatable; wrap user-facing text in the appropriate internationalization helpers and
+  provide translator comments where context is needed.
 - Custom database table prefix is `cpb_`.
 - Remove `includes/update-server/` before submitting to WP.org.
 - The demo cron event `cpb_demo_cron_event` exists only to showcase the Cron Jobs tab—remove it for production or client builds.
 - The Cron Jobs tab auto-detects cron hooks prefixed with `cpb_`; continue using this prefix for future scheduled tasks.
+- Whenever you add a cron hook, document a clear, human-friendly description so it appears in the Cron Jobs tab tooltip.

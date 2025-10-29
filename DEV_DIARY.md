@@ -23,3 +23,4 @@
 21. 2025-08-12: Reintroduced logos, added US states and territories placeholder, and refreshed styles and scripts.
 22. 2025-08-12: Wrapped "SO MUCH" in thank-you message with stylable span and added bold, italic styling.
 23. 2025-08-12: Added Cron Jobs tab with automatic cpb_ hook discovery, manual run/delete controls, countdowns, and demo event.
+24. 2025-08-12: Documented translation coverage expectations and cron tooltip description requirements for future work.
