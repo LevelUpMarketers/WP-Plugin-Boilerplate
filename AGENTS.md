@@ -22,6 +22,7 @@ Welcome to the Codex Plugin Boilerplate repository.
 - The Cron Jobs tab auto-detects cron hooks prefixed with `cpb_`; continue using this prefix for future scheduled tasks.
 - Whenever you add a cron hook, document a clear, human-friendly description so it appears in the Cron Jobs tab tooltip.
 - Align all backend feedback/status areas with the current inline spinner + message pattern that sits beside action buttons to prevent layout shifts.
+- Match grouped admin action buttons (like cron controls) to the shared min-width styling so side-by-side buttons render with consistent dimensions regardless of label length.
 - The Communications page currently ships with sample accordion data—remove these demos and supply real templates before shipping to clients or WordPress.org.
 - Reuse the Communications accordion pattern whenever you need expandable admin sections; mirror the current list-table layout, keep tooltip-ready descriptions, and retain the rotating indicator arrow.
 - Every admin tab should include the standardized title-and-description block (see `render_tab_intro()`), placed after `.cpb-top-message` and before tab-specific content.

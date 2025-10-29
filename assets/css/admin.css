@@ -441,7 +441,7 @@
     font-family: 'Roobert', sans-serif;
     font-size: 14px;
     line-height: 1.4;
-    max-width: 280px;
+    max-width: 420px;
     text-align: left;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
@@ -515,4 +515,9 @@
 
 .cpb-cron-action-form {
     margin: 0;
+}
+
+.cpb-cron-actions .button {
+    min-width: 140px;
+    text-align: center;
 }
