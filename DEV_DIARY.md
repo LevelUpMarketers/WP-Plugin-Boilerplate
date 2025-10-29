@@ -40,3 +40,4 @@
 38. 2025-08-12: Enlarged tooltip text styling and standardized a reusable title-and-description intro across every admin tab.
 39. 2025-08-12: Trimmed tooltip sizing, reworked the demo cron seeding to keep a single six-month sample, and restyled cron tab pagination so it clears the bottom message banner.
 40. 2025-08-12: Widened tooltip popovers and enforced equal-width cron action buttons for consistent control layouts.
+41. 2025-08-12: Increased tooltip popover width by seventy percent to improve readability of longer descriptions.
