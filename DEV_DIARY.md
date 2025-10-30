@@ -22,3 +22,23 @@
 20. 2025-08-12: Removed top logo row, added thank-you tagline to bottom message, and cleaned up unused premium logo styles.
 21. 2025-08-12: Reintroduced logos, added US states and territories placeholder, and refreshed styles and scripts.
 22. 2025-08-12: Wrapped "SO MUCH" in thank-you message with stylable span and added bold, italic styling.
+23. 2025-08-12: Added Cron Jobs tab with automatic cpb_ hook discovery, manual run/delete controls, countdowns, and demo event.
+24. 2025-08-12: Documented translation coverage expectations and cron tooltip description requirements for future work.
+25. 2025-08-12: Enabled AJAX spinner transitions by toggling WordPress's is-active class to show progress without shifting the layout.
+26. 2025-08-12: Wrapped spinner and feedback in a fixed-height container, added inline fade transitions, and surfaced a generic error message when AJAX requests fail.
+27. 2025-08-12: Moved the feedback container beside form submit buttons, keeping the spinner and status text inline without triggering layout shifts on save.
+28. 2025-08-12: Centered inline feedback controls with submit buttons and overlapped spinner fade-outs with status fade-ins for smoother confirmation cues.
+29. 2025-08-12: Documented the inline spinner-and-message layout as the standard pattern for all admin feedback areas.
+30. 2025-08-12: Added a Communications menu with an Email Templates accordion demo and placeholder notices for upcoming tabs.
+31. 2025-08-12: Realigned Communications accordion metadata with equal-width columns and wrapped values for consistent headers.
+32. 2025-08-12: Kept accordion metadata items inline with evenly distributed widths while allowing long values to wrap cleanly.
+33. 2025-08-12: Fixed accordion metadata labels to sit with their values, added a 100px title column, and removed gaps that split label/value pairs.
+34. 2025-08-12: Converted communications metadata rows to a responsive grid so columns align while labels hug their values without extra spacing.
+35. 2025-08-12: Rebuilt the Communications email accordion into a table-based layout with aligned columns and row toggles that mirror WordPress list tables.
+36. 2025-08-12: Lightened the first communications template header and added visual separators between accordion rows for improved scanning.
+37. 2025-08-12: Removed the communications row focus outline and allowed accordion groups to overflow so tooltips remain fully visible.
+38. 2025-08-12: Enlarged tooltip text styling and standardized a reusable title-and-description intro across every admin tab.
+39. 2025-08-12: Trimmed tooltip sizing, reworked the demo cron seeding to keep a single six-month sample, and restyled cron tab pagination so it clears the bottom message banner.
+40. 2025-08-12: Widened tooltip popovers and enforced equal-width cron action buttons for consistent control layouts.
+41. 2025-08-12: Increased tooltip popover width by seventy percent to improve readability of longer descriptions.
+42. 2025-08-12: Raised tooltip text size to 17px and enforced a 300px minimum width for clearer popup readability.

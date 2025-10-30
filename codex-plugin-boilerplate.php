@@ -24,6 +24,7 @@ require_once CPB_PLUGIN_DIR . 'includes/class-cpb-activator.php';
 require_once CPB_PLUGIN_DIR . 'includes/class-cpb-deactivator.php';
 require_once CPB_PLUGIN_DIR . 'includes/class-cpb-i18n.php';
 require_once CPB_PLUGIN_DIR . 'includes/class-cpb-ajax.php';
+require_once CPB_PLUGIN_DIR . 'includes/class-cpb-cron.php';
 require_once CPB_PLUGIN_DIR . 'includes/admin/class-cpb-admin.php';
 require_once CPB_PLUGIN_DIR . 'includes/shortcodes/class-cpb-shortcode-main-entity.php';
 require_once CPB_PLUGIN_DIR . 'includes/blocks/class-cpb-block-main-entity.php';

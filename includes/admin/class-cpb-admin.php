@@ -11,6 +11,8 @@ class CPB_Admin {
         add_action( 'admin_menu', array( $this, 'add_menu' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
         add_action( 'admin_post_cpb_delete_generated_content', array( $this, 'handle_delete_generated_content' ) );
+        add_action( 'admin_post_cpb_delete_cron_event', array( $this, 'handle_delete_cron_event' ) );
+        add_action( 'admin_post_cpb_run_cron_event', array( $this, 'handle_run_cron_event' ) );
     }
 
     public function add_menu() {
@@ -31,11 +33,246 @@ class CPB_Admin {
         );
 
         add_menu_page(
+            __( 'CPB Communications', 'codex-plugin-boilerplate' ),
+            __( 'CPB Communications', 'codex-plugin-boilerplate' ),
+            'manage_options',
+            'cpb-communications',
+            array( $this, 'render_communications_page' )
+        );
+
+        add_menu_page(
             __( 'CPB Logs', 'codex-plugin-boilerplate' ),
             __( 'CPB Logs', 'codex-plugin-boilerplate' ),
             'manage_options',
             'cpb-logs',
             array( $this, 'render_logs_page' )
+        );
+    }
+
+    public function render_communications_page() {
+        $tabs = array(
+            'email-templates' => __( 'Email Templates', 'codex-plugin-boilerplate' ),
+            'email-logs'      => __( 'Email Logs', 'codex-plugin-boilerplate' ),
+            'sms-templates'   => __( 'SMS Templates', 'codex-plugin-boilerplate' ),
+            'sms-logs'        => __( 'SMS Logs', 'codex-plugin-boilerplate' ),
+        );
+
+        $active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'email-templates';
+
+        if ( ! array_key_exists( $active_tab, $tabs ) ) {
+            $active_tab = 'email-templates';
+        }
+
+        echo '<div class="wrap"><h1>' . esc_html__( 'CPB Communications', 'codex-plugin-boilerplate' ) . '</h1>';
+        echo '<h2 class="nav-tab-wrapper">';
+
+        foreach ( $tabs as $tab_slug => $label ) {
+            $classes = array( 'nav-tab' );
+
+            if ( $tab_slug === $active_tab ) {
+                $classes[] = 'nav-tab-active';
+            }
+
+            printf(
+                '<a href="%1$s" class="%2$s">%3$s</a>',
+                esc_url( add_query_arg( array( 'page' => 'cpb-communications', 'tab' => $tab_slug ), admin_url( 'admin.php' ) ) ),
+                esc_attr( implode( ' ', $classes ) ),
+                esc_html( $label )
+            );
+        }
+
+        echo '</h2>';
+
+        $this->top_message_center();
+
+        $tab_descriptions = array(
+            'email-templates' => __( 'Review placeholder email templates that demonstrate how communications can be grouped for future automation requests.', 'codex-plugin-boilerplate' ),
+            'email-logs'      => __( 'Monitor outgoing email history and export records once log tooling is connected.', 'codex-plugin-boilerplate' ),
+            'sms-templates'   => __( 'Prepare SMS templates that mirror your email workflows so every touchpoint stays consistent.', 'codex-plugin-boilerplate' ),
+            'sms-logs'        => __( 'Audit sent SMS messages and spot delivery issues as soon as log data becomes available.', 'codex-plugin-boilerplate' ),
+        );
+
+        $description = isset( $tab_descriptions[ $active_tab ] ) ? $tab_descriptions[ $active_tab ] : '';
+
+        $this->render_tab_intro( $tabs[ $active_tab ], $description );
+
+        if ( 'email-templates' === $active_tab ) {
+            $this->render_email_templates_tab();
+        } elseif ( 'email-logs' === $active_tab ) {
+            $this->render_communications_placeholder_tab(
+                __( 'Email history tooling is coming soon.', 'codex-plugin-boilerplate' )
+            );
+        } elseif ( 'sms-templates' === $active_tab ) {
+            $this->render_communications_placeholder_tab(
+                __( 'SMS template management is coming soon.', 'codex-plugin-boilerplate' )
+            );
+        } else {
+            $this->render_communications_placeholder_tab(
+                __( 'SMS log history is coming soon.', 'codex-plugin-boilerplate' )
+            );
+        }
+
+        $this->bottom_message_center();
+        echo '</div>';
+    }
+
+    private function render_email_templates_tab() {
+        $templates   = $this->get_sample_email_templates();
+        $meta_labels = array(
+            'trigger'             => __( 'Trigger', 'codex-plugin-boilerplate' ),
+            'communication_type'  => __( 'Communication Type', 'codex-plugin-boilerplate' ),
+            'category'            => __( 'Category', 'codex-plugin-boilerplate' ),
+        );
+        $meta_order  = array( 'trigger', 'communication_type', 'category' );
+        $column_count = count( $meta_order ) + 2; // Title and actions columns.
+
+        echo '<div class="cpb-communications">';
+        echo '<div class="cpb-accordion-group cpb-accordion-group--table" data-cpb-accordion-group="communications">';
+        echo '<table class="wp-list-table widefat striped cpb-accordion-table">';
+        echo '<thead>';
+        echo '<tr>';
+        echo '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--title">' . esc_html__( 'Communication Name', 'codex-plugin-boilerplate' ) . '</th>';
+
+        foreach ( $meta_order as $meta_key ) {
+            if ( ! isset( $meta_labels[ $meta_key ] ) ) {
+                continue;
+            }
+
+            printf(
+                '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--%1$s">%2$s</th>',
+                esc_attr( $meta_key ),
+                esc_html( $meta_labels[ $meta_key ] )
+            );
+        }
+
+        echo '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--actions">' . esc_html__( 'Actions', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '</tr>';
+        echo '</thead>';
+        echo '<tbody>';
+
+        foreach ( $templates as $template ) {
+            $item_id    = sanitize_html_class( $template['id'] );
+            $panel_id   = $item_id . '-panel';
+            $header_id  = $item_id . '-header';
+            $tooltip    = isset( $template['tooltip'] ) ? $template['tooltip'] : '';
+            $meta_items = isset( $template['meta'] ) ? $template['meta'] : array();
+
+            printf(
+                '<tr id="%1$s" class="cpb-accordion__summary-row" tabindex="0" role="button" aria-expanded="false" aria-controls="%2$s">',
+                esc_attr( $header_id ),
+                esc_attr( $panel_id )
+            );
+
+            echo '<td class="cpb-accordion__cell cpb-accordion__cell--title">';
+
+            if ( $tooltip ) {
+                printf(
+                    '<span class="dashicons dashicons-info cpb-tooltip-icon" aria-hidden="true" data-tooltip="%1$s"></span><span class="screen-reader-text">%2$s</span>',
+                    esc_attr( $tooltip ),
+                    esc_html( $tooltip )
+                );
+            }
+
+            echo '<span class="cpb-accordion__title-text">' . esc_html( $template['title'] ) . '</span>';
+            echo '</td>';
+
+            foreach ( $meta_order as $meta_key ) {
+                $label      = isset( $meta_labels[ $meta_key ] ) ? $meta_labels[ $meta_key ] : '';
+                $meta_value = isset( $meta_items[ $meta_key ] ) ? $meta_items[ $meta_key ] : '';
+
+                echo '<td class="cpb-accordion__cell cpb-accordion__cell--meta">';
+
+                if ( $label ) {
+                    printf(
+                        '<span class="cpb-accordion__meta-text"><span class="cpb-accordion__meta-label">%1$s:</span> <span class="cpb-accordion__meta-value">%2$s</span></span>',
+                        esc_html( $label ),
+                        $meta_value ? esc_html( $meta_value ) : '&mdash;'
+                    );
+                }
+
+                echo '</td>';
+            }
+
+            echo '<td class="cpb-accordion__cell cpb-accordion__cell--actions">';
+            echo '<span class="dashicons dashicons-arrow-down-alt2 cpb-accordion__icon" aria-hidden="true"></span>';
+            echo '<span class="screen-reader-text">' . esc_html__( 'Toggle template details', 'codex-plugin-boilerplate' ) . '</span>';
+            echo '</td>';
+            echo '</tr>';
+
+            printf(
+                '<tr id="%1$s" class="cpb-accordion__panel-row" role="region" aria-labelledby="%2$s" aria-hidden="true">',
+                esc_attr( $panel_id ),
+                esc_attr( $header_id )
+            );
+            printf(
+                '<td colspan="%1$d">',
+                absint( $column_count )
+            );
+            echo '<div class="cpb-accordion__panel">';
+            echo '<p>' . esc_html( $template['content'] ) . '</p>';
+            echo '</div>';
+            echo '</td>';
+            echo '</tr>';
+        }
+
+        echo '</tbody>';
+        echo '</table>';
+        echo '</div>';
+        echo '</div>';
+    }
+
+    private function render_communications_placeholder_tab( $message ) {
+        echo '<div class="cpb-communications cpb-communications--placeholder">';
+        echo '<p>' . esc_html( $message ) . '</p>';
+        echo '</div>';
+    }
+
+    private function get_sample_email_templates() {
+        return array(
+            array(
+                'id'       => 'cpb-email-welcome',
+                'title'    => __( 'Welcome Aboard', 'codex-plugin-boilerplate' ),
+                'tooltip'  => __( 'Sent after a customer signs up to introduce key onboarding steps.', 'codex-plugin-boilerplate' ),
+                'meta'     => array(
+                    'trigger'            => __( 'New registration', 'codex-plugin-boilerplate' ),
+                    'communication_type' => __( 'External', 'codex-plugin-boilerplate' ),
+                    'category'           => __( 'Onboarding', 'codex-plugin-boilerplate' ),
+                ),
+                'content'  => __( 'Test text', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'id'       => 'cpb-email-follow-up',
+                'title'    => __( 'Consultation Follow Up', 'codex-plugin-boilerplate' ),
+                'tooltip'  => __( 'Delivers recap notes and next steps after a discovery call wraps up.', 'codex-plugin-boilerplate' ),
+                'meta'     => array(
+                    'trigger'            => __( 'Completed consultation', 'codex-plugin-boilerplate' ),
+                    'communication_type' => __( 'External', 'codex-plugin-boilerplate' ),
+                    'category'           => __( 'Sales Enablement', 'codex-plugin-boilerplate' ),
+                ),
+                'content'  => __( 'Test text', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'id'       => 'cpb-email-renewal',
+                'title'    => __( 'Membership Renewal Reminder', 'codex-plugin-boilerplate' ),
+                'tooltip'  => __( 'Warns members that their plan expires soon and outlines renewal options.', 'codex-plugin-boilerplate' ),
+                'meta'     => array(
+                    'trigger'            => __( 'Approaching renewal date', 'codex-plugin-boilerplate' ),
+                    'communication_type' => __( 'External', 'codex-plugin-boilerplate' ),
+                    'category'           => __( 'Retention', 'codex-plugin-boilerplate' ),
+                ),
+                'content'  => __( 'Test text', 'codex-plugin-boilerplate' ),
+            ),
+            array(
+                'id'       => 'cpb-email-alert',
+                'title'    => __( 'Internal Alert: Payment Review', 'codex-plugin-boilerplate' ),
+                'tooltip'  => __( 'Flags the support team when a payment requires manual approval.', 'codex-plugin-boilerplate' ),
+                'meta'     => array(
+                    'trigger'            => __( 'Payment pending review', 'codex-plugin-boilerplate' ),
+                    'communication_type' => __( 'Internal', 'codex-plugin-boilerplate' ),
+                    'category'           => __( 'Operations', 'codex-plugin-boilerplate' ),
+                ),
+                'content'  => __( 'Test text', 'codex-plugin-boilerplate' ),
+            ),
         );
     }
 
@@ -58,6 +295,7 @@ class CPB_Admin {
             'mediaTitle'   => __( 'Select Image', 'codex-plugin-boilerplate' ),
             'mediaButton'  => __( 'Use this image', 'codex-plugin-boilerplate' ),
             'itemPlaceholder' => __( 'Item #%d', 'codex-plugin-boilerplate' ),
+            'error'        => __( 'Something went wrong. Please try again.', 'codex-plugin-boilerplate' ),
         ) );
     }
 
@@ -194,6 +432,24 @@ class CPB_Admin {
         echo '</div>';
     }
 
+    private function render_tab_intro( $title, $description ) {
+        if ( empty( $title ) && empty( $description ) ) {
+            return;
+        }
+
+        echo '<div class="cpb-tab-intro">';
+
+        if ( $title ) {
+            echo '<h2 class="cpb-tab-intro__title">' . esc_html( $title ) . '</h2>';
+        }
+
+        if ( $description ) {
+            echo '<p class="cpb-tab-intro__description">' . esc_html( $description ) . '</p>';
+        }
+
+        echo '</div>';
+    }
+
     public function render_main_entity_page() {
         $active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( $_GET['tab'] ) : 'create';
         echo '<div class="wrap"><h1>' . esc_html__( 'CPB Main Entity', 'codex-plugin-boilerplate' ) . '</h1>';
@@ -202,6 +458,21 @@ class CPB_Admin {
         echo '<a href="?page=cpb-main-entity&tab=edit" class="nav-tab ' . ( 'edit' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Edit Main Entity', 'codex-plugin-boilerplate' ) . '</a>';
         echo '</h2>';
         $this->top_message_center();
+
+        $tab_titles = array(
+            'create' => __( 'Create a Main Entity', 'codex-plugin-boilerplate' ),
+            'edit'   => __( 'Edit Main Entity', 'codex-plugin-boilerplate' ),
+        );
+
+        $tab_descriptions = array(
+            'create' => __( 'Build a new main entity record by completing the placeholder fields and saving your changes.', 'codex-plugin-boilerplate' ),
+            'edit'   => __( 'Review saved entities to confirm their data, trigger edits, or remove records you no longer need.', 'codex-plugin-boilerplate' ),
+        );
+
+        $title       = isset( $tab_titles[ $active_tab ] ) ? $tab_titles[ $active_tab ] : '';
+        $description = isset( $tab_descriptions[ $active_tab ] ) ? $tab_descriptions[ $active_tab ] : '';
+
+        $this->render_tab_intro( $title, $description );
 
         if ( 'edit' === $active_tab ) {
             $this->render_edit_tab();
@@ -524,14 +795,16 @@ class CPB_Admin {
             echo '</div>';
         }
         echo '</div>';
-        submit_button( __( 'Save', 'codex-plugin-boilerplate' ) );
+        $submit_button = get_submit_button( __( 'Save', 'codex-plugin-boilerplate' ), 'primary', 'submit', false );
+        echo '<p class="submit">' . $submit_button;
+        echo '<span class="cpb-feedback-area cpb-feedback-area--inline"><span id="cpb-spinner" class="spinner" aria-hidden="true"></span><span id="cpb-feedback" role="status" aria-live="polite"></span></span>';
+        echo '</p>';
         echo '</form>';
-        echo '<div id="cpb-feedback"></div><div id="cpb-spinner" class="spinner"></div>';
     }
 
     private function render_edit_tab() {
         echo '<div id="cpb-entity-list" class="cpb-accordion"></div>';
-        echo '<div id="cpb-feedback"></div><div id="cpb-spinner" class="spinner"></div>';
+        echo '<div class="cpb-feedback-area cpb-feedback-area--block"><span id="cpb-spinner" class="spinner" aria-hidden="true"></span><span id="cpb-feedback" role="status" aria-live="polite"></span></div>';
     }
 
     public function render_settings_page() {
@@ -540,11 +813,31 @@ class CPB_Admin {
         echo '<h2 class="nav-tab-wrapper">';
         echo '<a href="?page=cpb-settings&tab=general" class="nav-tab ' . ( 'general' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'General Settings', 'codex-plugin-boilerplate' ) . '</a>';
         echo '<a href="?page=cpb-settings&tab=style" class="nav-tab ' . ( 'style' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Style Settings', 'codex-plugin-boilerplate' ) . '</a>';
+        echo '<a href="?page=cpb-settings&tab=cron" class="nav-tab ' . ( 'cron' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Cron Jobs', 'codex-plugin-boilerplate' ) . '</a>';
         echo '</h2>';
         $this->top_message_center();
 
+        $tab_titles = array(
+            'general' => __( 'General Settings', 'codex-plugin-boilerplate' ),
+            'style'   => __( 'Style Settings', 'codex-plugin-boilerplate' ),
+            'cron'    => __( 'Cron Jobs', 'codex-plugin-boilerplate' ),
+        );
+
+        $tab_descriptions = array(
+            'general' => __( 'Adjust the baseline configuration values that control how Codex Plugin Boilerplate behaves across your site.', 'codex-plugin-boilerplate' ),
+            'style'   => __( 'Apply design tweaks and CSS overrides to align the boilerplate output with your brand guidelines.', 'codex-plugin-boilerplate' ),
+            'cron'    => __( 'Review and manage every scheduled cron event created by Codex Plugin Boilerplate, including running or deleting hooks on demand.', 'codex-plugin-boilerplate' ),
+        );
+
+        $title       = isset( $tab_titles[ $active_tab ] ) ? $tab_titles[ $active_tab ] : '';
+        $description = isset( $tab_descriptions[ $active_tab ] ) ? $tab_descriptions[ $active_tab ] : '';
+
+        $this->render_tab_intro( $title, $description );
+
         if ( 'style' === $active_tab ) {
             $this->render_style_settings_tab();
+        } elseif ( 'cron' === $active_tab ) {
+            $this->render_cron_jobs_tab();
         } else {
             $this->render_general_settings_tab();
         }
@@ -557,18 +850,269 @@ class CPB_Admin {
         echo '<form id="cpb-general-settings-form">';
         echo '<label>' . esc_html__( 'Option', 'codex-plugin-boilerplate' ) . ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr__( 'Tooltip placeholder text for Option', 'codex-plugin-boilerplate' ) . '"></span></label>';
         echo '<input type="text" name="option" />';
-        submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ) );
+        $submit_button = get_submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ), 'primary', 'submit', false );
+        echo '<p class="submit">' . $submit_button;
+        echo '<span class="cpb-feedback-area cpb-feedback-area--inline"><span id="cpb-spinner" class="spinner" aria-hidden="true"></span><span id="cpb-feedback" role="status" aria-live="polite"></span></span>';
+        echo '</p>';
         echo '</form>';
-        echo '<div id="cpb-feedback"></div><div id="cpb-spinner" class="spinner"></div>';
     }
 
     private function render_style_settings_tab() {
         echo '<form id="cpb-style-settings-form">';
         echo '<label>' . esc_html__( 'Custom CSS', 'codex-plugin-boilerplate' ) . ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr__( 'Tooltip placeholder text for Custom CSS', 'codex-plugin-boilerplate' ) . '"></span></label>';
         echo '<textarea name="custom_css"></textarea>';
-        submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ) );
+        $submit_button = get_submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ), 'primary', 'submit', false );
+        echo '<p class="submit">' . $submit_button;
+        echo '<span class="cpb-feedback-area cpb-feedback-area--inline"><span id="cpb-spinner" class="spinner" aria-hidden="true"></span><span id="cpb-feedback" role="status" aria-live="polite"></span></span>';
+        echo '</p>';
         echo '</form>';
-        echo '<div id="cpb-feedback"></div><div id="cpb-spinner" class="spinner"></div>';
+    }
+
+    private function render_cron_jobs_tab() {
+        echo '<div class="cpb-cron-tab">';
+
+        $messages = array(
+            'deleted'       => array(
+                'type'    => 'success',
+                'message' => __( 'Cron event deleted successfully.', 'codex-plugin-boilerplate' ),
+            ),
+            'delete_failed' => array(
+                'type'    => 'error',
+                'message' => __( 'Unable to delete the cron event. Please try again.', 'codex-plugin-boilerplate' ),
+            ),
+            'run'           => array(
+                'type'    => 'success',
+                'message' => __( 'Cron event executed immediately.', 'codex-plugin-boilerplate' ),
+            ),
+            'run_failed'    => array(
+                'type'    => 'error',
+                'message' => __( 'Unable to execute the cron event. Ensure the hook is registered.', 'codex-plugin-boilerplate' ),
+            ),
+        );
+
+        $notice_key = isset( $_GET['cpb_cron_message'] ) ? sanitize_text_field( wp_unslash( $_GET['cpb_cron_message'] ) ) : '';
+
+        if ( $notice_key && isset( $messages[ $notice_key ] ) ) {
+            $notice = $messages[ $notice_key ];
+            printf(
+                '<div class="notice notice-%1$s"><p>%2$s</p></div>',
+                esc_attr( $notice['type'] ),
+                esc_html( $notice['message'] )
+            );
+        }
+
+        $events    = CPB_Cron_Manager::get_plugin_cron_events();
+        $per_page  = 20;
+        $total     = count( $events );
+        $page      = isset( $_GET['cpb_cron_page'] ) ? max( 1, absint( wp_unslash( $_GET['cpb_cron_page'] ) ) ) : 1;
+        $max_pages = max( 1, (int) ceil( $total / $per_page ) );
+
+        if ( $page > $max_pages ) {
+            $page = $max_pages;
+        }
+
+        $offset          = ( $page - 1 ) * $per_page;
+        $displayed_events = array_slice( $events, $offset, $per_page );
+
+        $pagination_base = add_query_arg(
+            array(
+                'page' => 'cpb-settings',
+                'tab'  => 'cron',
+                'cpb_cron_page' => '%#%',
+            ),
+            admin_url( 'admin.php' )
+        );
+
+        $pagination = paginate_links(
+            array(
+                'base'      => $pagination_base,
+                'format'    => '%#%',
+                'current'   => $page,
+                'total'     => $max_pages,
+                'prev_text' => __( '&laquo; Previous', 'codex-plugin-boilerplate' ),
+                'next_text' => __( 'Next &raquo;', 'codex-plugin-boilerplate' ),
+                'type'      => 'list',
+            )
+        );
+
+        if ( $pagination ) {
+            echo '<div class="tablenav"><div class="tablenav-pages">' . wp_kses_post( $pagination ) . '</div></div>';
+        }
+
+        echo '<table class="widefat striped cpb-cron-table">';
+        echo '<thead><tr>';
+        echo '<th>' . esc_html__( 'Cron Job', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Description', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Type', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Schedule', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Hook', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Next Run', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Countdown', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Arguments', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th>' . esc_html__( 'Actions', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '</tr></thead><tbody>';
+
+        if ( empty( $displayed_events ) ) {
+            echo '<tr><td colspan="9">' . esc_html__( 'No cron events found for Codex Plugin Boilerplate.', 'codex-plugin-boilerplate' ) . '</td></tr>';
+        } else {
+            $redirect = add_query_arg(
+                array(
+                    'page' => 'cpb-settings',
+                    'tab'  => 'cron',
+                ),
+                admin_url( 'admin.php' )
+            );
+
+            if ( $page > 1 ) {
+                $redirect = add_query_arg( 'cpb_cron_page', $page, $redirect );
+            }
+
+            foreach ( $displayed_events as $event ) {
+                $hook_data      = CPB_Cron_Manager::get_hook_display_data( $event['hook'] );
+                $type_label     = CPB_Cron_Manager::is_recurring( $event['schedule'] ) ? esc_html__( 'Recurring', 'codex-plugin-boilerplate' ) : esc_html__( 'One-off', 'codex-plugin-boilerplate' );
+                $schedule_label = CPB_Cron_Manager::get_schedule_label( $event['schedule'], $event['interval'] );
+                $next_run       = CPB_Cron_Manager::format_timestamp( $event['timestamp'] );
+                $countdown      = CPB_Cron_Manager::get_countdown( $event['timestamp'] );
+                $args_display   = empty( $event['args'] ) ? '&mdash;' : esc_html( wp_json_encode( $event['args'] ) );
+                $args_encoded   = base64_encode( wp_json_encode( $event['args'] ) );
+
+                if ( false === $args_encoded ) {
+                    $args_encoded = '';
+                }
+
+                echo '<tr>';
+                echo '<td><strong>' . esc_html( $hook_data['name'] ) . '</strong> <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr( $hook_data['description'] ) . '"></span></td>';
+                echo '<td>' . esc_html( $hook_data['description'] ) . '</td>';
+                echo '<td>' . esc_html( $type_label ) . '</td>';
+                echo '<td>' . esc_html( $schedule_label ) . '</td>';
+                echo '<td><code>' . esc_html( $event['hook'] ) . '</code></td>';
+                echo '<td>' . esc_html( $next_run ) . '</td>';
+                echo '<td>' . esc_html( $countdown ) . '</td>';
+                echo '<td>' . ( empty( $event['args'] ) ? '&mdash;' : $args_display ) . '</td>';
+                echo '<td>';
+                echo '<div class="cpb-cron-actions">';
+                echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="cpb-cron-action-form">';
+                wp_nonce_field( 'cpb_run_cron_event', 'cpb_run_cron_event_nonce' );
+                echo '<input type="hidden" name="action" value="cpb_run_cron_event" />';
+                echo '<input type="hidden" name="hook" value="' . esc_attr( $event['hook'] ) . '" />';
+                echo '<input type="hidden" name="args" value="' . esc_attr( $args_encoded ) . '" />';
+                echo '<input type="hidden" name="redirect" value="' . esc_attr( $redirect ) . '" />';
+                echo '<button type="submit" class="button button-secondary">' . esc_html__( 'Run Now', 'codex-plugin-boilerplate' ) . '</button>';
+                echo '</form>';
+
+                $confirm = esc_js( __( 'Are you sure you want to delete this cron event?', 'codex-plugin-boilerplate' ) );
+
+                echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="cpb-cron-action-form" onsubmit="return confirm(\'' . $confirm . '\');">';
+                wp_nonce_field( 'cpb_delete_cron_event', 'cpb_delete_cron_event_nonce' );
+                echo '<input type="hidden" name="action" value="cpb_delete_cron_event" />';
+                echo '<input type="hidden" name="hook" value="' . esc_attr( $event['hook'] ) . '" />';
+                echo '<input type="hidden" name="timestamp" value="' . esc_attr( $event['timestamp'] ) . '" />';
+                echo '<input type="hidden" name="args" value="' . esc_attr( $args_encoded ) . '" />';
+                echo '<input type="hidden" name="redirect" value="' . esc_attr( $redirect ) . '" />';
+                echo '<button type="submit" class="button button-link-delete">' . esc_html__( 'Delete Event', 'codex-plugin-boilerplate' ) . '</button>';
+                echo '</form>';
+                echo '</div>';
+                echo '</td>';
+                echo '</tr>';
+            }
+        }
+
+        echo '</tbody></table>';
+
+        if ( $pagination ) {
+            echo '<div class="tablenav"><div class="tablenav-pages">' . wp_kses_post( $pagination ) . '</div></div>';
+        }
+
+        echo '</div>';
+    }
+
+    private function decode_cron_args( $encoded ) {
+        if ( empty( $encoded ) ) {
+            return array();
+        }
+
+        $decoded = base64_decode( wp_unslash( $encoded ), true );
+
+        if ( false === $decoded ) {
+            return array();
+        }
+
+        $args = json_decode( $decoded, true );
+
+        return is_array( $args ) ? $args : array();
+    }
+
+    private function get_cron_redirect_url() {
+        $fallback = add_query_arg(
+            array(
+                'page' => 'cpb-settings',
+                'tab'  => 'cron',
+            ),
+            admin_url( 'admin.php' )
+        );
+
+        if ( empty( $_POST['redirect'] ) ) {
+            return $fallback;
+        }
+
+        $redirect = esc_url_raw( wp_unslash( $_POST['redirect'] ) );
+
+        return $redirect ? $redirect : $fallback;
+    }
+
+    private function redirect_with_cron_message( $redirect, $message ) {
+        $url = add_query_arg( 'cpb_cron_message', $message, $redirect );
+        wp_safe_redirect( $url );
+        exit;
+    }
+
+    public function handle_delete_cron_event() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Insufficient permissions.', 'codex-plugin-boilerplate' ) );
+        }
+
+        check_admin_referer( 'cpb_delete_cron_event', 'cpb_delete_cron_event_nonce' );
+
+        $redirect = $this->get_cron_redirect_url();
+        $hook     = isset( $_POST['hook'] ) ? sanitize_text_field( wp_unslash( $_POST['hook'] ) ) : '';
+        $timestamp = isset( $_POST['timestamp'] ) ? absint( wp_unslash( $_POST['timestamp'] ) ) : 0;
+        $args     = $this->decode_cron_args( isset( $_POST['args'] ) ? $_POST['args'] : '' );
+
+        if ( empty( $hook ) || 0 !== strpos( $hook, CPB_Cron_Manager::HOOK_PREFIX ) || empty( $timestamp ) ) {
+            $this->redirect_with_cron_message( $redirect, 'delete_failed' );
+        }
+
+        $deleted = wp_unschedule_event( $timestamp, $hook, $args );
+
+        if ( $deleted ) {
+            $this->redirect_with_cron_message( $redirect, 'deleted' );
+        }
+
+        $this->redirect_with_cron_message( $redirect, 'delete_failed' );
+    }
+
+    public function handle_run_cron_event() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Insufficient permissions.', 'codex-plugin-boilerplate' ) );
+        }
+
+        check_admin_referer( 'cpb_run_cron_event', 'cpb_run_cron_event_nonce' );
+
+        $redirect = $this->get_cron_redirect_url();
+        $hook     = isset( $_POST['hook'] ) ? sanitize_text_field( wp_unslash( $_POST['hook'] ) ) : '';
+        $args     = $this->decode_cron_args( isset( $_POST['args'] ) ? $_POST['args'] : '' );
+
+        if ( empty( $hook ) || 0 !== strpos( $hook, CPB_Cron_Manager::HOOK_PREFIX ) ) {
+            $this->redirect_with_cron_message( $redirect, 'run_failed' );
+        }
+
+        if ( ! has_action( $hook ) ) {
+            $this->redirect_with_cron_message( $redirect, 'run_failed' );
+        }
+
+        do_action_ref_array( $hook, $args );
+
+        $this->redirect_with_cron_message( $redirect, 'run' );
     }
 
     public function render_logs_page() {
@@ -578,6 +1122,19 @@ class CPB_Admin {
         echo '<a href="?page=cpb-logs&tab=generated_content" class="nav-tab ' . ( 'generated_content' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Generated Content', 'codex-plugin-boilerplate' ) . '</a>';
         echo '</h2>';
         $this->top_message_center();
+
+        $tab_titles = array(
+            'generated_content' => __( 'Generated Content', 'codex-plugin-boilerplate' ),
+        );
+
+        $tab_descriptions = array(
+            'generated_content' => __( 'Inspect saved content entries and jump to editing, viewing, or deleting items created by the logger.', 'codex-plugin-boilerplate' ),
+        );
+
+        $title       = isset( $tab_titles[ $active_tab ] ) ? $tab_titles[ $active_tab ] : '';
+        $description = isset( $tab_descriptions[ $active_tab ] ) ? $tab_descriptions[ $active_tab ] : '';
+
+        $this->render_tab_intro( $title, $description );
 
         if ( 'generated_content' === $active_tab ) {
             $this->render_generated_content_log();
