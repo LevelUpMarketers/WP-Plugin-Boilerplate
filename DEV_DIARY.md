@@ -41,3 +41,4 @@
 39. 2025-08-12: Trimmed tooltip sizing, reworked the demo cron seeding to keep a single six-month sample, and restyled cron tab pagination so it clears the bottom message banner.
 40. 2025-08-12: Widened tooltip popovers and enforced equal-width cron action buttons for consistent control layouts.
 41. 2025-08-12: Increased tooltip popover width by seventy percent to improve readability of longer descriptions.
+42. 2025-08-12: Raised tooltip text size to 17px and enforced a 300px minimum width for clearer popup readability.

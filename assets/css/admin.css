@@ -439,8 +439,9 @@
     transition: opacity 0.2s;
     z-index: 99999;
     font-family: 'Roobert', sans-serif;
-    font-size: 14px;
+    font-size: 17px;
     line-height: 1.4;
+    min-width: 300px;
     max-width: 714px;
     text-align: left;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
