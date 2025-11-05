@@ -298,6 +298,7 @@
     border-bottom: 1px solid #dcdcde;
     background-color: #fff;
     vertical-align: top;
+    min-height: 50px;
 }
 
 .cpb-accordion__summary-row:not(:first-of-type) > .cpb-accordion__cell {
