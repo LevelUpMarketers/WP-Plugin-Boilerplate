@@ -44,4 +44,5 @@
 42. 2025-08-12: Raised tooltip text size to 17px and enforced a 300px minimum width for clearer popup readability.
 43. 2025-11-05: Rebuilt the Main Entity edit tab with the communications accordion table, added paginated AJAX loading of records, and localized supporting scripts.
 44. 2025-11-05: Streamlined the Main Entity edit table by loading records immediately with alphabetical sorting, added the non-interactive edit cue, and centralized placeholder labels for future renames.
+45. 2025-11-05: Removed the enforced AJAX delay from Main Entity reads so the edit tab populates instantly on load.
 

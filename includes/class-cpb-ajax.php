@@ -13,10 +13,15 @@ class CPB_Ajax {
         add_action( 'wp_ajax_cpb_read_main_entity', array( $this, 'read_main_entity' ) );
     }
 
-    private function maybe_delay( $start ) {
+    private function maybe_delay( $start, $minimum_time = CPB_MIN_EXECUTION_TIME ) {
+        if ( $minimum_time <= 0 ) {
+            return;
+        }
+
         $elapsed = microtime( true ) - $start;
-        if ( $elapsed < CPB_MIN_EXECUTION_TIME ) {
-            usleep( ( CPB_MIN_EXECUTION_TIME - $elapsed ) * 1000000 );
+
+        if ( $elapsed < $minimum_time ) {
+            usleep( ( $minimum_time - $elapsed ) * 1000000 );
         }
     }
 
@@ -109,7 +114,7 @@ class CPB_Ajax {
             );
         }
 
-        $this->maybe_delay( $start );
+        $this->maybe_delay( $start, 0 );
         wp_send_json_success(
             array(
                 'entities'    => $entities,
