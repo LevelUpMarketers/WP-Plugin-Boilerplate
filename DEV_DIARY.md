@@ -47,4 +47,5 @@
 45. 2025-11-05: Removed the enforced AJAX delay from Main Entity reads so the edit tab populates instantly on load.
 46. 2025-11-05: Embedded the creation form inside each Main Entity accordion, localized field metadata for client-side rendering, and wired AJAX save/delete actions with inline feedback and pagination refreshes.
 47. 2025-11-05: Re-ran the inline Main Entity editor deployment with refreshed feedback styling and corrected placeholder sanitization for saved values.
+48. 2025-11-05: Hardened Main Entity AJAX saving with normalized sanitization for date, time, and select fields plus explicit database error handling.
 

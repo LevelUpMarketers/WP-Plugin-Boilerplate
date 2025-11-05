@@ -34,37 +34,58 @@ class CPB_Ajax {
         $now   = current_time( 'mysql' );
 
         $data = array(
-            'name'           => sanitize_text_field( $_POST['name'] ?? '' ),
-            'placeholder_1'  => sanitize_text_field( $_POST['placeholder_1'] ?? '' ),
-            'placeholder_2'  => sanitize_text_field( $_POST['placeholder_2'] ?? '' ),
-            'placeholder_3'  => isset( $_POST['placeholder_3'] ) ? intval( $_POST['placeholder_3'] ) : 0,
-            'placeholder_4'  => sanitize_text_field( $_POST['placeholder_4'] ?? '' ),
-            'placeholder_5'  => sanitize_text_field( $_POST['placeholder_5'] ?? '' ),
-            'placeholder_6'  => isset( $_POST['placeholder_6'] ) ? intval( $_POST['placeholder_6'] ) : 0,
-            'placeholder_7'  => sanitize_text_field( $_POST['placeholder_7'] ?? '' ),
-            'placeholder_8'  => sanitize_text_field( $_POST['placeholder_8'] ?? '' ),
-            'placeholder_9'  => sanitize_text_field( $_POST['placeholder_9'] ?? '' ),
-            'placeholder_10' => sanitize_text_field( $_POST['placeholder_10'] ?? '' ),
-            'placeholder_11' => sanitize_text_field( $_POST['placeholder_11'] ?? '' ),
-            'placeholder_12' => sanitize_text_field( $_POST['placeholder_12'] ?? '' ),
-            'placeholder_13' => sanitize_text_field( $_POST['placeholder_13'] ?? '' ),
-            'placeholder_14' => esc_url_raw( $_POST['placeholder_14'] ?? '' ),
-            'placeholder_15' => isset( $_POST['placeholder_15'] ) ? floatval( $_POST['placeholder_15'] ) : 0,
-            'placeholder_16' => isset( $_POST['placeholder_16'] ) ? floatval( $_POST['placeholder_16'] ) : 0,
-            'placeholder_17' => isset( $_POST['placeholder_17'] ) ? floatval( $_POST['placeholder_17'] ) : 0,
-            'placeholder_18' => isset( $_POST['placeholder_18'] ) ? intval( $_POST['placeholder_18'] ) : 0,
-            'placeholder_19' => isset( $_POST['placeholder_19'] ) ? intval( $_POST['placeholder_19'] ) : 0,
-            'placeholder_20' => sanitize_text_field( $_POST['placeholder_20'] ?? '' ),
+            'name'           => $this->sanitize_text_value( 'name' ),
+            'placeholder_1'  => $this->sanitize_text_value( 'placeholder_1' ),
+            'placeholder_2'  => $this->sanitize_text_value( 'placeholder_2' ),
+            'placeholder_3'  => $this->sanitize_date_value( 'placeholder_3' ),
+            'placeholder_4'  => $this->sanitize_select_value( 'placeholder_4', array( '0', '1' ) ),
+            'placeholder_5'  => $this->sanitize_time_value( 'placeholder_5' ),
+            'placeholder_6'  => $this->sanitize_time_value( 'placeholder_6' ),
+            'placeholder_7'  => $this->sanitize_select_value( 'placeholder_7', array( '0', '1' ) ),
+            'placeholder_8'  => $this->sanitize_text_value( 'placeholder_8' ),
+            'placeholder_9'  => $this->sanitize_text_value( 'placeholder_9' ),
+            'placeholder_10' => $this->sanitize_text_value( 'placeholder_10' ),
+            'placeholder_11' => $this->sanitize_text_value( 'placeholder_11' ),
+            'placeholder_12' => $this->sanitize_text_value( 'placeholder_12' ),
+            'placeholder_13' => $this->sanitize_text_value( 'placeholder_13' ),
+            'placeholder_14' => $this->sanitize_url_value( 'placeholder_14' ),
+            'placeholder_15' => $this->sanitize_select_value( 'placeholder_15', array( 'option1', 'option2', 'option3' ) ),
+            'placeholder_16' => $this->sanitize_decimal_value( 'placeholder_16' ),
+            'placeholder_17' => $this->sanitize_decimal_value( 'placeholder_17' ),
+            'placeholder_18' => $this->sanitize_decimal_value( 'placeholder_18' ),
+            'placeholder_19' => $this->sanitize_select_value( 'placeholder_19', array( '0', '1' ) ),
+            'placeholder_20' => $this->sanitize_select_value( 'placeholder_20', array( '0', '1' ) ),
             'updated_at'     => $now,
         );
 
+        $formats = array_fill( 0, count( $data ), '%s' );
+
         if ( $id > 0 ) {
-            $wpdb->update( $table, $data, array( 'id' => $id ), null, array( '%d' ) );
+            $result  = $wpdb->update( $table, $data, array( 'id' => $id ), $formats, array( '%d' ) );
             $message = __( 'Changes saved.', 'codex-plugin-boilerplate' );
+
+            if ( false === $result && $wpdb->last_error ) {
+                $this->maybe_delay( $start );
+                wp_send_json_error(
+                    array(
+                        'message' => __( 'Unable to save changes. Please try again.', 'codex-plugin-boilerplate' ),
+                    )
+                );
+            }
         } else {
             $data['created_at'] = $now;
-            $wpdb->insert( $table, $data );
-            $message = __( 'Saved', 'codex-plugin-boilerplate' );
+            $formats[]          = '%s';
+            $result             = $wpdb->insert( $table, $data, $formats );
+            $message            = __( 'Saved', 'codex-plugin-boilerplate' );
+
+            if ( false === $result ) {
+                $this->maybe_delay( $start );
+                wp_send_json_error(
+                    array(
+                        'message' => __( 'Unable to save the record. Please try again.', 'codex-plugin-boilerplate' ),
+                    )
+                );
+            }
         }
 
         $this->maybe_delay( $start );
@@ -135,5 +156,127 @@ class CPB_Ajax {
                 'total_pages' => $total_pages,
             )
         );
+    }
+
+    private function get_post_value( $key ) {
+        if ( ! isset( $_POST[ $key ] ) ) {
+            return null;
+        }
+
+        $value = $_POST[ $key ];
+
+        if ( is_array( $value ) ) {
+            return array_map( 'wp_unslash', $value );
+        }
+
+        return wp_unslash( $value );
+    }
+
+    private function sanitize_text_value( $key ) {
+        $value = $this->get_post_value( $key );
+
+        if ( null === $value ) {
+            return '';
+        }
+
+        if ( is_array( $value ) ) {
+            $value = implode( ',', $value );
+        }
+
+        return sanitize_text_field( $value );
+    }
+
+    private function sanitize_select_value( $key, $allowed, $allow_empty = true ) {
+        $value = $this->get_post_value( $key );
+
+        if ( null === $value ) {
+            return $allow_empty ? '' : reset( $allowed );
+        }
+
+        if ( is_array( $value ) ) {
+            $value = reset( $value );
+        }
+
+        $value = sanitize_text_field( $value );
+
+        if ( '' === $value && $allow_empty ) {
+            return '';
+        }
+
+        if ( in_array( $value, $allowed, true ) ) {
+            return $value;
+        }
+
+        return $allow_empty ? '' : reset( $allowed );
+    }
+
+    private function sanitize_date_value( $key ) {
+        $value = $this->get_post_value( $key );
+
+        if ( null === $value ) {
+            return '';
+        }
+
+        if ( is_array( $value ) ) {
+            $value = reset( $value );
+        }
+
+        $value = sanitize_text_field( $value );
+
+        return $value;
+    }
+
+    private function sanitize_time_value( $key ) {
+        $value = $this->get_post_value( $key );
+
+        if ( null === $value ) {
+            return '';
+        }
+
+        if ( is_array( $value ) ) {
+            $value = reset( $value );
+        }
+
+        return sanitize_text_field( $value );
+    }
+
+    private function sanitize_decimal_value( $key ) {
+        $value = $this->get_post_value( $key );
+
+        if ( null === $value ) {
+            return '0.00';
+        }
+
+        if ( is_array( $value ) ) {
+            $value = reset( $value );
+        }
+
+        $value = trim( (string) $value );
+
+        if ( '' === $value ) {
+            return '0.00';
+        }
+
+        $normalized = preg_replace( '/[^0-9\-\.]/', '', $value );
+
+        if ( '' === $normalized ) {
+            return '0.00';
+        }
+
+        return number_format( (float) $normalized, 2, '.', '' );
+    }
+
+    private function sanitize_url_value( $key ) {
+        $value = $this->get_post_value( $key );
+
+        if ( null === $value ) {
+            return '';
+        }
+
+        if ( is_array( $value ) ) {
+            $value = reset( $value );
+        }
+
+        return esc_url_raw( $value );
     }
 }
