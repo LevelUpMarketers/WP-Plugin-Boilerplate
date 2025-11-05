@@ -345,8 +345,22 @@
 }
 
 .cpb-accordion__cell--actions {
-    width: 90px;
+    width: 120px;
+    min-width: 120px;
     text-align: right;
+}
+
+.cpb-accordion__action-link {
+    margin-right: 8px;
+    color: #2271b1;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.cpb-accordion__summary-row:hover .cpb-accordion__action-link,
+.cpb-accordion__summary-row:focus .cpb-accordion__action-link,
+.cpb-accordion__summary-row.is-open .cpb-accordion__action-link {
+    color: #135e96;
 }
 
 .cpb-accordion__icon {

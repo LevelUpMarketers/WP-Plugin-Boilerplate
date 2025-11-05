@@ -102,7 +102,7 @@ class CPB_Ajax {
         if ( $total > 0 ) {
             $entities = $wpdb->get_results(
                 $wpdb->prepare(
-                    "SELECT * FROM $table ORDER BY id DESC LIMIT %d OFFSET %d",
+                    "SELECT * FROM $table ORDER BY placeholder_1 ASC, id ASC LIMIT %d OFFSET %d",
                     $per_page,
                     $offset
                 )

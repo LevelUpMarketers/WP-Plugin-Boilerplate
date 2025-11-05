@@ -89,37 +89,48 @@ jQuery(document).ready(function($){
         var columnCount = parseInt($entityTableBody.data('column-count'), 10) || 6;
         var $pagination = $('#cpb-entity-pagination');
         var $paginationContainer = $pagination.closest('.tablenav');
-        var $spinner = $('#cpb-spinner');
-        var $feedback = $('#cpb-feedback');
+        var $entityFeedback = $('#cpb-entity-feedback');
+        var placeholderMap = cpbAdmin.placeholderMap || {};
+        var placeholderList = Array.isArray(cpbAdmin.placeholders) ? cpbAdmin.placeholders : [];
+        var placeholderCount = Object.keys(placeholderMap).length || placeholderList.length || 28;
         var currentPage = 1;
-        var placeholderCount = (cpbAdmin.placeholders && cpbAdmin.placeholders.length) ? cpbAdmin.placeholders.length : 28;
         var emptyValue = '—';
+
+        if ($entityFeedback.length){
+            $entityFeedback.hide().removeClass('is-visible');
+        }
 
         if ($paginationContainer.length){
             $paginationContainer.hide();
         }
 
         function clearFeedback(){
-            if ($feedback.length){
-                $feedback.removeClass('is-visible').text('');
+            if ($entityFeedback.length){
+                $entityFeedback.text('').hide().removeClass('is-visible');
             }
         }
 
         function showFeedback(message){
-            if (!$feedback.length){
+            if (!$entityFeedback.length){
                 return;
             }
 
             if (message){
-                $feedback.text(message).addClass('is-visible');
+                $entityFeedback.text(message).show().addClass('is-visible');
             } else {
-                $feedback.removeClass('is-visible').text('');
+                clearFeedback();
             }
         }
 
         function getPlaceholderLabel(index){
-            if (cpbAdmin.placeholders && cpbAdmin.placeholders.length >= index){
-                return cpbAdmin.placeholders[index - 1];
+            var mapKey = 'placeholder_' + index;
+
+            if (Object.prototype.hasOwnProperty.call(placeholderMap, mapKey) && placeholderMap[mapKey]){
+                return placeholderMap[mapKey];
+            }
+
+            if (placeholderList.length >= index){
+                return placeholderList[index - 1];
             }
 
             return 'Placeholder ' + index;
@@ -235,8 +246,10 @@ jQuery(document).ready(function($){
                 }
 
                 var $actionsCell = $('<td/>', {'class': 'cpb-accordion__cell cpb-accordion__cell--actions'});
+                var $editText = $('<span/>', {'class': 'cpb-accordion__action-link', 'aria-hidden': 'true'}).text(cpbAdmin.editAction);
                 var $icon = $('<span/>', {'class': 'dashicons dashicons-arrow-down-alt2 cpb-accordion__icon', 'aria-hidden': 'true'});
                 var $srText = $('<span/>', {'class': 'screen-reader-text'}).text(cpbAdmin.toggleDetails);
+                $actionsCell.append($editText);
                 $actionsCell.append($icon).append($srText);
                 $summaryRow.append($actionsCell);
                 $entityTableBody.append($summaryRow);
@@ -307,10 +320,6 @@ jQuery(document).ready(function($){
             var targetPage = page || 1;
             clearFeedback();
 
-            if ($spinner.length){
-                $spinner.addClass('is-active');
-            }
-
             $.post(cpbAjax.ajaxurl, {
                 action: 'cpb_read_main_entity',
                 _ajax_nonce: cpbAjax.nonce,
@@ -326,11 +335,6 @@ jQuery(document).ready(function($){
                 })
                 .fail(function(){
                     showFeedback(cpbAdmin.loadError || cpbAdmin.error);
-                })
-                .always(function(){
-                    if ($spinner.length){
-                        $spinner.removeClass('is-active');
-                    }
                 });
         }
 
@@ -358,10 +362,6 @@ jQuery(document).ready(function($){
 
             clearFeedback();
 
-            if ($spinner.length){
-                $spinner.addClass('is-active');
-            }
-
             $.post(cpbAjax.ajaxurl, {
                 action: 'cpb_delete_main_entity',
                 id: id,
@@ -376,11 +376,6 @@ jQuery(document).ready(function($){
                 })
                 .fail(function(){
                     showFeedback(cpbAdmin.error);
-                })
-                .always(function(){
-                    if ($spinner.length){
-                        $spinner.removeClass('is-active');
-                    }
                 });
         });
     }
