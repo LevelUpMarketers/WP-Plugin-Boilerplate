@@ -315,6 +315,7 @@ class CPB_Admin {
             'editAction'   => __( 'Edit', 'codex-plugin-boilerplate' ),
             'saveChanges'  => __( 'Save Changes', 'codex-plugin-boilerplate' ),
             'entityFields' => $field_definitions,
+            'editorSettings' => $this->get_inline_editor_settings(),
         ) );
     }
 
@@ -607,6 +608,7 @@ class CPB_Admin {
                 'name'    => 'placeholder_11',
                 'label'   => $this->get_placeholder_label( 11 ),
                 'type'    => 'state',
+                'options' => $this->get_us_states(),
                 'tooltip' => $tooltips['placeholder_11'],
             ),
             array(
@@ -798,6 +800,25 @@ class CPB_Admin {
         }
 
         return $prepared;
+    }
+
+    private function get_inline_editor_settings() {
+        $default_settings = array(
+            'tinymce'   => array(
+                'wpautop' => true,
+            ),
+            'quicktags' => true,
+        );
+
+        if ( function_exists( 'wp_get_editor_settings' ) ) {
+            $settings = wp_get_editor_settings( 'placeholder_28', array( 'textarea_name' => 'placeholder_28' ) );
+
+            if ( is_array( $settings ) ) {
+                return $settings;
+            }
+        }
+
+        return $default_settings;
     }
 
     private function render_create_tab() {

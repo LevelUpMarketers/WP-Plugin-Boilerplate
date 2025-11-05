@@ -33,29 +33,56 @@ class CPB_Ajax {
         $id    = isset( $_POST['id'] ) ? absint( $_POST['id'] ) : 0;
         $now   = current_time( 'mysql' );
 
+        $name = $this->sanitize_text_value( 'name' );
+
+        if ( '' === $name ) {
+            $name = $this->sanitize_text_value( 'placeholder_1' );
+        }
+
+        $state_options          = $this->get_us_states();
+        $extended_state_options = $this->get_us_states_and_territories();
+        $opt_in_keys            = array(
+            'opt_in_marketing_email',
+            'opt_in_marketing_sms',
+            'opt_in_event_update_email',
+            'opt_in_event_update_sms',
+        );
+
         $data = array(
-            'name'           => $this->sanitize_text_value( 'name' ),
-            'placeholder_1'  => $this->sanitize_text_value( 'placeholder_1' ),
-            'placeholder_2'  => $this->sanitize_text_value( 'placeholder_2' ),
-            'placeholder_3'  => $this->sanitize_date_value( 'placeholder_3' ),
-            'placeholder_4'  => $this->sanitize_select_value( 'placeholder_4', array( '0', '1' ) ),
-            'placeholder_5'  => $this->sanitize_time_value( 'placeholder_5' ),
-            'placeholder_6'  => $this->sanitize_time_value( 'placeholder_6' ),
-            'placeholder_7'  => $this->sanitize_select_value( 'placeholder_7', array( '0', '1' ) ),
-            'placeholder_8'  => $this->sanitize_text_value( 'placeholder_8' ),
-            'placeholder_9'  => $this->sanitize_text_value( 'placeholder_9' ),
-            'placeholder_10' => $this->sanitize_text_value( 'placeholder_10' ),
-            'placeholder_11' => $this->sanitize_text_value( 'placeholder_11' ),
-            'placeholder_12' => $this->sanitize_text_value( 'placeholder_12' ),
-            'placeholder_13' => $this->sanitize_text_value( 'placeholder_13' ),
-            'placeholder_14' => $this->sanitize_url_value( 'placeholder_14' ),
-            'placeholder_15' => $this->sanitize_select_value( 'placeholder_15', array( 'option1', 'option2', 'option3' ) ),
-            'placeholder_16' => $this->sanitize_decimal_value( 'placeholder_16' ),
-            'placeholder_17' => $this->sanitize_decimal_value( 'placeholder_17' ),
-            'placeholder_18' => $this->sanitize_decimal_value( 'placeholder_18' ),
-            'placeholder_19' => $this->sanitize_select_value( 'placeholder_19', array( '0', '1' ) ),
-            'placeholder_20' => $this->sanitize_select_value( 'placeholder_20', array( '0', '1' ) ),
-            'updated_at'     => $now,
+            'name'                        => $name,
+            'placeholder_1'               => $this->sanitize_text_value( 'placeholder_1' ),
+            'placeholder_2'               => $this->sanitize_text_value( 'placeholder_2' ),
+            'placeholder_3'               => $this->sanitize_date_value( 'placeholder_3' ),
+            'placeholder_4'               => $this->sanitize_select_value( 'placeholder_4', array( '0', '1' ) ),
+            'placeholder_5'               => $this->sanitize_time_value( 'placeholder_5' ),
+            'placeholder_6'               => $this->sanitize_time_value( 'placeholder_6' ),
+            'placeholder_7'               => $this->sanitize_select_value( 'placeholder_7', array( '0', '1' ) ),
+            'placeholder_8'               => $this->sanitize_text_value( 'placeholder_8' ),
+            'placeholder_9'               => $this->sanitize_text_value( 'placeholder_9' ),
+            'placeholder_10'              => $this->sanitize_text_value( 'placeholder_10' ),
+            'placeholder_11'              => $this->sanitize_state_value( 'placeholder_11', $state_options ),
+            'placeholder_12'              => $this->sanitize_text_value( 'placeholder_12' ),
+            'placeholder_13'              => $this->sanitize_text_value( 'placeholder_13' ),
+            'placeholder_14'              => $this->sanitize_url_value( 'placeholder_14' ),
+            'placeholder_15'              => $this->sanitize_select_value( 'placeholder_15', array( 'option1', 'option2', 'option3' ) ),
+            'placeholder_16'              => $this->sanitize_decimal_value( 'placeholder_16' ),
+            'placeholder_17'              => $this->sanitize_decimal_value( 'placeholder_17' ),
+            'placeholder_18'              => $this->sanitize_decimal_value( 'placeholder_18' ),
+            'placeholder_19'              => $this->sanitize_select_value( 'placeholder_19', array( '0', '1' ) ),
+            'placeholder_20'              => $this->sanitize_select_value( 'placeholder_20', array( '0', '1' ) ),
+            'placeholder_21'              => $this->sanitize_state_value( 'placeholder_21', $extended_state_options ),
+            'placeholder_22'              => $this->sanitize_text_value( 'placeholder_22' ),
+            'placeholder_23'              => $this->sanitize_select_value( 'placeholder_23', array( 'option1', 'option2', 'option3' ) ),
+            'placeholder_24'              => $this->sanitize_opt_in_summary( $opt_in_keys ),
+            'placeholder_25'              => $this->sanitize_items_value( 'placeholder_25' ),
+            'placeholder_26'              => $this->sanitize_color_value( 'placeholder_26' ),
+            'placeholder_27'              => $this->sanitize_image_value( 'placeholder_27' ),
+            'placeholder_28'              => $this->sanitize_editor_value( 'placeholder_28' ),
+            'opt_in_marketing_email'      => $this->sanitize_checkbox_value( 'opt_in_marketing_email' ),
+            'opt_in_marketing_sms'        => $this->sanitize_checkbox_value( 'opt_in_marketing_sms' ),
+            'opt_in_event_update_email'   => $this->sanitize_checkbox_value( 'opt_in_event_update_email' ),
+            'opt_in_event_update_sms'     => $this->sanitize_checkbox_value( 'opt_in_event_update_sms' ),
+            'updated_at'                  => $now,
         );
 
         $formats = array_fill( 0, count( $data ), '%s' );
@@ -137,13 +164,69 @@ class CPB_Ajax {
         $entities = array();
 
         if ( $total > 0 ) {
+            $opt_in_keys = array(
+                'opt_in_marketing_email',
+                'opt_in_marketing_sms',
+                'opt_in_event_update_email',
+                'opt_in_event_update_sms',
+            );
+
             $entities = $wpdb->get_results(
                 $wpdb->prepare(
                     "SELECT * FROM $table ORDER BY placeholder_1 ASC, id ASC LIMIT %d OFFSET %d",
                     $per_page,
                     $offset
-                )
+                ),
+                ARRAY_A
             );
+
+            foreach ( $entities as &$entity ) {
+                $entity['placeholder_3']  = $this->format_date_for_response( $entity['placeholder_3'] );
+                $entity['placeholder_5']  = $this->format_time_for_response( $entity['placeholder_5'] );
+                $entity['placeholder_6']  = $this->format_time_for_response( $entity['placeholder_6'] );
+                $entity['placeholder_16'] = $this->format_decimal_for_response( $entity['placeholder_16'] );
+                $entity['placeholder_17'] = $this->format_decimal_for_response( $entity['placeholder_17'] );
+                $entity['placeholder_18'] = $this->format_decimal_for_response( $entity['placeholder_18'] );
+                $entity['placeholder_24'] = $this->format_json_field( $entity['placeholder_24'] );
+                $entity['placeholder_25'] = $this->format_json_field( $entity['placeholder_25'] );
+                $entity['placeholder_26'] = $this->format_color_for_response( $entity['placeholder_26'] );
+                $entity['placeholder_27'] = (string) absint( $entity['placeholder_27'] );
+                $entity['placeholder_27_url'] = $this->get_attachment_url( $entity['placeholder_27'] );
+                $entity['placeholder_28'] = $this->format_editor_content_for_response( $entity['placeholder_28'] );
+
+                foreach ( array( 'placeholder_4', 'placeholder_7', 'placeholder_19', 'placeholder_20', 'opt_in_marketing_email', 'opt_in_marketing_sms', 'opt_in_event_update_email', 'opt_in_event_update_sms' ) as $bool_key ) {
+                    if ( isset( $entity[ $bool_key ] ) ) {
+                        $entity[ $bool_key ] = (string) ( (int) $entity[ $bool_key ] );
+                    }
+                }
+
+                if ( ! isset( $entity['placeholder_21'] ) ) {
+                    $entity['placeholder_21'] = '';
+                }
+
+                if ( ! isset( $entity['placeholder_22'] ) ) {
+                    $entity['placeholder_22'] = '';
+                }
+
+                if ( ! isset( $entity['placeholder_23'] ) ) {
+                    $entity['placeholder_23'] = '';
+                }
+
+                if ( ! isset( $entity['placeholder_24'] ) ) {
+                    $entity['placeholder_24'] = wp_json_encode( array() );
+                }
+
+                if ( ! isset( $entity['placeholder_25'] ) ) {
+                    $entity['placeholder_25'] = wp_json_encode( array() );
+                }
+
+                foreach ( $opt_in_keys as $opt_in_key ) {
+                    if ( ! isset( $entity[ $opt_in_key ] ) ) {
+                        $entity[ $opt_in_key ] = '0';
+                    }
+                }
+            }
+            unset( $entity );
         }
 
         $this->maybe_delay( $start, 0 );
@@ -223,7 +306,17 @@ class CPB_Ajax {
 
         $value = sanitize_text_field( $value );
 
-        return $value;
+        if ( '' === $value ) {
+            return '';
+        }
+
+        $date = date_create_from_format( 'Y-m-d', $value );
+
+        if ( ! $date ) {
+            return '';
+        }
+
+        return $date->format( 'Y-m-d' );
     }
 
     private function sanitize_time_value( $key ) {
@@ -237,7 +330,23 @@ class CPB_Ajax {
             $value = reset( $value );
         }
 
-        return sanitize_text_field( $value );
+        $value = sanitize_text_field( $value );
+
+        if ( '' === $value ) {
+            return '';
+        }
+
+        if ( preg_match( '/^(\d{2}):(\d{2})$/', $value, $matches ) ) {
+            $hours = (int) $matches[1];
+            $mins  = (int) $matches[2];
+
+            $hours = max( 0, min( 23, $hours ) );
+            $mins  = max( 0, min( 59, $mins ) );
+
+            return sprintf( '%02d:%02d', $hours, $mins );
+        }
+
+        return '';
     }
 
     private function sanitize_decimal_value( $key ) {
@@ -278,5 +387,289 @@ class CPB_Ajax {
         }
 
         return esc_url_raw( $value );
+    }
+
+    private function sanitize_state_value( $key, $allowed_states ) {
+        $value = $this->get_post_value( $key );
+
+        if ( null === $value ) {
+            return '';
+        }
+
+        if ( is_array( $value ) ) {
+            $value = reset( $value );
+        }
+
+        $value = sanitize_text_field( $value );
+
+        if ( '' === $value ) {
+            return '';
+        }
+
+        if ( in_array( $value, $allowed_states, true ) ) {
+            return $value;
+        }
+
+        return '';
+    }
+
+    private function sanitize_checkbox_value( $key ) {
+        $value = $this->get_post_value( $key );
+
+        if ( null === $value ) {
+            return '0';
+        }
+
+        if ( is_array( $value ) ) {
+            $value = reset( $value );
+        }
+
+        return ! empty( $value ) ? '1' : '0';
+    }
+
+    private function sanitize_opt_in_summary( $keys ) {
+        $selected = array();
+
+        foreach ( $keys as $key ) {
+            if ( '1' === $this->sanitize_checkbox_value( $key ) ) {
+                $selected[] = $key;
+            }
+        }
+
+        return wp_json_encode( $selected );
+    }
+
+    private function sanitize_items_value( $key ) {
+        $value = $this->get_post_value( $key );
+
+        if ( null === $value ) {
+            return wp_json_encode( array() );
+        }
+
+        $items = array();
+
+        if ( is_array( $value ) ) {
+            foreach ( $value as $item ) {
+                $item = sanitize_text_field( $item );
+
+                if ( '' !== $item ) {
+                    $items[] = $item;
+                }
+            }
+        } else {
+            $value = sanitize_textarea_field( $value );
+            $split = preg_split( '/\r?\n/', $value );
+
+            if ( is_array( $split ) ) {
+                foreach ( $split as $item ) {
+                    $item = trim( $item );
+
+                    if ( '' !== $item ) {
+                        $items[] = $item;
+                    }
+                }
+            }
+        }
+
+        return wp_json_encode( $items );
+    }
+
+    private function sanitize_color_value( $key ) {
+        $value = $this->get_post_value( $key );
+
+        if ( null === $value ) {
+            return '';
+        }
+
+        if ( is_array( $value ) ) {
+            $value = reset( $value );
+        }
+
+        $value = sanitize_hex_color( $value );
+
+        return $value ? $value : '';
+    }
+
+    private function sanitize_image_value( $key ) {
+        $value = $this->get_post_value( $key );
+
+        if ( null === $value ) {
+            return '';
+        }
+
+        if ( is_array( $value ) ) {
+            $value = reset( $value );
+        }
+
+        return (string) absint( $value );
+    }
+
+    private function sanitize_editor_value( $key ) {
+        $value = $this->get_post_value( $key );
+
+        if ( null === $value ) {
+            return '';
+        }
+
+        if ( is_array( $value ) ) {
+            $value = reset( $value );
+        }
+
+        return wp_kses_post( $value );
+    }
+
+    private function format_date_for_response( $value ) {
+        if ( empty( $value ) || '0000-00-00' === $value ) {
+            return '';
+        }
+
+        $date = date_create( $value );
+
+        if ( ! $date ) {
+            return '';
+        }
+
+        return $date->format( 'Y-m-d' );
+    }
+
+    private function format_time_for_response( $value ) {
+        if ( empty( $value ) || '00:00:00' === $value ) {
+            return '';
+        }
+
+        if ( preg_match( '/^(\d{2}:\d{2})/', $value, $matches ) ) {
+            return $matches[1];
+        }
+
+        return '';
+    }
+
+    private function format_decimal_for_response( $value ) {
+        if ( null === $value || '' === $value ) {
+            return '0.00';
+        }
+
+        return number_format( (float) $value, 2, '.', '' );
+    }
+
+    private function format_json_field( $value ) {
+        if ( empty( $value ) ) {
+            return wp_json_encode( array() );
+        }
+
+        if ( is_array( $value ) ) {
+            return wp_json_encode( array_values( $value ) );
+        }
+
+        $decoded = json_decode( $value, true );
+
+        if ( is_array( $decoded ) ) {
+            return wp_json_encode( array_values( $decoded ) );
+        }
+
+        return wp_json_encode( array() );
+    }
+
+    private function format_color_for_response( $value ) {
+        $value = sanitize_hex_color( $value );
+
+        if ( ! $value ) {
+            return '';
+        }
+
+        return $value;
+    }
+
+    private function format_editor_content_for_response( $value ) {
+        if ( empty( $value ) ) {
+            return '';
+        }
+
+        return wp_kses_post( $value );
+    }
+
+    private function get_attachment_url( $attachment_id ) {
+        $attachment_id = absint( $attachment_id );
+
+        if ( ! $attachment_id ) {
+            return '';
+        }
+
+        $url = wp_get_attachment_url( $attachment_id );
+
+        if ( ! $url ) {
+            return '';
+        }
+
+        return esc_url_raw( $url );
+    }
+
+    private function get_us_states() {
+        return array(
+            __( 'Alabama', 'codex-plugin-boilerplate' ),
+            __( 'Alaska', 'codex-plugin-boilerplate' ),
+            __( 'Arizona', 'codex-plugin-boilerplate' ),
+            __( 'Arkansas', 'codex-plugin-boilerplate' ),
+            __( 'California', 'codex-plugin-boilerplate' ),
+            __( 'Colorado', 'codex-plugin-boilerplate' ),
+            __( 'Connecticut', 'codex-plugin-boilerplate' ),
+            __( 'Delaware', 'codex-plugin-boilerplate' ),
+            __( 'Florida', 'codex-plugin-boilerplate' ),
+            __( 'Georgia', 'codex-plugin-boilerplate' ),
+            __( 'Hawaii', 'codex-plugin-boilerplate' ),
+            __( 'Idaho', 'codex-plugin-boilerplate' ),
+            __( 'Illinois', 'codex-plugin-boilerplate' ),
+            __( 'Indiana', 'codex-plugin-boilerplate' ),
+            __( 'Iowa', 'codex-plugin-boilerplate' ),
+            __( 'Kansas', 'codex-plugin-boilerplate' ),
+            __( 'Kentucky', 'codex-plugin-boilerplate' ),
+            __( 'Louisiana', 'codex-plugin-boilerplate' ),
+            __( 'Maine', 'codex-plugin-boilerplate' ),
+            __( 'Maryland', 'codex-plugin-boilerplate' ),
+            __( 'Massachusetts', 'codex-plugin-boilerplate' ),
+            __( 'Michigan', 'codex-plugin-boilerplate' ),
+            __( 'Minnesota', 'codex-plugin-boilerplate' ),
+            __( 'Mississippi', 'codex-plugin-boilerplate' ),
+            __( 'Missouri', 'codex-plugin-boilerplate' ),
+            __( 'Montana', 'codex-plugin-boilerplate' ),
+            __( 'Nebraska', 'codex-plugin-boilerplate' ),
+            __( 'Nevada', 'codex-plugin-boilerplate' ),
+            __( 'New Hampshire', 'codex-plugin-boilerplate' ),
+            __( 'New Jersey', 'codex-plugin-boilerplate' ),
+            __( 'New Mexico', 'codex-plugin-boilerplate' ),
+            __( 'New York', 'codex-plugin-boilerplate' ),
+            __( 'North Carolina', 'codex-plugin-boilerplate' ),
+            __( 'North Dakota', 'codex-plugin-boilerplate' ),
+            __( 'Ohio', 'codex-plugin-boilerplate' ),
+            __( 'Oklahoma', 'codex-plugin-boilerplate' ),
+            __( 'Oregon', 'codex-plugin-boilerplate' ),
+            __( 'Pennsylvania', 'codex-plugin-boilerplate' ),
+            __( 'Rhode Island', 'codex-plugin-boilerplate' ),
+            __( 'South Carolina', 'codex-plugin-boilerplate' ),
+            __( 'South Dakota', 'codex-plugin-boilerplate' ),
+            __( 'Tennessee', 'codex-plugin-boilerplate' ),
+            __( 'Texas', 'codex-plugin-boilerplate' ),
+            __( 'Utah', 'codex-plugin-boilerplate' ),
+            __( 'Vermont', 'codex-plugin-boilerplate' ),
+            __( 'Virginia', 'codex-plugin-boilerplate' ),
+            __( 'Washington', 'codex-plugin-boilerplate' ),
+            __( 'West Virginia', 'codex-plugin-boilerplate' ),
+            __( 'Wisconsin', 'codex-plugin-boilerplate' ),
+            __( 'Wyoming', 'codex-plugin-boilerplate' ),
+        );
+    }
+
+    private function get_us_states_and_territories() {
+        return array_merge(
+            $this->get_us_states(),
+            array(
+                __( 'District of Columbia', 'codex-plugin-boilerplate' ),
+                __( 'American Samoa', 'codex-plugin-boilerplate' ),
+                __( 'Guam', 'codex-plugin-boilerplate' ),
+                __( 'Northern Mariana Islands', 'codex-plugin-boilerplate' ),
+                __( 'Puerto Rico', 'codex-plugin-boilerplate' ),
+                __( 'U.S. Virgin Islands', 'codex-plugin-boilerplate' ),
+            )
+        );
     }
 }

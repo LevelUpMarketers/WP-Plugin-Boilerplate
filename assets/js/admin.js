@@ -606,10 +606,17 @@ jQuery(document).ready(function($){
                         }
                     }
 
-                    wp.editor.initialize(editorId, {
-                        tinymce: true,
-                        quicktags: true
-                    });
+                    var editorSettings = $.extend(true, {}, cpbAdmin.editorSettings || {});
+
+                    if (typeof editorSettings.tinymce === 'undefined'){
+                        editorSettings.tinymce = true;
+                    }
+
+                    if (typeof editorSettings.quicktags === 'undefined'){
+                        editorSettings.quicktags = true;
+                    }
+
+                    wp.editor.initialize(editorId, editorSettings);
                 });
             }
         }
