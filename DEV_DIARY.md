@@ -51,4 +51,5 @@
 49. 2025-11-05: Synced the Main Entity schema and AJAX handlers to persist all placeholders, state dropdowns, opt-ins, item lists, media, and editor content while mirroring the create form's TinyMCE setup.
 50. 2025-11-05: Top-aligned Main Entity accordion summary cells so row heights stay consistent when toggling inline editors.
 51. 2025-11-05: Added a 50px minimum height to Main Entity accordion summary cells to eliminate row shifts when toggling panels.
+52. 2025-11-05: Evened accordion header column widths and mirrored the action-cell treatment on Communications templates for a consistent layout across tabs.
 

@@ -194,6 +194,7 @@ class CPB_Admin {
             }
 
             echo '<td class="cpb-accordion__cell cpb-accordion__cell--actions">';
+            echo '<span class="cpb-accordion__action-link" aria-hidden="true">' . esc_html__( 'Edit', 'codex-plugin-boilerplate' ) . '</span>';
             echo '<span class="dashicons dashicons-arrow-down-alt2 cpb-accordion__icon" aria-hidden="true"></span>';
             echo '<span class="screen-reader-text">' . esc_html__( 'Toggle template details', 'codex-plugin-boilerplate' ) . '</span>';
             echo '</td>';
