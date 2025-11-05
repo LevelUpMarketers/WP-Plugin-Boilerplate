@@ -49,4 +49,5 @@
 47. 2025-11-05: Re-ran the inline Main Entity editor deployment with refreshed feedback styling and corrected placeholder sanitization for saved values.
 48. 2025-11-05: Hardened Main Entity AJAX saving with normalized sanitization for date, time, and select fields plus explicit database error handling.
 49. 2025-11-05: Synced the Main Entity schema and AJAX handlers to persist all placeholders, state dropdowns, opt-ins, item lists, media, and editor content while mirroring the create form's TinyMCE setup.
+50. 2025-11-05: Top-aligned Main Entity accordion summary cells so row heights stay consistent when toggling inline editors.
 
