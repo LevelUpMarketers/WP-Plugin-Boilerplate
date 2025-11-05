@@ -30,7 +30,10 @@ class CPB_Ajax {
         check_ajax_referer( 'cpb_ajax_nonce' );
         global $wpdb;
         $table = $wpdb->prefix . 'cpb_main_entity';
-        $data  = array(
+        $id    = isset( $_POST['id'] ) ? absint( $_POST['id'] ) : 0;
+        $now   = current_time( 'mysql' );
+
+        $data = array(
             'name'           => sanitize_text_field( $_POST['name'] ?? '' ),
             'placeholder_1'  => sanitize_text_field( $_POST['placeholder_1'] ?? '' ),
             'placeholder_2'  => sanitize_text_field( $_POST['placeholder_2'] ?? '' ),
@@ -52,12 +55,20 @@ class CPB_Ajax {
             'placeholder_18' => isset( $_POST['placeholder_18'] ) ? intval( $_POST['placeholder_18'] ) : 0,
             'placeholder_19' => isset( $_POST['placeholder_19'] ) ? intval( $_POST['placeholder_19'] ) : 0,
             'placeholder_20' => sanitize_text_field( $_POST['placeholder_20'] ?? '' ),
-            'created_at'     => current_time( 'mysql' ),
-            'updated_at'     => current_time( 'mysql' ),
+            'updated_at'     => $now,
         );
-        $wpdb->insert( $table, $data );
+
+        if ( $id > 0 ) {
+            $wpdb->update( $table, $data, array( 'id' => $id ), null, array( '%d' ) );
+            $message = __( 'Changes saved.', 'codex-plugin-boilerplate' );
+        } else {
+            $data['created_at'] = $now;
+            $wpdb->insert( $table, $data );
+            $message = __( 'Saved', 'codex-plugin-boilerplate' );
+        }
+
         $this->maybe_delay( $start );
-        wp_send_json_success( array( 'message' => __( 'Saved', 'codex-plugin-boilerplate' ) ) );
+        wp_send_json_success( array( 'message' => $message ) );
     }
 
     public function delete_main_entity() {

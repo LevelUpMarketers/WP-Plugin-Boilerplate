@@ -92,7 +92,8 @@ jQuery(document).ready(function($){
         var $entityFeedback = $('#cpb-entity-feedback');
         var placeholderMap = cpbAdmin.placeholderMap || {};
         var placeholderList = Array.isArray(cpbAdmin.placeholders) ? cpbAdmin.placeholders : [];
-        var placeholderCount = Object.keys(placeholderMap).length || placeholderList.length || 28;
+        var entityFields = Array.isArray(cpbAdmin.entityFields) ? cpbAdmin.entityFields : [];
+        var pendingFeedbackMessage = '';
         var currentPage = 1;
         var emptyValue = '—';
 
@@ -142,6 +143,321 @@ jQuery(document).ready(function($){
             }
 
             return String(value);
+        }
+
+        function getFieldValue(entity, key){
+            if (!entity || typeof entity !== 'object'){
+                return '';
+            }
+
+            if (Object.prototype.hasOwnProperty.call(entity, key) && entity[key] !== null && typeof entity[key] !== 'undefined'){
+                return entity[key];
+            }
+
+            return '';
+        }
+
+        function parseItemsValue(value){
+            if (Array.isArray(value)){
+                return value;
+            }
+
+            if (!value || value === ''){
+                return [];
+            }
+
+            if (typeof value === 'string'){
+                try {
+                    var parsed = JSON.parse(value);
+
+                    if (Array.isArray(parsed)){
+                        return parsed;
+                    }
+                } catch (err) {
+                    // Ignore JSON parse errors and fall back to splitting.
+                }
+
+                return value.split(/\r?\n/).filter(function(item){
+                    return item !== '';
+                });
+            }
+
+            return [];
+        }
+
+        function appendFieldInput($container, field, value, entity, entityId){
+            var type = field.type || 'text';
+            var fieldName = field.name;
+            var stringValue = value === null || typeof value === 'undefined' ? '' : value;
+            var baseId = fieldName + '-' + entityId;
+            var addAnotherLabel = cpbAdmin.addAnotherItem || '+ Add Another Item';
+
+            switch (type){
+                case 'select':
+                    var options = field.options || {};
+                    var $select = $('<select/>', { name: fieldName });
+                    Object.keys(options).forEach(function(optionValue){
+                        var optionLabel = options[optionValue];
+                        var $option = $('<option/>', { value: optionValue, text: optionLabel });
+
+                        if (optionValue === ''){
+                            $option.prop('disabled', true);
+
+                            if (!stringValue){
+                                $option.prop('selected', true);
+                            }
+                        } else if (String(stringValue) === String(optionValue)){
+                            $option.prop('selected', true);
+                        }
+
+                        $select.append($option);
+                    });
+                    $container.append($select);
+                    break;
+                case 'state':
+                    var states = Array.isArray(field.options) ? field.options : [];
+                    var $stateSelect = $('<select/>', { name: fieldName });
+                    var placeholderOption = $('<option/>', {
+                        value: '',
+                        text: cpbAdmin.makeSelection || ''
+                    }).prop('disabled', true);
+
+                    if (!stringValue){
+                        placeholderOption.prop('selected', true);
+                    }
+
+                    $stateSelect.append(placeholderOption);
+
+                    states.forEach(function(stateValue){
+                        var $stateOption = $('<option/>', { value: stateValue, text: stateValue });
+
+                        if (String(stateValue) === String(stringValue)){
+                            $stateOption.prop('selected', true);
+                        }
+
+                        $stateSelect.append($stateOption);
+                    });
+
+                    $container.append($stateSelect);
+                    break;
+                case 'radio':
+                    var radioOptions = field.options || {};
+
+                    Object.keys(radioOptions).forEach(function(optionValue){
+                        var option = radioOptions[optionValue] || {};
+                        var $label = $('<label/>', { 'class': 'cpb-radio-option' });
+                        var $input = $('<input/>', {
+                            type: 'radio',
+                            name: fieldName,
+                            value: optionValue
+                        });
+
+                        if (String(optionValue) === String(stringValue)){
+                            $input.prop('checked', true);
+                        }
+
+                        $label.append($input);
+                        $label.append(' ');
+                        $label.append($('<span/>', {
+                            'class': 'cpb-tooltip-icon dashicons dashicons-editor-help',
+                            'data-tooltip': option.tooltip || ''
+                        }));
+                        $label.append(document.createTextNode(option.label || ''));
+                        $container.append($label);
+                    });
+                    break;
+                case 'opt_in':
+                    var optInOptions = Array.isArray(field.options) ? field.options : [];
+                    var $fieldset = $('<fieldset/>');
+
+                    optInOptions.forEach(function(option){
+                        var optionName = option.name || '';
+                        var isChecked = entity && (entity[optionName] === '1' || entity[optionName] === 1 || entity[optionName] === true);
+                        var $label = $('<label/>', { 'class': 'cpb-opt-in-option' });
+                        var $input = $('<input/>', {
+                            type: 'checkbox',
+                            name: optionName,
+                            value: '1'
+                        });
+
+                        if (isChecked){
+                            $input.prop('checked', true);
+                        }
+
+                        $label.append($input);
+                        $label.append(' ');
+                        $label.append($('<span/>', {
+                            'class': 'cpb-tooltip-icon dashicons dashicons-editor-help',
+                            'data-tooltip': option.tooltip || ''
+                        }));
+                        $label.append(document.createTextNode(option.label || ''));
+                        $fieldset.append($label);
+                    });
+
+                    $container.append($fieldset);
+                    break;
+                case 'items':
+                    var containerId = baseId + '-container';
+                    var $itemsContainer = $('<div/>', {
+                        id: containerId,
+                        'class': 'cpb-items-container',
+                        'data-placeholder': fieldName
+                    });
+                    var items = parseItemsValue(stringValue);
+
+                    if (!items.length){
+                        items = [''];
+                    }
+
+                    items.forEach(function(itemValue, index){
+                        var $row = $('<div/>', {
+                            'class': 'cpb-item-row',
+                            style: 'margin-bottom:8px; display:flex; align-items:center;'
+                        });
+                        var placeholderText = cpbAdmin.itemPlaceholder ? formatString(cpbAdmin.itemPlaceholder, index + 1) : '';
+                        var $input = $('<input/>', {
+                            type: 'text',
+                            name: fieldName + '[]',
+                            'class': 'regular-text cpb-item-field',
+                            placeholder: placeholderText,
+                            value: itemValue
+                        });
+                        $row.append($input);
+                        var $removeButton = $('<button/>', {
+                            type: 'button',
+                            'class': 'cpb-delete-item',
+                            'aria-label': 'Remove',
+                            style: 'background:none;border:none;cursor:pointer;margin-left:8px;'
+                        }).append($('<span/>', { 'class': 'dashicons dashicons-no-alt' }));
+                        $row.append($removeButton);
+                        $itemsContainer.append($row);
+                    });
+
+                    $container.append($itemsContainer);
+
+                    var $addButton = $('<button/>', {
+                        type: 'button',
+                        'class': 'button cpb-add-item',
+                        'data-target': '#' + containerId,
+                        'data-field-name': fieldName,
+                        style: 'margin-top:8px;'
+                    }).text(addAnotherLabel);
+
+                    $container.append($addButton);
+                    break;
+                case 'image':
+                    var inputId = baseId;
+                    var $hidden = $('<input/>', {
+                        type: 'hidden',
+                        name: fieldName,
+                        id: inputId,
+                        value: stringValue
+                    });
+                    var $button = $('<button/>', {
+                        type: 'button',
+                        'class': 'button cpb-upload',
+                        'data-target': '#' + inputId
+                    }).text(cpbAdmin.mediaTitle);
+                    var previewId = inputId + '-preview';
+                    var $preview = $('<div/>', {
+                        id: previewId,
+                        style: 'margin-top:10px;'
+                    });
+                    var urlKey = fieldName + '_url';
+
+                    if (entity && entity[urlKey]){
+                        $preview.append($('<img/>', {
+                            src: entity[urlKey],
+                            alt: field.label || '',
+                            style: 'max-width:100px;height:auto;'
+                        }));
+                    }
+
+                    $container.append($hidden, $button, $preview);
+                    break;
+                case 'editor':
+                    var editorId = baseId;
+                    var $textarea = $('<textarea/>', {
+                        name: fieldName,
+                        id: editorId,
+                        'class': 'cpb-editor-field'
+                    }).val(stringValue);
+                    $container.append($textarea);
+                    break;
+                default:
+                    var $inputField = $('<input/>', {
+                        type: type,
+                        name: fieldName
+                    }).val(stringValue);
+
+                    if (field.attrs){
+                        field.attrs.replace(/([\w-]+)="([^"]*)"/g, function(match, attrName, attrValue){
+                            $inputField.attr(attrName, attrValue);
+                            return match;
+                        });
+                    }
+
+                    $container.append($inputField);
+                    break;
+            }
+        }
+
+        function buildEntityForm(entity){
+            var entityId = entity && entity.id ? entity.id : 0;
+            var $form = $('<form/>', {
+                'class': 'cpb-entity-edit-form',
+                'data-entity-id': entityId
+            });
+            var $flex = $('<div/>', { 'class': 'cpb-flex-form' });
+
+            $form.append($('<input/>', { type: 'hidden', name: 'id', value: entityId }));
+            $form.append($('<input/>', { type: 'hidden', name: 'name', value: entity && entity.name ? entity.name : '' }));
+
+            entityFields.forEach(function(field){
+                if (!field || !field.name){
+                    return;
+                }
+
+                var value = getFieldValue(entity, field.name);
+                var fieldClasses = 'cpb-field';
+
+                if (field.fullWidth){
+                    fieldClasses += ' cpb-field-full';
+                }
+
+                var $fieldWrapper = $('<div/>', { 'class': fieldClasses });
+                var $label = $('<label/>');
+
+                $label.append($('<span/>', {
+                    'class': 'cpb-tooltip-icon dashicons dashicons-editor-help',
+                    'data-tooltip': field.tooltip || ''
+                }));
+                $label.append(document.createTextNode(field.label || ''));
+                $fieldWrapper.append($label);
+                appendFieldInput($fieldWrapper, field, value, entity, entityId);
+                $flex.append($fieldWrapper);
+            });
+
+            $form.append($flex);
+
+            var $actions = $('<p/>', { 'class': 'cpb-entity__actions submit' });
+            var $saveButton = $('<button/>', {
+                type: 'submit',
+                'class': 'button button-primary cpb-entity-save'
+            }).text(cpbAdmin.saveChanges || 'Save Changes');
+            var $deleteButton = $('<button/>', {
+                type: 'button',
+                'class': 'button button-secondary cpb-delete',
+                'data-id': entityId
+            }).text(cpbAdmin.delete);
+            var $feedbackArea = $('<span/>', { 'class': 'cpb-feedback-area cpb-feedback-area--inline' });
+            var $spinner = $('<span/>', { 'class': 'spinner cpb-entity-spinner', 'aria-hidden': 'true' });
+            var $feedback = $('<span/>', { 'class': 'cpb-entity-feedback', 'role': 'status', 'aria-live': 'polite' });
+            $feedbackArea.append($spinner).append($feedback);
+            $actions.append($saveButton).append(' ').append($deleteButton).append($feedbackArea);
+            $form.append($actions);
+
+            return $form;
         }
 
         function updatePagination(total, totalPages, page){
@@ -264,56 +580,38 @@ jQuery(document).ready(function($){
 
                 var $panelCell = $('<td/>').attr('colspan', columnCount);
                 var $panel = $('<div/>', {'class': 'cpb-accordion__panel'}).hide();
+                var $form = buildEntityForm(entity);
 
-                var $nameField = $('<p/>', {'class': 'cpb-entity__field cpb-entity__field--name'});
-                $nameField.append($('<strong/>').text(cpbAdmin.nameLabel + ':'));
-                $nameField.append(' ');
-                $nameField.append($('<span/>').text(formatValue(entity.name)));
-                $panel.append($nameField);
-
-                for (var i = 1; i <= placeholderCount; i++) {
-                    var placeholderLabel = getPlaceholderLabel(i);
-                    var key = 'placeholder_' + i;
-                    var displayValue = formatValue(entity[key]);
-                    var $field = $('<p/>', {'class': 'cpb-entity__field'});
-                    $field.append($('<strong/>').text(placeholderLabel + ':'));
-                    var hasImage = (i === 27 && entity[key + '_url']);
-
-                    if (hasImage) {
-                        $field.append(' ');
-                        $field.append($('<img/>', {
-                            src: entity[key + '_url'],
-                            alt: placeholderLabel,
-                            style: 'max-width:100px;height:auto;'
-                        }));
-
-                        if (displayValue !== emptyValue) {
-                            $field.append(' ');
-                            $field.append($('<span/>').text(displayValue));
-                        }
-                    } else {
-                        $field.append(' ');
-                        $field.append($('<span/>').text(displayValue));
-                    }
-
-                    $panel.append($field);
-                }
-
-                var $actions = $('<p/>', {'class': 'cpb-entity__actions'});
-                var $deleteButton = $('<button/>', {
-                    type: 'button',
-                    'class': 'button button-secondary cpb-delete',
-                    'data-id': entityId
-                }).text(cpbAdmin.delete);
-                $actions.append($deleteButton);
-                $panel.append($actions);
-
+                $panel.append($form);
                 $panelCell.append($panel);
                 $panelRow.append($panelCell);
                 $entityTableBody.append($panelRow);
             });
 
             updatePagination(total, totalPages, currentPage);
+
+            if (typeof wp !== 'undefined' && wp.editor && typeof wp.editor.initialize === 'function'){
+                $entityTableBody.find('.cpb-editor-field').each(function(){
+                    var editorId = $(this).attr('id');
+
+                    if (!editorId){
+                        return;
+                    }
+
+                    if (typeof wp.editor.remove === 'function'){
+                        try {
+                            wp.editor.remove(editorId);
+                        } catch (removeError) {
+                            // Ignore errors when removing editors that were not initialized yet.
+                        }
+                    }
+
+                    wp.editor.initialize(editorId, {
+                        tinymce: true,
+                        quicktags: true
+                    });
+                });
+            }
         }
 
         function fetchEntities(page){
@@ -329,12 +627,17 @@ jQuery(document).ready(function($){
                 .done(function(response){
                     if (response && response.success && response.data){
                         renderEntities(response.data);
+                        if (pendingFeedbackMessage){
+                            showFeedback(pendingFeedbackMessage);
+                            pendingFeedbackMessage = '';
+                        }
                     } else {
                         showFeedback(cpbAdmin.loadError || cpbAdmin.error);
                     }
                 })
                 .fail(function(){
                     showFeedback(cpbAdmin.loadError || cpbAdmin.error);
+                    pendingFeedbackMessage = '';
                 });
         }
 
@@ -353,7 +656,55 @@ jQuery(document).ready(function($){
             });
         }
 
-        $entityTableBody.on('click', '.cpb-delete', function(){
+        $entityTableBody.on('submit', '.cpb-entity-edit-form', function(e){
+            e.preventDefault();
+            e.stopPropagation();
+
+            var $form = $(this);
+            var $spinner = $form.find('.cpb-entity-spinner');
+            var $feedback = $form.find('.cpb-entity-feedback');
+
+            if ($spinner.length){
+                $spinner.addClass('is-active');
+            }
+
+            if ($feedback.length){
+                $feedback.removeClass('is-visible').text('');
+            }
+
+            var formData = $form.serialize();
+            formData += '&action=cpb_save_main_entity&_ajax_nonce=' + encodeURIComponent(cpbAjax.nonce);
+
+            $.post(cpbAjax.ajaxurl, formData)
+                .done(function(resp){
+                    if (resp && resp.success){
+                        pendingFeedbackMessage = resp.data && resp.data.message ? resp.data.message : '';
+                        fetchEntities(currentPage);
+                    } else {
+                        var message = resp && resp.data && resp.data.message ? resp.data.message : (cpbAdmin.error || '');
+
+                        if ($feedback.length && message){
+                            $feedback.text(message).addClass('is-visible');
+                        }
+                    }
+                })
+                .fail(function(){
+                    if ($feedback.length && cpbAdmin.error){
+                        $feedback.text(cpbAdmin.error).addClass('is-visible');
+                    }
+                })
+                .always(function(){
+                    if ($spinner.length){
+                        setTimeout(function(){
+                            $spinner.removeClass('is-active');
+                        }, 150);
+                    }
+                });
+        });
+
+        $entityTableBody.on('click', '.cpb-delete', function(e){
+            e.preventDefault();
+            e.stopPropagation();
             var id = $(this).data('id');
 
             if (!id){
@@ -369,6 +720,7 @@ jQuery(document).ready(function($){
             })
                 .done(function(resp){
                     if (resp && resp.success){
+                        pendingFeedbackMessage = resp.data && resp.data.message ? resp.data.message : '';
                         fetchEntities(currentPage);
                     } else {
                         showFeedback(cpbAdmin.error);
@@ -472,15 +824,58 @@ jQuery(document).ready(function($){
 
     initAccordionGroups();
 
-    $(document).on('click','#cpb-add-item',function(){
-        var count = $('#cpb-items-container .cpb-item-row').length + 1;
-        var row = $('<div class="cpb-item-row" style="margin-bottom:8px; display:flex; align-items:center;"></div>');
-          row.append('<input type="text" name="placeholder_25[]" class="regular-text cpb-item-field" placeholder="'+cpbAdmin.itemPlaceholder.replace('%d',count)+'" />');
-        row.append('<button type="button" class="cpb-delete-item" aria-label="Remove" style="background:none;border:none;cursor:pointer;margin-left:8px;"><span class="dashicons dashicons-no-alt"></span></button>');
-        $('#cpb-items-container').append(row);
+    $(document).on('click', '.cpb-add-item', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+
+        var $button = $(this);
+        var targetSelector = $button.data('target');
+        var $container = targetSelector ? $(targetSelector) : $button.closest('.cpb-field').find('.cpb-items-container').first();
+
+        if (!$container.length){
+            return;
+        }
+
+        var fieldName = $button.data('field-name') || $container.data('placeholder') || 'placeholder_25';
+        var count = $container.find('.cpb-item-row').length + 1;
+        var placeholderText = cpbAdmin.itemPlaceholder ? formatString(cpbAdmin.itemPlaceholder, count) : '';
+        var $row = $('<div/>', {
+            'class': 'cpb-item-row',
+            style: 'margin-bottom:8px; display:flex; align-items:center;'
+        });
+        var $input = $('<input/>', {
+            type: 'text',
+            name: fieldName + '[]',
+            'class': 'regular-text cpb-item-field',
+            placeholder: placeholderText
+        });
+        var $removeButton = $('<button/>', {
+            type: 'button',
+            'class': 'cpb-delete-item',
+            'aria-label': 'Remove',
+            style: 'background:none;border:none;cursor:pointer;margin-left:8px;'
+        }).append($('<span/>', { 'class': 'dashicons dashicons-no-alt' }));
+
+        $row.append($input).append($removeButton);
+        $container.append($row);
     });
 
-    $(document).on('click','.cpb-delete-item',function(){
-        $(this).closest('.cpb-item-row').remove();
+    $(document).on('click', '.cpb-delete-item', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+
+        var $row = $(this).closest('.cpb-item-row');
+        var $container = $row.parent('.cpb-items-container');
+        $row.remove();
+
+        if ($container && $container.length && cpbAdmin.itemPlaceholder){
+            $container.find('.cpb-item-row').each(function(index){
+                var $input = $(this).find('.cpb-item-field');
+
+                if ($input.length){
+                    $input.attr('placeholder', formatString(cpbAdmin.itemPlaceholder, index + 1));
+                }
+            });
+        }
     });
 });

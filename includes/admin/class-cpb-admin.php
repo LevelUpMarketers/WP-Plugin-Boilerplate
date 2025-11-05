@@ -286,6 +286,7 @@ class CPB_Admin {
         wp_enqueue_editor();
 
         $placeholder_labels = $this->get_placeholder_labels();
+        $field_definitions  = $this->prepare_main_entity_fields_for_js();
 
         wp_localize_script( 'cpb-admin', 'cpbAjax', array(
             'ajaxurl' => admin_url( 'admin-ajax.php' ),
@@ -299,6 +300,8 @@ class CPB_Admin {
             'mediaTitle'   => __( 'Select Image', 'codex-plugin-boilerplate' ),
             'mediaButton'  => __( 'Use this image', 'codex-plugin-boilerplate' ),
             'itemPlaceholder' => __( 'Item #%d', 'codex-plugin-boilerplate' ),
+            'addAnotherItem' => __( '+ Add Another Item', 'codex-plugin-boilerplate' ),
+            'makeSelection' => __( 'Make a Selection...', 'codex-plugin-boilerplate' ),
             'error'        => __( 'Something went wrong. Please try again.', 'codex-plugin-boilerplate' ),
             'loadError'    => __( 'Unable to load records. Please try again.', 'codex-plugin-boilerplate' ),
             'totalRecords' => __( 'Total records: %s', 'codex-plugin-boilerplate' ),
@@ -310,6 +313,8 @@ class CPB_Admin {
             'toggleDetails' => __( 'Toggle entity details', 'codex-plugin-boilerplate' ),
             'nameLabel'    => __( 'Name', 'codex-plugin-boilerplate' ),
             'editAction'   => __( 'Edit', 'codex-plugin-boilerplate' ),
+            'saveChanges'  => __( 'Save Changes', 'codex-plugin-boilerplate' ),
+            'entityFields' => $field_definitions,
         ) );
     }
 
@@ -525,7 +530,7 @@ class CPB_Admin {
         echo '</div>';
     }
 
-    private function render_create_tab() {
+    private function get_main_entity_fields() {
         $tooltips = $this->get_tooltips();
         $fields    = array(
             array(
@@ -715,6 +720,28 @@ class CPB_Admin {
                 'label'   => $this->get_placeholder_label( 24 ),
                 'type'    => 'opt_in',
                 'tooltip' => $tooltips['placeholder_24'],
+                'options' => array(
+                    array(
+                        'name'    => 'opt_in_marketing_email',
+                        'label'   => __( 'Option 1', 'codex-plugin-boilerplate' ),
+                        'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 1', 'codex-plugin-boilerplate' ),
+                    ),
+                    array(
+                        'name'    => 'opt_in_marketing_sms',
+                        'label'   => __( 'Option 2', 'codex-plugin-boilerplate' ),
+                        'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 2', 'codex-plugin-boilerplate' ),
+                    ),
+                    array(
+                        'name'    => 'opt_in_event_update_email',
+                        'label'   => __( 'Option 3', 'codex-plugin-boilerplate' ),
+                        'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 3', 'codex-plugin-boilerplate' ),
+                    ),
+                    array(
+                        'name'    => 'opt_in_event_update_sms',
+                        'label'   => __( 'Option 4', 'codex-plugin-boilerplate' ),
+                        'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 4', 'codex-plugin-boilerplate' ),
+                    ),
+                ),
             ),
             array(
                 'name'    => 'placeholder_25',
@@ -743,6 +770,39 @@ class CPB_Admin {
                 'full_width' => true,
             ),
         );
+        return $fields;
+    }
+
+    private function prepare_main_entity_fields_for_js() {
+        $fields    = $this->get_main_entity_fields();
+        $prepared  = array();
+
+        foreach ( $fields as $field ) {
+            $prepared_field = array(
+                'name'      => $field['name'],
+                'type'      => $field['type'],
+                'label'     => $field['label'],
+                'tooltip'   => $field['tooltip'],
+                'fullWidth' => ! empty( $field['full_width'] ),
+            );
+
+            if ( isset( $field['options'] ) ) {
+                $prepared_field['options'] = $field['options'];
+            }
+
+            if ( isset( $field['attrs'] ) ) {
+                $prepared_field['attrs'] = $field['attrs'];
+            }
+
+            $prepared[] = $prepared_field;
+        }
+
+        return $prepared;
+    }
+
+    private function render_create_tab() {
+        $fields = $this->get_main_entity_fields();
+
         echo '<form id="cpb-create-form"><div class="cpb-flex-form">';
         foreach ( $fields as $field ) {
             $classes = 'cpb-field';
@@ -783,28 +843,33 @@ class CPB_Admin {
                     wp_editor( '', $field['name'], array( 'textarea_name' => $field['name'] ) );
                     break;
                 case 'opt_in':
-                    $opts = array(
-                        array(
-                            'name'    => 'opt_in_marketing_email',
-                            'label'   => __( 'Option 1', 'codex-plugin-boilerplate' ),
-                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 1', 'codex-plugin-boilerplate' ),
-                        ),
-                        array(
-                            'name'    => 'opt_in_marketing_sms',
-                            'label'   => __( 'Option 2', 'codex-plugin-boilerplate' ),
-                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 2', 'codex-plugin-boilerplate' ),
-                        ),
-                        array(
-                            'name'    => 'opt_in_event_update_email',
-                            'label'   => __( 'Option 3', 'codex-plugin-boilerplate' ),
-                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 3', 'codex-plugin-boilerplate' ),
-                        ),
-                        array(
-                            'name'    => 'opt_in_event_update_sms',
-                            'label'   => __( 'Option 4', 'codex-plugin-boilerplate' ),
-                            'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 4', 'codex-plugin-boilerplate' ),
-                        ),
-                    );
+                    $opts = isset( $field['options'] ) ? $field['options'] : array();
+
+                    if ( empty( $opts ) ) {
+                        $opts = array(
+                            array(
+                                'name'    => 'opt_in_marketing_email',
+                                'label'   => __( 'Option 1', 'codex-plugin-boilerplate' ),
+                                'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 1', 'codex-plugin-boilerplate' ),
+                            ),
+                            array(
+                                'name'    => 'opt_in_marketing_sms',
+                                'label'   => __( 'Option 2', 'codex-plugin-boilerplate' ),
+                                'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 2', 'codex-plugin-boilerplate' ),
+                            ),
+                            array(
+                                'name'    => 'opt_in_event_update_email',
+                                'label'   => __( 'Option 3', 'codex-plugin-boilerplate' ),
+                                'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 3', 'codex-plugin-boilerplate' ),
+                            ),
+                            array(
+                                'name'    => 'opt_in_event_update_sms',
+                                'label'   => __( 'Option 4', 'codex-plugin-boilerplate' ),
+                                'tooltip' => __( 'Tooltip placeholder text for Placeholder 23 Option 4', 'codex-plugin-boilerplate' ),
+                            ),
+                        );
+                    }
+
                     echo '<fieldset>';
                     foreach ( $opts as $opt ) {
                         echo '<label class="cpb-opt-in-option"><input type="checkbox" name="' . esc_attr( $opt['name'] ) . '" value="1" />';
@@ -814,11 +879,11 @@ class CPB_Admin {
                     echo '</fieldset>';
                     break;
                 case 'items':
-                    echo '<div id="cpb-items-container">';
+                    echo '<div id="cpb-items-container" class="cpb-items-container" data-placeholder="' . esc_attr( $field['name'] ) . '">';
                     echo '<div class="cpb-item-row" style="margin-bottom:8px; display:flex; align-items:center;">';
                     echo '<input type="text" name="' . esc_attr( $field['name'] ) . '[]" class="regular-text cpb-item-field" placeholder="' . esc_attr__( 'Item #1', 'codex-plugin-boilerplate' ) . '" />';
                     echo '</div></div>';
-                    echo '<button type="button" class="button" id="cpb-add-item" style="margin-top:8px;">' . esc_html__( '+ Add Another Item', 'codex-plugin-boilerplate' ) . '</button>';
+                    echo '<button type="button" class="button cpb-add-item" id="cpb-add-item" data-target="#cpb-items-container" style="margin-top:8px;">' . esc_html__( '+ Add Another Item', 'codex-plugin-boilerplate' ) . '</button>';
                     break;
                 case 'textarea':
                     echo '<textarea name="' . esc_attr( $field['name'] ) . '"></textarea>';
