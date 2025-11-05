@@ -71,8 +71,53 @@ class CPB_Ajax {
         check_ajax_referer( 'cpb_ajax_nonce' );
         global $wpdb;
         $table    = $wpdb->prefix . 'cpb_main_entity';
-        $entities = $wpdb->get_results( "SELECT * FROM $table ORDER BY id DESC" );
+        $page     = isset( $_POST['page'] ) ? max( 1, absint( $_POST['page'] ) ) : 1;
+        $per_page = isset( $_POST['per_page'] ) ? absint( $_POST['per_page'] ) : 20;
+
+        if ( $per_page <= 0 ) {
+            $per_page = 20;
+        }
+
+        $per_page = min( $per_page, 100 );
+
+        $total       = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table" );
+        $total_pages = $per_page > 0 ? (int) ceil( $total / $per_page ) : 1;
+
+        if ( $total_pages < 1 ) {
+            $total_pages = 1;
+        }
+
+        if ( $page > $total_pages ) {
+            $page = $total_pages;
+        }
+
+        $offset = ( $page - 1 ) * $per_page;
+
+        if ( $offset < 0 ) {
+            $offset = 0;
+        }
+
+        $entities = array();
+
+        if ( $total > 0 ) {
+            $entities = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT * FROM $table ORDER BY id DESC LIMIT %d OFFSET %d",
+                    $per_page,
+                    $offset
+                )
+            );
+        }
+
         $this->maybe_delay( $start );
-        wp_send_json_success( array( 'entities' => $entities ) );
+        wp_send_json_success(
+            array(
+                'entities'    => $entities,
+                'page'        => $page,
+                'per_page'    => $per_page,
+                'total'       => $total,
+                'total_pages' => $total_pages,
+            )
+        );
     }
 }

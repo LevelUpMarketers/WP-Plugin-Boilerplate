@@ -296,6 +296,15 @@ class CPB_Admin {
             'mediaButton'  => __( 'Use this image', 'codex-plugin-boilerplate' ),
             'itemPlaceholder' => __( 'Item #%d', 'codex-plugin-boilerplate' ),
             'error'        => __( 'Something went wrong. Please try again.', 'codex-plugin-boilerplate' ),
+            'loadError'    => __( 'Unable to load records. Please try again.', 'codex-plugin-boilerplate' ),
+            'totalRecords' => __( 'Total records: %s', 'codex-plugin-boilerplate' ),
+            'pageOf'       => __( 'Page %1$s of %2$s', 'codex-plugin-boilerplate' ),
+            'firstPage'    => __( 'First page', 'codex-plugin-boilerplate' ),
+            'prevPage'     => __( 'Previous page', 'codex-plugin-boilerplate' ),
+            'nextPage'     => __( 'Next page', 'codex-plugin-boilerplate' ),
+            'lastPage'     => __( 'Last page', 'codex-plugin-boilerplate' ),
+            'toggleDetails' => __( 'Toggle entity details', 'codex-plugin-boilerplate' ),
+            'nameLabel'    => __( 'Name', 'codex-plugin-boilerplate' ),
         ) );
     }
 
@@ -803,7 +812,37 @@ class CPB_Admin {
     }
 
     private function render_edit_tab() {
-        echo '<div id="cpb-entity-list" class="cpb-accordion"></div>';
+        $per_page     = 20;
+        $column_count = 6; // Five placeholder columns plus actions.
+
+        echo '<div class="cpb-communications cpb-communications--main-entities">';
+        echo '<div class="cpb-accordion-group cpb-accordion-group--table" data-cpb-accordion-group="main-entities">';
+        echo '<table class="wp-list-table widefat striped cpb-accordion-table">';
+        echo '<thead>';
+        echo '<tr>';
+
+        for ( $i = 1; $i <= 5; $i++ ) {
+            printf(
+                '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--placeholder-%1$d">%2$s</th>',
+                absint( $i ),
+                esc_html( sprintf( __( 'Placeholder %d', 'codex-plugin-boilerplate' ), $i ) )
+            );
+        }
+
+        echo '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--actions">' . esc_html__( 'Actions', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '</tr>';
+        echo '</thead>';
+        printf(
+            '<tbody id="cpb-entity-list" data-per-page="%1$d" data-column-count="%2$d">',
+            absint( $per_page ),
+            absint( $column_count )
+        );
+        echo '<tr class="no-items"><td colspan="' . esc_attr( $column_count ) . '">' . esc_html__( 'Loading records…', 'codex-plugin-boilerplate' ) . '</td></tr>';
+        echo '</tbody>';
+        echo '</table>';
+        echo '</div>';
+        echo '<div class="tablenav"><div id="cpb-entity-pagination" class="tablenav-pages"></div></div>';
+        echo '</div>';
         echo '<div class="cpb-feedback-area cpb-feedback-area--block"><span id="cpb-spinner" class="spinner" aria-hidden="true"></span><span id="cpb-feedback" role="status" aria-live="polite"></span></div>';
     }
 

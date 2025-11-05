@@ -38,6 +38,39 @@ jQuery(document).ready(function($){
     handleForm('#cpb-general-settings-form','cpb_save_main_entity');
     handleForm('#cpb-style-settings-form','cpb_save_main_entity');
 
+    function formatString(template){
+        if (typeof template !== 'string') {
+            return '';
+        }
+
+        var args = Array.prototype.slice.call(arguments, 1);
+        var usedIndexes = {};
+        var result = template.replace(/%(\d+)\$s/g, function(match, number){
+            var index = parseInt(number, 10) - 1;
+
+            if (typeof args[index] === 'undefined') {
+                usedIndexes[index] = true;
+                return '';
+            }
+
+            usedIndexes[index] = true;
+            return args[index];
+        });
+
+        var sequentialIndex = 0;
+
+        return result.replace(/%s/g, function(){
+            while (usedIndexes[sequentialIndex]) {
+                sequentialIndex++;
+            }
+
+            var value = typeof args[sequentialIndex] !== 'undefined' ? args[sequentialIndex] : '';
+            usedIndexes[sequentialIndex] = true;
+            sequentialIndex++;
+            return value;
+        });
+    }
+
     $(document).on('click','.cpb-upload',function(e){
         e.preventDefault();
         var target=$(this).data('target');
@@ -51,46 +84,303 @@ jQuery(document).ready(function($){
     });
 
     if($('#cpb-entity-list').length){
-        $.post(cpbAjax.ajaxurl,{action:'cpb_read_main_entity',_ajax_nonce:cpbAjax.nonce},function(response){
-            var $list=$('#cpb-entity-list');
-            if(response.success && response.data.entities.length){
-                response.data.entities.forEach(function(ent){
-                    var $item=$('<div class="item"></div>');
-                    var $header=$('<div class="item-header"></div>').text(ent.name);
-                    var $content=$('<div class="item-content"></div>');
-                    cpbAdmin.placeholders.forEach(function(label,index){
-                        var key='placeholder_'+(index+1);
-                    if(index===26){
-                        var urlKey='placeholder_'+(index+1)+'_url';
-                            if(ent[urlKey]){
-                                $content.append('<p><img src="'+ent[urlKey]+'" style="max-width:100px;height:auto;" /></p>');
-                            }
-                        }else{
-                            $content.append('<p><strong>'+label+':</strong> '+(ent[key]||'')+'</p>');
-                        }
-                    });
-                    $content.append('<button type="button" class="button cpb-delete" data-id="'+ent.id+'">'+cpbAdmin.delete+'</button>');
-                    $item.append($header).append($content);
-                    $list.append($item);
-                });
-            }else{
-                $list.append('<p>'+cpbAdmin.none+'</p>');
-            }
-        });
+        var $entityTableBody = $('#cpb-entity-list');
+        var perPage = parseInt($entityTableBody.data('per-page'), 10) || 20;
+        var columnCount = parseInt($entityTableBody.data('column-count'), 10) || 6;
+        var $pagination = $('#cpb-entity-pagination');
+        var $paginationContainer = $pagination.closest('.tablenav');
+        var $spinner = $('#cpb-spinner');
+        var $feedback = $('#cpb-feedback');
+        var currentPage = 1;
+        var placeholderCount = (cpbAdmin.placeholders && cpbAdmin.placeholders.length) ? cpbAdmin.placeholders.length : 28;
+        var emptyValue = '—';
 
-        $('#cpb-entity-list').on('click','.cpb-delete',function(){
-            var id=$(this).data('id');
-            var $row=$(this).closest('.item');
-            var $spinner = $('#cpb-spinner');
-            $spinner.addClass('is-active');
-            $.post(cpbAjax.ajaxurl,{action:'cpb_delete_main_entity',id:id,_ajax_nonce:cpbAjax.nonce})
-                .done(function(resp){
-                    if(resp.success){
-                        $row.remove();
+        if ($paginationContainer.length){
+            $paginationContainer.hide();
+        }
+
+        function clearFeedback(){
+            if ($feedback.length){
+                $feedback.removeClass('is-visible').text('');
+            }
+        }
+
+        function showFeedback(message){
+            if (!$feedback.length){
+                return;
+            }
+
+            if (message){
+                $feedback.text(message).addClass('is-visible');
+            } else {
+                $feedback.removeClass('is-visible').text('');
+            }
+        }
+
+        function getPlaceholderLabel(index){
+            if (cpbAdmin.placeholders && cpbAdmin.placeholders.length >= index){
+                return cpbAdmin.placeholders[index - 1];
+            }
+
+            return 'Placeholder ' + index;
+        }
+
+        function formatValue(value){
+            if (value === null || typeof value === 'undefined' || value === ''){
+                return emptyValue;
+            }
+
+            return String(value);
+        }
+
+        function updatePagination(total, totalPages, page){
+            if (!$pagination.length){
+                return;
+            }
+
+            if (!total || total <= 0){
+                $pagination.empty();
+
+                if ($paginationContainer.length){
+                    $paginationContainer.hide();
+                }
+
+                return;
+            }
+
+            var totalPagesSafe = totalPages && totalPages > 0 ? totalPages : 1;
+            var pageSafe = page && page > 0 ? page : 1;
+            var html = '<span class="displaying-num">' + formatString(cpbAdmin.totalRecords, total) + '</span>';
+
+            if (totalPagesSafe > 1){
+                html += '<span class="pagination-links">';
+
+                if (pageSafe > 1){
+                    html += '<a class="first-page button cpb-entity-page" href="#" data-page="1"><span class="screen-reader-text">' + cpbAdmin.firstPage + '</span><span aria-hidden="true">&laquo;</span></a>';
+                    html += '<a class="prev-page button cpb-entity-page" href="#" data-page="' + (pageSafe - 1) + '"><span class="screen-reader-text">' + cpbAdmin.prevPage + '</span><span aria-hidden="true">&lsaquo;</span></a>';
+                } else {
+                    html += '<span class="tablenav-pages-navspan button disabled" aria-hidden="true">&laquo;</span>';
+                    html += '<span class="tablenav-pages-navspan button disabled" aria-hidden="true">&lsaquo;</span>';
+                }
+
+                html += '<span class="tablenav-paging-text">' + formatString(cpbAdmin.pageOf, pageSafe, totalPagesSafe) + '</span>';
+
+                if (pageSafe < totalPagesSafe){
+                    html += '<a class="next-page button cpb-entity-page" href="#" data-page="' + (pageSafe + 1) + '"><span class="screen-reader-text">' + cpbAdmin.nextPage + '</span><span aria-hidden="true">&rsaquo;</span></a>';
+                    html += '<a class="last-page button cpb-entity-page" href="#" data-page="' + totalPagesSafe + '"><span class="screen-reader-text">' + cpbAdmin.lastPage + '</span><span aria-hidden="true">&raquo;</span></a>';
+                } else {
+                    html += '<span class="tablenav-pages-navspan button disabled" aria-hidden="true">&rsaquo;</span>';
+                    html += '<span class="tablenav-pages-navspan button disabled" aria-hidden="true">&raquo;</span>';
+                }
+
+                html += '</span>';
+            } else {
+                html += '<span class="tablenav-paging-text">' + formatString(cpbAdmin.pageOf, pageSafe, totalPagesSafe) + '</span>';
+            }
+
+            $pagination.html(html);
+
+            if ($paginationContainer.length){
+                $paginationContainer.show();
+            }
+        }
+
+        function renderEntities(data){
+            var entities = data && Array.isArray(data.entities) ? data.entities : [];
+            currentPage = data && data.page ? data.page : 1;
+            var total = data && typeof data.total !== 'undefined' ? data.total : 0;
+            var totalPages = data && data.total_pages ? data.total_pages : 1;
+
+            $entityTableBody.empty();
+
+            if (!entities.length){
+                var $emptyRow = $('<tr class="no-items"></tr>');
+                var $emptyCell = $('<td/>').attr('colspan', columnCount).text(cpbAdmin.none);
+                $emptyRow.append($emptyCell);
+                $entityTableBody.append($emptyRow);
+                updatePagination(total, totalPages, currentPage);
+                return;
+            }
+
+            entities.forEach(function(entity){
+                var entityId = entity.id || 0;
+                var headerId = 'cpb-entity-' + entityId + '-header';
+                var panelId = 'cpb-entity-' + entityId + '-panel';
+
+                var $summaryRow = $('<tr/>', {
+                    id: headerId,
+                    'class': 'cpb-accordion__summary-row',
+                    tabindex: 0,
+                    role: 'button',
+                    'aria-expanded': 'false',
+                    'aria-controls': panelId
+                });
+
+                var $titleCell = $('<td/>', {'class': 'cpb-accordion__cell cpb-accordion__cell--title'});
+                var $titleText = $('<span/>', {'class': 'cpb-accordion__title-text'}).text(formatValue(entity.placeholder_1));
+                $titleCell.append($titleText);
+                $summaryRow.append($titleCell);
+
+                for (var index = 2; index <= 5; index++) {
+                    var label = getPlaceholderLabel(index);
+                    var valueKey = 'placeholder_' + index;
+                    var value = formatValue(entity[valueKey]);
+                    var $metaCell = $('<td/>', {'class': 'cpb-accordion__cell cpb-accordion__cell--meta'});
+                    var $metaText = $('<span/>', {'class': 'cpb-accordion__meta-text'});
+                    $metaText.append($('<span/>', {'class': 'cpb-accordion__meta-label'}).text(label + ':'));
+                    $metaText.append(' ');
+                    $metaText.append($('<span/>', {'class': 'cpb-accordion__meta-value'}).text(value));
+                    $metaCell.append($metaText);
+                    $summaryRow.append($metaCell);
+                }
+
+                var $actionsCell = $('<td/>', {'class': 'cpb-accordion__cell cpb-accordion__cell--actions'});
+                var $icon = $('<span/>', {'class': 'dashicons dashicons-arrow-down-alt2 cpb-accordion__icon', 'aria-hidden': 'true'});
+                var $srText = $('<span/>', {'class': 'screen-reader-text'}).text(cpbAdmin.toggleDetails);
+                $actionsCell.append($icon).append($srText);
+                $summaryRow.append($actionsCell);
+                $entityTableBody.append($summaryRow);
+
+                var $panelRow = $('<tr/>', {
+                    id: panelId,
+                    'class': 'cpb-accordion__panel-row',
+                    role: 'region',
+                    'aria-labelledby': headerId,
+                    'aria-hidden': 'true'
+                }).hide();
+
+                var $panelCell = $('<td/>').attr('colspan', columnCount);
+                var $panel = $('<div/>', {'class': 'cpb-accordion__panel'}).hide();
+
+                var $nameField = $('<p/>', {'class': 'cpb-entity__field cpb-entity__field--name'});
+                $nameField.append($('<strong/>').text(cpbAdmin.nameLabel + ':'));
+                $nameField.append(' ');
+                $nameField.append($('<span/>').text(formatValue(entity.name)));
+                $panel.append($nameField);
+
+                for (var i = 1; i <= placeholderCount; i++) {
+                    var placeholderLabel = getPlaceholderLabel(i);
+                    var key = 'placeholder_' + i;
+                    var displayValue = formatValue(entity[key]);
+                    var $field = $('<p/>', {'class': 'cpb-entity__field'});
+                    $field.append($('<strong/>').text(placeholderLabel + ':'));
+                    var hasImage = (i === 27 && entity[key + '_url']);
+
+                    if (hasImage) {
+                        $field.append(' ');
+                        $field.append($('<img/>', {
+                            src: entity[key + '_url'],
+                            alt: placeholderLabel,
+                            style: 'max-width:100px;height:auto;'
+                        }));
+
+                        if (displayValue !== emptyValue) {
+                            $field.append(' ');
+                            $field.append($('<span/>').text(displayValue));
+                        }
+                    } else {
+                        $field.append(' ');
+                        $field.append($('<span/>').text(displayValue));
+                    }
+
+                    $panel.append($field);
+                }
+
+                var $actions = $('<p/>', {'class': 'cpb-entity__actions'});
+                var $deleteButton = $('<button/>', {
+                    type: 'button',
+                    'class': 'button button-secondary cpb-delete',
+                    'data-id': entityId
+                }).text(cpbAdmin.delete);
+                $actions.append($deleteButton);
+                $panel.append($actions);
+
+                $panelCell.append($panel);
+                $panelRow.append($panelCell);
+                $entityTableBody.append($panelRow);
+            });
+
+            updatePagination(total, totalPages, currentPage);
+        }
+
+        function fetchEntities(page){
+            var targetPage = page || 1;
+            clearFeedback();
+
+            if ($spinner.length){
+                $spinner.addClass('is-active');
+            }
+
+            $.post(cpbAjax.ajaxurl, {
+                action: 'cpb_read_main_entity',
+                _ajax_nonce: cpbAjax.nonce,
+                page: targetPage,
+                per_page: perPage
+            })
+                .done(function(response){
+                    if (response && response.success && response.data){
+                        renderEntities(response.data);
+                    } else {
+                        showFeedback(cpbAdmin.loadError || cpbAdmin.error);
                     }
                 })
+                .fail(function(){
+                    showFeedback(cpbAdmin.loadError || cpbAdmin.error);
+                })
                 .always(function(){
-                    $spinner.removeClass('is-active');
+                    if ($spinner.length){
+                        $spinner.removeClass('is-active');
+                    }
+                });
+        }
+
+        fetchEntities(1);
+
+        if ($pagination.length){
+            $pagination.on('click', '.cpb-entity-page', function(e){
+                e.preventDefault();
+                var targetPage = parseInt($(this).data('page'), 10);
+
+                if (!targetPage || targetPage === currentPage){
+                    return;
+                }
+
+                fetchEntities(targetPage);
+            });
+        }
+
+        $entityTableBody.on('click', '.cpb-delete', function(){
+            var id = $(this).data('id');
+
+            if (!id){
+                return;
+            }
+
+            clearFeedback();
+
+            if ($spinner.length){
+                $spinner.addClass('is-active');
+            }
+
+            $.post(cpbAjax.ajaxurl, {
+                action: 'cpb_delete_main_entity',
+                id: id,
+                _ajax_nonce: cpbAjax.nonce
+            })
+                .done(function(resp){
+                    if (resp && resp.success){
+                        fetchEntities(currentPage);
+                    } else {
+                        showFeedback(cpbAdmin.error);
+                    }
+                })
+                .fail(function(){
+                    showFeedback(cpbAdmin.error);
+                })
+                .always(function(){
+                    if ($spinner.length){
+                        $spinner.removeClass('is-active');
+                    }
                 });
         });
     }
@@ -100,9 +390,15 @@ jQuery(document).ready(function($){
         $(this).parent().toggleClass('open');
     });
 
-    function initCommunicationsAccordions(){
-        $('[data-cpb-accordion-group="communications"]').each(function(){
+    function initAccordionGroups(){
+        $('[data-cpb-accordion-group]').each(function(){
             var $group = $(this);
+
+            if ($group.data('cpbAccordionInitialized')) {
+                return;
+            }
+
+            $group.data('cpbAccordionInitialized', true);
 
             function closeRow($summary, $panelRow){
                 if (!$summary.length || !$panelRow.length) {
@@ -119,20 +415,6 @@ jQuery(document).ready(function($){
 
                 $panelRow.attr('aria-hidden', 'true');
             }
-
-            $group.find('.cpb-accordion__summary-row').each(function(){
-                var $summary = $(this);
-                var panelId = $summary.attr('aria-controls');
-                var $panelRow = $('#' + panelId);
-
-                if (!$panelRow.length) {
-                    return;
-                }
-
-                $summary.removeClass('is-open').attr('aria-expanded', 'false');
-                $panelRow.hide().attr('aria-hidden', 'true');
-                $panelRow.find('.cpb-accordion__panel').hide();
-            });
 
             function toggleRow($summary){
                 var panelId = $summary.attr('aria-controls');
@@ -160,6 +442,20 @@ jQuery(document).ready(function($){
                 $panelRow.find('.cpb-accordion__panel').stop(true, true).slideDown(200);
             }
 
+            $group.find('.cpb-accordion__summary-row').each(function(){
+                var $summary = $(this);
+                var panelId = $summary.attr('aria-controls');
+                var $panelRow = $('#' + panelId);
+
+                if (!$panelRow.length) {
+                    return;
+                }
+
+                $summary.removeClass('is-open').attr('aria-expanded', 'false');
+                $panelRow.hide().attr('aria-hidden', 'true');
+                $panelRow.find('.cpb-accordion__panel').hide();
+            });
+
             $group.on('click', '.cpb-accordion__summary-row', function(e){
                 if ($(e.target).closest('a, button, input, textarea, select, label').length) {
                     return;
@@ -179,7 +475,7 @@ jQuery(document).ready(function($){
         });
     }
 
-    initCommunicationsAccordions();
+    initAccordionGroups();
 
     $(document).on('click','#cpb-add-item',function(){
         var count = $('#cpb-items-container .cpb-item-row').length + 1;

@@ -42,3 +42,4 @@
 40. 2025-08-12: Widened tooltip popovers and enforced equal-width cron action buttons for consistent control layouts.
 41. 2025-08-12: Increased tooltip popover width by seventy percent to improve readability of longer descriptions.
 42. 2025-08-12: Raised tooltip text size to 17px and enforced a 300px minimum width for clearer popup readability.
+43. 2025-11-05: Rebuilt the Main Entity edit tab with the communications accordion table, added paginated AJAX loading of records, and localized supporting scripts.
