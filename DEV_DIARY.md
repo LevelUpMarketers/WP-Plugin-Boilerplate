@@ -42,3 +42,14 @@
 40. 2025-08-12: Widened tooltip popovers and enforced equal-width cron action buttons for consistent control layouts.
 41. 2025-08-12: Increased tooltip popover width by seventy percent to improve readability of longer descriptions.
 42. 2025-08-12: Raised tooltip text size to 17px and enforced a 300px minimum width for clearer popup readability.
+43. 2025-11-05: Rebuilt the Main Entity edit tab with the communications accordion table, added paginated AJAX loading of records, and localized supporting scripts.
+44. 2025-11-05: Streamlined the Main Entity edit table by loading records immediately with alphabetical sorting, added the non-interactive edit cue, and centralized placeholder labels for future renames.
+45. 2025-11-05: Removed the enforced AJAX delay from Main Entity reads so the edit tab populates instantly on load.
+46. 2025-11-05: Embedded the creation form inside each Main Entity accordion, localized field metadata for client-side rendering, and wired AJAX save/delete actions with inline feedback and pagination refreshes.
+47. 2025-11-05: Re-ran the inline Main Entity editor deployment with refreshed feedback styling and corrected placeholder sanitization for saved values.
+48. 2025-11-05: Hardened Main Entity AJAX saving with normalized sanitization for date, time, and select fields plus explicit database error handling.
+49. 2025-11-05: Synced the Main Entity schema and AJAX handlers to persist all placeholders, state dropdowns, opt-ins, item lists, media, and editor content while mirroring the create form's TinyMCE setup.
+50. 2025-11-05: Top-aligned Main Entity accordion summary cells so row heights stay consistent when toggling inline editors.
+51. 2025-11-05: Added a 50px minimum height to Main Entity accordion summary cells to eliminate row shifts when toggling panels.
+52. 2025-11-05: Evened accordion header column widths and mirrored the action-cell treatment on Communications templates for a consistent layout across tabs.
+
