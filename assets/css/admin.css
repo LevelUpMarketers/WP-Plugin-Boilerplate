@@ -172,7 +172,8 @@
 
 #cpb-create-form .submit,
 #cpb-general-settings-form .submit,
-#cpb-style-settings-form .submit {
+#cpb-style-settings-form .submit,
+.cpb-entity-edit-form .submit {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -193,7 +194,8 @@
 
 #cpb-create-form .submit .cpb-feedback-area--inline,
 #cpb-general-settings-form .submit .cpb-feedback-area--inline,
-#cpb-style-settings-form .submit .cpb-feedback-area--inline {
+#cpb-style-settings-form .submit .cpb-feedback-area--inline,
+.cpb-entity-edit-form .submit .cpb-feedback-area--inline {
     margin-left: 0;
 }
 
@@ -202,7 +204,8 @@
     margin-top: 12px;
 }
 
-#cpb-spinner {
+#cpb-spinner,
+.cpb-entity-spinner {
     display: inline-block;
     flex-shrink: 0;
     opacity: 0;
@@ -210,23 +213,27 @@
     transition: opacity 0.3s ease-in-out;
 }
 
-#cpb-spinner.is-active {
+#cpb-spinner.is-active,
+.cpb-entity-spinner.is-active {
     opacity: 1;
     visibility: visible;
 }
 
-#cpb-feedback {
+#cpb-feedback,
+.cpb-entity-feedback {
     min-height: 1em;
     opacity: 0;
     transition: opacity 0.25s ease-in-out;
 }
 
-#cpb-feedback.is-visible {
+#cpb-feedback.is-visible,
+.cpb-entity-feedback.is-visible {
     opacity: 1;
     transition-delay: 0.1s;
 }
 
-#cpb-feedback:not(.is-visible) {
+#cpb-feedback:not(.is-visible),
+.cpb-entity-feedback:not(.is-visible) {
     transition-delay: 0s;
 }
 
