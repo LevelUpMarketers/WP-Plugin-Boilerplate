@@ -126,7 +126,7 @@ class CPB_Admin {
         $meta_order  = array( 'trigger', 'communication_type', 'category' );
         $column_count = count( $meta_order ) + 2; // Title and actions columns.
 
-        echo '<div class="cpb-communications">';
+        echo '<div class="cpb-communications cpb-communications--email-templates">';
         echo '<div class="cpb-accordion-group cpb-accordion-group--table" data-cpb-accordion-group="communications">';
         echo '<table class="wp-list-table widefat striped cpb-accordion-table">';
         echo '<thead>';
