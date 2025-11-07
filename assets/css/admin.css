@@ -343,6 +343,23 @@
     text-align: right;
 }
 
+.cpb-communications--email-templates .cpb-accordion__cell--title {
+    display: block;
+    gap: 0;
+}
+
+.cpb-communications--email-templates .cpb-accordion__cell--actions {
+    display: block;
+    justify-content: initial;
+    align-items: initial;
+    gap: 0;
+}
+
+.cpb-communications--email-templates .cpb-accordion__summary-row > .cpb-accordion__cell {
+    min-height: 50px !important;
+    height: 50px;
+}
+
 .cpb-accordion__title-text {
     display: inline-block;
     min-width: 0;
