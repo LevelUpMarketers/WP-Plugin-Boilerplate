@@ -13,6 +13,7 @@ class CPB_Admin {
         add_action( 'admin_post_cpb_delete_generated_content', array( $this, 'handle_delete_generated_content' ) );
         add_action( 'admin_post_cpb_delete_cron_event', array( $this, 'handle_delete_cron_event' ) );
         add_action( 'admin_post_cpb_run_cron_event', array( $this, 'handle_run_cron_event' ) );
+        add_action( 'admin_post_cpb_download_email_log', array( $this, 'handle_download_email_log' ) );
     }
 
     public function add_menu() {
@@ -87,7 +88,7 @@ class CPB_Admin {
 
         $tab_descriptions = array(
             'email-templates' => __( 'Review placeholder email templates that demonstrate how communications can be grouped for future automation requests.', 'codex-plugin-boilerplate' ),
-            'email-logs'      => __( 'Monitor outgoing email history and export records once log tooling is connected.', 'codex-plugin-boilerplate' ),
+            'email-logs'      => __( 'Review detailed delivery history for plugin-generated emails and export the log for troubleshooting.', 'codex-plugin-boilerplate' ),
             'sms-templates'   => __( 'Prepare SMS templates that mirror your email workflows so every touchpoint stays consistent.', 'codex-plugin-boilerplate' ),
             'sms-logs'        => __( 'Audit sent SMS messages and spot delivery issues as soon as log data becomes available.', 'codex-plugin-boilerplate' ),
         );
@@ -99,9 +100,7 @@ class CPB_Admin {
         if ( 'email-templates' === $active_tab ) {
             $this->render_email_templates_tab();
         } elseif ( 'email-logs' === $active_tab ) {
-            $this->render_communications_placeholder_tab(
-                __( 'Email history tooling is coming soon.', 'codex-plugin-boilerplate' )
-            );
+            $this->render_email_logs_tab();
         } elseif ( 'sms-templates' === $active_tab ) {
             $this->render_communications_placeholder_tab(
                 __( 'SMS template management is coming soon.', 'codex-plugin-boilerplate' )
@@ -118,6 +117,11 @@ class CPB_Admin {
 
     private function render_email_templates_tab() {
         $templates   = $this->get_sample_email_templates();
+        foreach ( $templates as $template ) {
+            if ( isset( $template['id'], $template['title'] ) ) {
+                CPB_Email_Template_Helper::register_template_label( $template['id'], $template['title'] );
+            }
+        }
         $meta_labels = array(
             'trigger'             => __( 'Trigger', 'codex-plugin-boilerplate' ),
             'communication_type'  => __( 'Communication Type', 'codex-plugin-boilerplate' ),
@@ -473,6 +477,166 @@ class CPB_Admin {
         );
     }
 
+    private function render_email_logs_tab() {
+        $log_available = CPB_Email_Log_Helper::is_log_available();
+        $entries       = $log_available ? CPB_Email_Log_Helper::get_log_entries() : array();
+        $empty_message = __( 'No email activity has been recorded yet.', 'codex-plugin-boilerplate' );
+        $time_notice   = __( 'Timestamps display Eastern United States time.', 'codex-plugin-boilerplate' );
+        $clear_label   = __( 'Clear log', 'codex-plugin-boilerplate' );
+        $download_label = __( 'Download log file', 'codex-plugin-boilerplate' );
+        $sent_format   = __( 'Sent %s', 'codex-plugin-boilerplate' );
+        $not_available = __( 'Email logging is unavailable. Confirm that WordPress can write to the uploads directory.', 'codex-plugin-boilerplate' );
+        $body_empty    = __( 'No body content recorded.', 'codex-plugin-boilerplate' );
+
+        $empty_classes = 'cpb-email-log__empty';
+        $empty_hidden  = '';
+
+        if ( empty( $entries ) ) {
+            $empty_classes .= ' is-visible';
+        } else {
+            $empty_hidden = ' hidden';
+        }
+
+        echo '<div class="cpb-communications cpb-communications--email-logs">';
+
+        if ( ! $log_available ) {
+            echo '<div class="notice notice-error inline"><p>' . esc_html( $not_available ) . '</p></div>';
+        }
+
+        echo '<div class="cpb-email-log">';
+        echo '<p class="description">' . esc_html( $time_notice ) . '</p>';
+        echo '<div id="cpb-email-log-list" class="cpb-email-log__list" data-empty-message="' . esc_attr( $empty_message ) . '">';
+        echo '<p id="cpb-email-log-empty" class="' . esc_attr( $empty_classes ) . '"' . $empty_hidden . '>' . esc_html( $empty_message ) . '</p>';
+
+        foreach ( $entries as $entry ) {
+            $template_title   = isset( $entry['template_title'] ) ? trim( $entry['template_title'] ) : '';
+            $template_id      = isset( $entry['template_id'] ) ? $entry['template_id'] : '';
+            $template_display = $template_title;
+
+            if ( '' === $template_display && isset( $entry['template_display'] ) ) {
+                $template_display = trim( $entry['template_display'] );
+            }
+
+            if ( '' === $template_display ) {
+                $template_display = $template_id ? $template_id : __( 'Email template', 'codex-plugin-boilerplate' );
+            }
+
+            if ( $template_id && false === strpos( $template_display, $template_id ) ) {
+                $template_display .= ' (' . $template_id . ')';
+            }
+
+            $time_display = isset( $entry['time_display'] ) ? $entry['time_display'] : '';
+            $recipient    = isset( $entry['recipient'] ) ? $entry['recipient'] : '';
+            $from_name    = isset( $entry['from_name'] ) ? $entry['from_name'] : '';
+            $from_email   = isset( $entry['from_email'] ) ? $entry['from_email'] : '';
+            $subject      = isset( $entry['subject'] ) ? $entry['subject'] : '';
+            $context      = isset( $entry['context'] ) ? $entry['context'] : '';
+            $triggered_by = isset( $entry['triggered_by'] ) ? $entry['triggered_by'] : '';
+            $body         = isset( $entry['body'] ) ? $entry['body'] : '';
+
+            echo '<article class="cpb-email-log__entry">';
+            echo '<header class="cpb-email-log__header">';
+            echo '<h3 class="cpb-email-log__title">' . esc_html( $template_display ) . '</h3>';
+
+            if ( $time_display ) {
+                printf(
+                    '<p class="cpb-email-log__time">%s</p>',
+                    esc_html( sprintf( $sent_format, $time_display ) )
+                );
+            }
+
+            echo '</header>';
+
+            $meta_items = array(
+                array(
+                    'label' => __( 'Sent (ET)', 'codex-plugin-boilerplate' ),
+                    'value' => $time_display,
+                ),
+                array(
+                    'label' => __( 'Recipient', 'codex-plugin-boilerplate' ),
+                    'value' => $recipient,
+                ),
+                array(
+                    'label' => __( 'From name', 'codex-plugin-boilerplate' ),
+                    'value' => $from_name,
+                ),
+                array(
+                    'label' => __( 'From email', 'codex-plugin-boilerplate' ),
+                    'value' => $from_email,
+                ),
+                array(
+                    'label' => __( 'Subject', 'codex-plugin-boilerplate' ),
+                    'value' => $subject,
+                ),
+            );
+
+            if ( $template_id ) {
+                $meta_items[] = array(
+                    'label' => __( 'Template ID', 'codex-plugin-boilerplate' ),
+                    'value' => $template_id,
+                );
+            }
+
+            if ( $context ) {
+                $meta_items[] = array(
+                    'label' => __( 'Context', 'codex-plugin-boilerplate' ),
+                    'value' => $context,
+                );
+            }
+
+            if ( $triggered_by ) {
+                $meta_items[] = array(
+                    'label' => __( 'Initiated by', 'codex-plugin-boilerplate' ),
+                    'value' => $triggered_by,
+                );
+            }
+
+            echo '<dl class="cpb-email-log__meta">';
+
+            foreach ( $meta_items as $item ) {
+                $label = isset( $item['label'] ) ? $item['label'] : '';
+                $value = isset( $item['value'] ) ? $item['value'] : '';
+
+                echo '<div class="cpb-email-log__meta-item">';
+                echo '<dt>' . esc_html( $label ) . '</dt>';
+                echo '<dd>' . esc_html( '' !== trim( $value ) ? $value : '—' ) . '</dd>';
+                echo '</div>';
+            }
+
+            echo '</dl>';
+
+            if ( '' !== $body ) {
+                echo '<div class="cpb-email-log__body" aria-label="' . esc_attr__( 'Email body', 'codex-plugin-boilerplate' ) . '">';
+                echo wp_kses_post( nl2br( esc_html( $body ) ) );
+                echo '</div>';
+            } else {
+                echo '<div class="cpb-email-log__body cpb-email-log__body--empty">' . esc_html( $body_empty ) . '</div>';
+            }
+
+            echo '</article>';
+        }
+
+        echo '</div>';
+
+        $disabled_attr      = ' disabled="disabled" aria-disabled="true"';
+        $clear_disabled    = $log_available ? '' : $disabled_attr;
+        $download_disabled = $log_available ? '' : $disabled_attr;
+
+        echo '<div class="cpb-email-log__actions">';
+        echo '<button type="button" class="button button-secondary cpb-email-log__clear" data-spinner="#cpb-email-log-spinner" data-feedback="#cpb-email-log-feedback"' . $clear_disabled . '>' . esc_html( $clear_label ) . '</button>';
+        echo '<form method="post" class="cpb-email-log__download" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+        wp_nonce_field( 'cpb_download_email_log', 'cpb_email_log_nonce' );
+        echo '<input type="hidden" name="action" value="cpb_download_email_log" />';
+        echo '<button type="submit" class="button button-secondary"' . $download_disabled . '>' . esc_html( $download_label ) . '</button>';
+        echo '</form>';
+        echo '<span class="spinner cpb-email-log__spinner" id="cpb-email-log-spinner"></span>';
+        echo '<p class="cpb-email-log__feedback" id="cpb-email-log-feedback" aria-live="polite"></p>';
+        echo '</div>';
+
+        echo '</div>';
+        echo '</div>';
+    }
+
     private function render_communications_placeholder_tab( $message ) {
         echo '<div class="cpb-communications cpb-communications--placeholder">';
         echo '<p>' . esc_html( $message ) . '</p>';
@@ -573,6 +737,9 @@ class CPB_Admin {
             'previewUnavailableMessage' => __( 'Add a Main Entity entry to generate a preview.', 'codex-plugin-boilerplate' ),
             'testEmailRequired' => __( 'Enter an email address before sending a test.', 'codex-plugin-boilerplate' ),
             'testEmailSuccess'  => __( 'Test email sent.', 'codex-plugin-boilerplate' ),
+            'emailLogCleared'   => __( 'Email log cleared.', 'codex-plugin-boilerplate' ),
+            'emailLogError'     => __( 'Unable to clear the email log. Please try again.', 'codex-plugin-boilerplate' ),
+            'emailLogEmpty'     => __( 'No email activity has been recorded yet.', 'codex-plugin-boilerplate' ),
         ) );
     }
 
@@ -1588,6 +1755,39 @@ class CPB_Admin {
             echo '<tr><td colspan="3">' . esc_html__( 'No generated content found.', 'codex-plugin-boilerplate' ) . '</td></tr>';
         }
         echo '</tbody></table>';
+    }
+
+    public function handle_download_email_log() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'You are not allowed to download the email log.', 'codex-plugin-boilerplate' ) );
+        }
+
+        check_admin_referer( 'cpb_download_email_log', 'cpb_email_log_nonce' );
+
+        if ( ! CPB_Email_Log_Helper::is_log_available() ) {
+            wp_die( esc_html__( 'The email log could not be found. Check upload directory permissions.', 'codex-plugin-boilerplate' ) );
+        }
+
+        $contents = CPB_Email_Log_Helper::get_log_contents();
+        $filename = CPB_Email_Log_Helper::get_download_filename();
+
+        if ( '' === $filename ) {
+            $filename = 'cpb-email-log.txt';
+        }
+
+        $filename = sanitize_file_name( $filename );
+
+        if ( '' === $contents ) {
+            $contents = '';
+        }
+
+        nocache_headers();
+        header( 'Content-Type: text/plain; charset=utf-8' );
+        header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+        header( 'Content-Length: ' . strlen( $contents ) );
+
+        echo $contents;
+        exit;
     }
 
     public function handle_delete_generated_content() {

@@ -25,6 +25,7 @@ require_once CPB_PLUGIN_DIR . 'includes/class-cpb-deactivator.php';
 require_once CPB_PLUGIN_DIR . 'includes/class-cpb-i18n.php';
 require_once CPB_PLUGIN_DIR . 'includes/class-cpb-main-entity-helper.php';
 require_once CPB_PLUGIN_DIR . 'includes/class-cpb-email-template-helper.php';
+require_once CPB_PLUGIN_DIR . 'includes/class-cpb-email-log-helper.php';
 require_once CPB_PLUGIN_DIR . 'includes/class-cpb-ajax.php';
 require_once CPB_PLUGIN_DIR . 'includes/class-cpb-cron.php';
 require_once CPB_PLUGIN_DIR . 'includes/admin/class-cpb-admin.php';

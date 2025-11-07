@@ -12,6 +12,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 class CPB_Email_Template_Helper {
 
     /**
+     * Registered template labels for reuse across logging and UI output.
+     *
+     * @var array
+     */
+    protected static $template_labels = array();
+
+    /**
      * Get the option name used to persist email templates.
      *
      * @return string
@@ -278,5 +285,64 @@ class CPB_Email_Template_Helper {
         }
 
         return '';
+    }
+
+    /**
+     * Register a human-friendly label for the provided template identifier.
+     *
+     * @param string $template_id Template identifier.
+     * @param string $label       Display label.
+     */
+    public static function register_template_label( $template_id, $label ) {
+        $template_id = sanitize_key( $template_id );
+
+        if ( '' === $template_id ) {
+            return;
+        }
+
+        $label = is_string( $label ) ? trim( wp_strip_all_tags( $label ) ) : '';
+
+        if ( '' === $label ) {
+            return;
+        }
+
+        self::$template_labels[ $template_id ] = $label;
+    }
+
+    /**
+     * Resolve a template label for logging and display contexts.
+     *
+     * @param string $template_id Template identifier.
+     *
+     * @return string
+     */
+    public static function get_template_label( $template_id ) {
+        $template_id = sanitize_key( $template_id );
+
+        if ( '' === $template_id ) {
+            return '';
+        }
+
+        if ( isset( self::$template_labels[ $template_id ] ) ) {
+            return self::$template_labels[ $template_id ];
+        }
+
+        $label = apply_filters( 'cpb_email_template_label', '', $template_id );
+
+        if ( '' === $label ) {
+            $label = preg_replace( '/^cpb[-_]/', '', $template_id );
+            $label = str_replace( array( '-', '_' ), ' ', $label );
+            $label = ucwords( $label );
+        }
+
+        $label = is_string( $label ) ? trim( wp_strip_all_tags( $label ) ) : '';
+
+        if ( '' === $label ) {
+            $label = $template_id;
+        }
+
+        self::$template_labels[ $template_id ] = $label;
+
+        return $label;
     }
 }

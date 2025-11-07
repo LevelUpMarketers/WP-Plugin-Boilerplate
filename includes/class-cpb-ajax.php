@@ -13,6 +13,7 @@ class CPB_Ajax {
         add_action( 'wp_ajax_cpb_read_main_entity', array( $this, 'read_main_entity' ) );
         add_action( 'wp_ajax_cpb_save_email_template', array( $this, 'save_email_template' ) );
         add_action( 'wp_ajax_cpb_send_test_email', array( $this, 'send_test_email' ) );
+        add_action( 'wp_ajax_cpb_clear_email_log', array( $this, 'clear_email_log' ) );
     }
 
     private function maybe_delay( $start, $minimum_time = CPB_MIN_EXECUTION_TIME ) {
@@ -376,9 +377,82 @@ class CPB_Ajax {
             );
         }
 
+        $current_user = wp_get_current_user();
+        $triggered_by = '';
+
+        if ( $current_user instanceof WP_User && $current_user->exists() ) {
+            $name = $current_user->display_name ? $current_user->display_name : $current_user->user_login;
+            $identifier = $current_user->user_login;
+
+            if ( $identifier && $identifier !== $name ) {
+                $name .= ' (' . $identifier . ')';
+            }
+
+            if ( $current_user->user_email ) {
+                $name .= ' <' . $current_user->user_email . '>';
+            }
+
+            $triggered_by = $name;
+        }
+
+        CPB_Email_Log_Helper::log_email(
+            array(
+                'template_id'    => $template_id,
+                'template_title' => CPB_Email_Template_Helper::get_template_label( $template_id ),
+                'recipient'      => $to_email,
+                'from_name'      => $from_name,
+                'from_email'     => $from_email,
+                'subject'        => $subject,
+                'body'           => $rendered_body,
+                'context'        => __( 'Test email', 'codex-plugin-boilerplate' ),
+                'triggered_by'   => $triggered_by,
+            )
+        );
+
         wp_send_json_success(
             array(
                 'message' => __( 'Test email sent.', 'codex-plugin-boilerplate' ),
+            )
+        );
+    }
+
+    public function clear_email_log() {
+        $start = microtime( true );
+        check_ajax_referer( 'cpb_ajax_nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'You are not allowed to perform this action.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        if ( ! CPB_Email_Log_Helper::is_log_available() ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Email logging is unavailable. Check directory permissions and try again.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $cleared = CPB_Email_Log_Helper::clear_log();
+
+        $this->maybe_delay( $start );
+
+        if ( ! $cleared ) {
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Unable to clear the email log. Please try again.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        wp_send_json_success(
+            array(
+                'message' => __( 'Email log cleared.', 'codex-plugin-boilerplate' ),
             )
         );
     }
