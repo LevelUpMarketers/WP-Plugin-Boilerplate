@@ -267,24 +267,22 @@ class CPB_Ajax {
             );
         }
 
+        $from_name = isset( $_POST['from_name'] ) ? CPB_Email_Template_Helper::sanitize_from_name( wp_unslash( $_POST['from_name'] ) ) : '';
+        $from_email = isset( $_POST['from_email'] ) ? CPB_Email_Template_Helper::sanitize_from_email( wp_unslash( $_POST['from_email'] ) ) : '';
         $subject = isset( $_POST['subject'] ) ? sanitize_text_field( wp_unslash( $_POST['subject'] ) ) : '';
         $body    = isset( $_POST['body'] ) ? wp_kses_post( wp_unslash( $_POST['body'] ) ) : '';
         $sms     = isset( $_POST['sms'] ) ? sanitize_textarea_field( wp_unslash( $_POST['sms'] ) ) : '';
 
-        $option_name = $this->get_email_templates_option_name();
-        $templates   = get_option( $option_name, array() );
-
-        if ( ! is_array( $templates ) ) {
-            $templates = array();
-        }
-
-        $templates[ $template_id ] = array(
-            'subject' => $subject,
-            'body'    => $body,
-            'sms'     => $sms,
+        CPB_Email_Template_Helper::update_template_settings(
+            $template_id,
+            array(
+                'from_name'  => $from_name,
+                'from_email' => $from_email,
+                'subject'    => $subject,
+                'body'       => $body,
+                'sms'        => $sms,
+            )
         );
-
-        update_option( $option_name, $templates );
 
         $this->maybe_delay( $start );
         wp_send_json_success(
@@ -329,8 +327,23 @@ class CPB_Ajax {
             );
         }
 
+        $from_name = isset( $_POST['from_name'] ) ? CPB_Email_Template_Helper::sanitize_from_name( wp_unslash( $_POST['from_name'] ) ) : '';
+        $from_email = isset( $_POST['from_email'] ) ? CPB_Email_Template_Helper::sanitize_from_email( wp_unslash( $_POST['from_email'] ) ) : '';
         $subject = isset( $_POST['subject'] ) ? sanitize_text_field( wp_unslash( $_POST['subject'] ) ) : '';
         $body    = isset( $_POST['body'] ) ? wp_kses_post( wp_unslash( $_POST['body'] ) ) : '';
+
+        $stored_settings = CPB_Email_Template_Helper::get_template_settings( $template_id );
+
+        if ( '' === $from_name && isset( $stored_settings['from_name'] ) ) {
+            $from_name = CPB_Email_Template_Helper::sanitize_from_name( $stored_settings['from_name'] );
+        }
+
+        if ( '' === $from_email && isset( $stored_settings['from_email'] ) ) {
+            $from_email = CPB_Email_Template_Helper::sanitize_from_email( $stored_settings['from_email'] );
+        }
+
+        $from_name  = CPB_Email_Template_Helper::resolve_from_name( $from_name );
+        $from_email = CPB_Email_Template_Helper::resolve_from_email( $from_email );
 
         $tokens = CPB_Main_Entity_Helper::get_first_preview_data();
 
@@ -346,6 +359,11 @@ class CPB_Ajax {
         }
 
         $headers = array( 'Content-Type: text/html; charset=UTF-8' );
+        $from_header = CPB_Email_Template_Helper::build_from_header( $from_name, $from_email );
+
+        if ( $from_header ) {
+            $headers[] = $from_header;
+        }
         $sent    = wp_mail( $to_email, $subject, $rendered_body, $headers );
 
         $this->maybe_delay( $start );
@@ -371,7 +389,7 @@ class CPB_Ajax {
          *
          * @param string $option_name Default option name.
          */
-        return apply_filters( 'cpb_email_templates_option_name', 'cpb_email_templates' );
+        return CPB_Email_Template_Helper::get_option_name();
     }
 
     private function get_post_value( $key ) {

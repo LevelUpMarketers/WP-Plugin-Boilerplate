@@ -1118,6 +1118,8 @@ jQuery(document).ready(function($){
             _ajax_nonce: cpbAjax.nonce,
             template_id: templateId,
             to_email: emailValue,
+            from_name: $editor.find('[data-template-field="from_name"]').first().val() || '',
+            from_email: $editor.find('[data-template-field="from_email"]').first().val() || '',
             subject: $editor.find('[data-token-context="subject"]').first().val() || '',
             body: $editor.find('[data-token-context="body"]').first().val() || ''
         };
@@ -1202,6 +1204,8 @@ jQuery(document).ready(function($){
             action: 'cpb_save_email_template',
             _ajax_nonce: cpbAjax.nonce,
             template_id: templateId,
+            from_name: $editor.find('[data-template-field="from_name"]').first().val() || '',
+            from_email: $editor.find('[data-template-field="from_email"]').first().val() || '',
             subject: $editor.find('[data-token-context="subject"]').first().val() || '',
             body: $editor.find('[data-token-context="body"]').first().val() || '',
             sms: $editor.find('[data-token-context="sms"]').first().val() || ''

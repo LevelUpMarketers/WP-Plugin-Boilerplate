@@ -236,14 +236,20 @@ class CPB_Admin {
     private function render_welcome_email_template_panel( $template ) {
         $template_id   = isset( $template['id'] ) ? $template['id'] : 'cpb-email-welcome';
         $field_prefix  = sanitize_html_class( $template_id );
+        $from_name_id  = $field_prefix . '-from-name';
+        $from_email_id = $field_prefix . '-from-email';
         $subject_id    = $field_prefix . '-subject';
         $body_id       = $field_prefix . '-body';
         $sms_id        = $field_prefix . '-sms';
         $token_groups       = $this->get_main_entity_token_groups();
         $template_settings  = $this->get_email_template_settings( $template_id );
+        $from_name_value    = isset( $template_settings['from_name'] ) ? $template_settings['from_name'] : '';
+        $from_email_value   = isset( $template_settings['from_email'] ) ? $template_settings['from_email'] : '';
         $subject_value      = isset( $template_settings['subject'] ) ? $template_settings['subject'] : '';
         $body_value         = isset( $template_settings['body'] ) ? $template_settings['body'] : '';
         $sms_value          = isset( $template_settings['sms'] ) ? $template_settings['sms'] : '';
+        $default_from_name  = CPB_Email_Template_Helper::get_default_from_name();
+        $default_from_email = CPB_Email_Template_Helper::get_default_from_email();
         $preview_data       = CPB_Main_Entity_Helper::get_first_preview_data();
         $has_preview        = ! empty( $preview_data );
         $save_spinner_id    = $field_prefix . '-save-spinner';
@@ -259,6 +265,24 @@ class CPB_Admin {
         echo '<div class="cpb-template-editor" data-template="' . esc_attr( $template_id ) . '">';
 
         echo '<div class="cpb-template-editor__fields">';
+
+        printf(
+            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><input type="text" id="%1$s" name="templates[%3$s][from_name]" class="regular-text" data-template-field="from_name" value="%4$s" placeholder="%5$s" autocomplete="name"></div>',
+            esc_attr( $from_name_id ),
+            esc_html__( 'Email From Name', 'codex-plugin-boilerplate' ),
+            esc_attr( $template_id ),
+            esc_attr( $from_name_value ),
+            esc_attr( $default_from_name )
+        );
+
+        printf(
+            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><input type="email" id="%1$s" name="templates[%3$s][from_email]" class="regular-text" data-template-field="from_email" value="%4$s" placeholder="%5$s" autocomplete="email"></div>',
+            esc_attr( $from_email_id ),
+            esc_html__( 'Email From Address', 'codex-plugin-boilerplate' ),
+            esc_attr( $template_id ),
+            esc_attr( $from_email_value ),
+            esc_attr( $default_from_email )
+        );
 
         printf(
             '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><input type="text" id="%1$s" name="templates[%3$s][subject]" class="regular-text cpb-token-target" data-token-context="subject" value="%4$s"></div>',
@@ -406,12 +430,7 @@ class CPB_Admin {
     }
 
     private function get_email_templates_option_name() {
-        /**
-         * Filter the option name used to store email template settings.
-         *
-         * @param string $option_name Default option name.
-         */
-        return apply_filters( 'cpb_email_templates_option_name', 'cpb_email_templates' );
+        return CPB_Email_Template_Helper::get_option_name();
     }
 
     private function get_email_template_settings( $template_id ) {
@@ -421,31 +440,7 @@ class CPB_Admin {
             return array();
         }
 
-        $option_name = $this->get_email_templates_option_name();
-        $stored      = get_option( $option_name, array() );
-
-        if ( ! is_array( $stored ) || empty( $stored[ $template_id ] ) || ! is_array( $stored[ $template_id ] ) ) {
-            return array(
-                'subject' => '',
-                'body'    => '',
-                'sms'     => '',
-            );
-        }
-
-        $settings = wp_parse_args(
-            $stored[ $template_id ],
-            array(
-                'subject' => '',
-                'body'    => '',
-                'sms'     => '',
-            )
-        );
-
-        foreach ( $settings as $key => $value ) {
-            $settings[ $key ] = is_string( $value ) ? $value : '';
-        }
-
-        return $settings;
+        return CPB_Email_Template_Helper::get_template_settings( $template_id );
     }
 
     private function normalize_token_group( $group ) {
