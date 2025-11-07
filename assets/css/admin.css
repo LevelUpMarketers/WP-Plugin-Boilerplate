@@ -512,6 +512,32 @@
     margin-bottom: 0;
 }
 
+.cpb-template-editor__test {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.cpb-template-editor__test .button {
+    min-width: 150px;
+}
+
+.cpb-template-editor__test-input {
+    flex: 1 1 240px;
+    max-width: 320px;
+}
+
+.cpb-template-editor__test-input .regular-text {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.cpb-template-editor__test .cpb-feedback-area--inline {
+    margin-left: 0;
+}
+
 .cpb-template-editor__actions {
     display: flex;
     align-items: center;

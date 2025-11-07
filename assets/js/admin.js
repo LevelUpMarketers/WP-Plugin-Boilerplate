@@ -977,6 +977,8 @@ jQuery(document).ready(function($){
     var previewEntity = cpbAdmin.previewEntity || {};
     var previewEmptyMessage = cpbAdmin.previewEmptyMessage || '';
     var previewUnavailableMessage = cpbAdmin.previewUnavailableMessage || '';
+    var testEmailRequired = cpbAdmin.testEmailRequired || '';
+    var testEmailSuccess = cpbAdmin.testEmailSuccess || '';
     var previewEntityKeys = Object.keys(previewEntity);
     var previewHasEntity = previewEntityKeys.length > 0;
 
@@ -1058,6 +1060,112 @@ jQuery(document).ready(function($){
             $content.addClass('is-visible');
         }
     }
+
+    $(document).on('click', '.cpb-template-test-send', function(e){
+        e.preventDefault();
+
+        var $button = $(this);
+
+        if ($button.prop('disabled')){
+            return;
+        }
+
+        var templateId = $button.data('template');
+        var $editor = $button.closest('.cpb-template-editor');
+
+        if (!templateId || !$editor.length){
+            return;
+        }
+
+        var spinnerSelector = $button.data('spinner');
+        var feedbackSelector = $button.data('feedback');
+        var emailInputSelector = $button.data('emailInput') || $button.data('email-input');
+        var $spinner = spinnerSelector ? $(spinnerSelector) : $editor.find('.cpb-template-spinner').first();
+        var $feedback = feedbackSelector ? $(feedbackSelector) : $editor.find('.cpb-template-feedback').first();
+        var $emailInput = emailInputSelector ? $(emailInputSelector) : $editor.find('.cpb-template-test-email').first();
+        var emailValue = $emailInput.length ? $emailInput.val() : '';
+
+        emailValue = emailValue ? emailValue.trim() : '';
+
+        if (!emailValue){
+            if (testEmailRequired){
+                window.alert(testEmailRequired);
+            } else if (typeof cpbAdmin !== 'undefined' && cpbAdmin.error){
+                window.alert(cpbAdmin.error);
+            } else {
+                window.alert('Please enter an email address.');
+            }
+
+            if ($emailInput.length){
+                $emailInput.focus();
+            }
+
+            return;
+        }
+
+        if ($feedback.length){
+            $feedback.removeClass('is-visible').text('');
+        }
+
+        if ($spinner.length){
+            $spinner.addClass('is-active');
+        }
+
+        $button.prop('disabled', true);
+
+        var payload = {
+            action: 'cpb_send_test_email',
+            _ajax_nonce: cpbAjax.nonce,
+            template_id: templateId,
+            to_email: emailValue,
+            subject: $editor.find('[data-token-context="subject"]').first().val() || '',
+            body: $editor.find('[data-token-context="body"]').first().val() || ''
+        };
+
+        $.post(cpbAjax.ajaxurl, payload)
+            .done(function(response){
+                var isSuccess = response && response.success;
+                var message = '';
+
+                if (response && response.data){
+                    if (isSuccess && response.data.message){
+                        message = response.data.message;
+                    } else if (!isSuccess && (response.data.error || response.data.message)){
+                        message = response.data.error || response.data.message;
+                    }
+                }
+
+                if (isSuccess && !message && testEmailSuccess){
+                    message = testEmailSuccess;
+                }
+
+                if (!isSuccess && !message && typeof cpbAdmin !== 'undefined' && cpbAdmin.error){
+                    message = cpbAdmin.error;
+                }
+
+                if ($feedback.length){
+                    if (message){
+                        $feedback.text(message).addClass('is-visible');
+                    } else {
+                        $feedback.removeClass('is-visible').text('');
+                    }
+                }
+            })
+            .fail(function(){
+                if ($feedback.length && typeof cpbAdmin !== 'undefined' && cpbAdmin.error){
+                    $feedback.text(cpbAdmin.error).addClass('is-visible');
+                }
+            })
+            .always(function(){
+                if ($spinner.length){
+                    setTimeout(function(){
+                        $spinner.removeClass('is-active');
+                    }, 150);
+                }
+
+                $button.prop('disabled', false);
+            });
+    });
 
     $(document).on('click', '.cpb-template-save', function(e){
         e.preventDefault();

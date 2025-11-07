@@ -12,6 +12,7 @@ class CPB_Ajax {
         add_action( 'wp_ajax_cpb_delete_main_entity', array( $this, 'delete_main_entity' ) );
         add_action( 'wp_ajax_cpb_read_main_entity', array( $this, 'read_main_entity' ) );
         add_action( 'wp_ajax_cpb_save_email_template', array( $this, 'save_email_template' ) );
+        add_action( 'wp_ajax_cpb_send_test_email', array( $this, 'send_test_email' ) );
     }
 
     private function maybe_delay( $start, $minimum_time = CPB_MIN_EXECUTION_TIME ) {
@@ -293,6 +294,77 @@ class CPB_Ajax {
         );
     }
 
+    public function send_test_email() {
+        $start = microtime( true );
+        check_ajax_referer( 'cpb_ajax_nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'You are not allowed to perform this action.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $template_id = isset( $_POST['template_id'] ) ? sanitize_key( wp_unslash( $_POST['template_id'] ) ) : '';
+
+        if ( '' === $template_id ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Invalid template selection.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $to_email = isset( $_POST['to_email'] ) ? sanitize_email( wp_unslash( $_POST['to_email'] ) ) : '';
+
+        if ( ! $to_email || ! is_email( $to_email ) ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Please provide a valid email address.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $subject = isset( $_POST['subject'] ) ? sanitize_text_field( wp_unslash( $_POST['subject'] ) ) : '';
+        $body    = isset( $_POST['body'] ) ? wp_kses_post( wp_unslash( $_POST['body'] ) ) : '';
+
+        $tokens = CPB_Main_Entity_Helper::get_first_preview_data();
+
+        if ( ! empty( $tokens ) ) {
+            $subject = $this->replace_template_tokens( $subject, $tokens );
+            $body    = $this->replace_template_tokens( $body, $tokens );
+        }
+
+        $rendered_body = $body;
+
+        if ( $rendered_body && ! preg_match( '/<[a-z][\s\S]*>/i', $rendered_body ) ) {
+            $rendered_body = nl2br( esc_html( $rendered_body ) );
+        }
+
+        $headers = array( 'Content-Type: text/html; charset=UTF-8' );
+        $sent    = wp_mail( $to_email, $subject, $rendered_body, $headers );
+
+        $this->maybe_delay( $start );
+
+        if ( ! $sent ) {
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Unable to send the test email. Please try again.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        wp_send_json_success(
+            array(
+                'message' => __( 'Test email sent.', 'codex-plugin-boilerplate' ),
+            )
+        );
+    }
+
     private function get_email_templates_option_name() {
         /**
          * Filter the option name used to store email template settings.
@@ -328,6 +400,23 @@ class CPB_Ajax {
         }
 
         return sanitize_text_field( $value );
+    }
+
+    private function replace_template_tokens( $content, $tokens ) {
+        if ( ! is_string( $content ) || '' === $content || empty( $tokens ) || ! is_array( $tokens ) ) {
+            return $content;
+        }
+
+        foreach ( $tokens as $key => $value ) {
+            if ( ! is_scalar( $value ) ) {
+                continue;
+            }
+
+            $token = '{' . $key . '}';
+            $content = str_replace( $token, (string) $value, $content );
+        }
+
+        return $content;
     }
 
     private function sanitize_select_value( $key, $allowed, $allow_empty = true ) {
