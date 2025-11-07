@@ -11,6 +11,7 @@ class CPB_Ajax {
         add_action( 'wp_ajax_cpb_save_main_entity', array( $this, 'save_main_entity' ) );
         add_action( 'wp_ajax_cpb_delete_main_entity', array( $this, 'delete_main_entity' ) );
         add_action( 'wp_ajax_cpb_read_main_entity', array( $this, 'read_main_entity' ) );
+        add_action( 'wp_ajax_cpb_save_email_template', array( $this, 'save_email_template' ) );
     }
 
     private function maybe_delay( $start, $minimum_time = CPB_MIN_EXECUTION_TIME ) {
@@ -239,6 +240,66 @@ class CPB_Ajax {
                 'total_pages' => $total_pages,
             )
         );
+    }
+
+    public function save_email_template() {
+        $start = microtime( true );
+        check_ajax_referer( 'cpb_ajax_nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'You are not allowed to perform this action.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $template_id = isset( $_POST['template_id'] ) ? sanitize_key( wp_unslash( $_POST['template_id'] ) ) : '';
+
+        if ( '' === $template_id ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Invalid template selection.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $subject = isset( $_POST['subject'] ) ? sanitize_text_field( wp_unslash( $_POST['subject'] ) ) : '';
+        $body    = isset( $_POST['body'] ) ? wp_kses_post( wp_unslash( $_POST['body'] ) ) : '';
+        $sms     = isset( $_POST['sms'] ) ? sanitize_textarea_field( wp_unslash( $_POST['sms'] ) ) : '';
+
+        $option_name = $this->get_email_templates_option_name();
+        $templates   = get_option( $option_name, array() );
+
+        if ( ! is_array( $templates ) ) {
+            $templates = array();
+        }
+
+        $templates[ $template_id ] = array(
+            'subject' => $subject,
+            'body'    => $body,
+            'sms'     => $sms,
+        );
+
+        update_option( $option_name, $templates );
+
+        $this->maybe_delay( $start );
+        wp_send_json_success(
+            array(
+                'message' => __( 'Template saved.', 'codex-plugin-boilerplate' ),
+            )
+        );
+    }
+
+    private function get_email_templates_option_name() {
+        /**
+         * Filter the option name used to store email template settings.
+         *
+         * @param string $option_name Default option name.
+         */
+        return apply_filters( 'cpb_email_templates_option_name', 'cpb_email_templates' );
     }
 
     private function get_post_value( $key ) {

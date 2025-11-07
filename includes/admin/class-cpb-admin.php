@@ -239,9 +239,15 @@ class CPB_Admin {
         $subject_id    = $field_prefix . '-subject';
         $body_id       = $field_prefix . '-body';
         $sms_id        = $field_prefix . '-sms';
-        $token_groups  = $this->get_main_entity_token_groups();
-        $preview_data  = $this->get_first_main_entity_preview_data();
-        $has_preview   = ! empty( $preview_data );
+        $token_groups       = $this->get_main_entity_token_groups();
+        $template_settings  = $this->get_email_template_settings( $template_id );
+        $subject_value      = isset( $template_settings['subject'] ) ? $template_settings['subject'] : '';
+        $body_value         = isset( $template_settings['body'] ) ? $template_settings['body'] : '';
+        $sms_value          = isset( $template_settings['sms'] ) ? $template_settings['sms'] : '';
+        $preview_data       = $this->get_first_main_entity_preview_data();
+        $has_preview        = ! empty( $preview_data );
+        $spinner_id         = $field_prefix . '-save-spinner';
+        $feedback_id        = $field_prefix . '-save-feedback';
 
         $preview_notice = $has_preview
             ? __( 'Enter a subject or body to generate the preview.', 'codex-plugin-boilerplate' )
@@ -252,24 +258,27 @@ class CPB_Admin {
         echo '<div class="cpb-template-editor__fields">';
 
         printf(
-            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><input type="text" id="%1$s" name="templates[%3$s][subject]" class="regular-text cpb-token-target" data-token-context="subject"></div>',
+            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><input type="text" id="%1$s" name="templates[%3$s][subject]" class="regular-text cpb-token-target" data-token-context="subject" value="%4$s"></div>',
             esc_attr( $subject_id ),
             esc_html__( 'Email Subject', 'codex-plugin-boilerplate' ),
-            esc_attr( $template_id )
+            esc_attr( $template_id ),
+            esc_attr( $subject_value )
         );
 
         printf(
-            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><textarea id="%1$s" name="templates[%3$s][body]" rows="8" class="widefat cpb-token-target" data-token-context="body"></textarea></div>',
+            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><textarea id="%1$s" name="templates[%3$s][body]" rows="8" class="widefat cpb-token-target" data-token-context="body">%4$s</textarea></div>',
             esc_attr( $body_id ),
             esc_html__( 'Email Body', 'codex-plugin-boilerplate' ),
-            esc_attr( $template_id )
+            esc_attr( $template_id ),
+            esc_textarea( $body_value )
         );
 
         printf(
-            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><textarea id="%1$s" name="templates[%3$s][sms]" rows="4" class="widefat cpb-token-target" data-token-context="sms"></textarea></div>',
+            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><textarea id="%1$s" name="templates[%3$s][sms]" rows="4" class="widefat cpb-token-target" data-token-context="sms">%4$s</textarea></div>',
             esc_attr( $sms_id ),
             esc_html__( 'SMS Text', 'codex-plugin-boilerplate' ),
-            esc_attr( $template_id )
+            esc_attr( $template_id ),
+            esc_textarea( $sms_value )
         );
 
         echo '<div class="cpb-template-preview" aria-live="polite">';
@@ -279,6 +288,21 @@ class CPB_Admin {
         echo '<p class="cpb-template-preview__subject"><span class="cpb-template-preview__label">' . esc_html__( 'Subject:', 'codex-plugin-boilerplate' ) . '</span> <span class="cpb-template-preview__value" data-preview-field="subject"></span></p>';
         echo '<div class="cpb-template-preview__body" data-preview-field="body"></div>';
         echo '</div>';
+        echo '</div>';
+
+        echo '<div class="cpb-template-editor__actions">';
+        printf(
+            '<button type="button" class="button button-primary cpb-template-save" data-template="%1$s" data-spinner="#%2$s" data-feedback="#%3$s">%4$s</button>',
+            esc_attr( $template_id ),
+            esc_attr( $spinner_id ),
+            esc_attr( $feedback_id ),
+            esc_html__( 'Save Template', 'codex-plugin-boilerplate' )
+        );
+        printf(
+            '<span class="cpb-feedback-area cpb-feedback-area--inline"><span id="%1$s" class="spinner cpb-template-spinner" aria-hidden="true"></span><span id="%2$s" class="cpb-template-feedback" role="status" aria-live="polite"></span></span>',
+            esc_attr( $spinner_id ),
+            esc_attr( $feedback_id )
+        );
         echo '</div>';
 
         echo '</div>';
@@ -352,6 +376,49 @@ class CPB_Admin {
         $groups = apply_filters( 'cpb_communications_token_groups', array( $token_group ) );
 
         return array_map( array( $this, 'normalize_token_group' ), $groups );
+    }
+
+    private function get_email_templates_option_name() {
+        /**
+         * Filter the option name used to store email template settings.
+         *
+         * @param string $option_name Default option name.
+         */
+        return apply_filters( 'cpb_email_templates_option_name', 'cpb_email_templates' );
+    }
+
+    private function get_email_template_settings( $template_id ) {
+        $template_id = sanitize_key( $template_id );
+
+        if ( '' === $template_id ) {
+            return array();
+        }
+
+        $option_name = $this->get_email_templates_option_name();
+        $stored      = get_option( $option_name, array() );
+
+        if ( ! is_array( $stored ) || empty( $stored[ $template_id ] ) || ! is_array( $stored[ $template_id ] ) ) {
+            return array(
+                'subject' => '',
+                'body'    => '',
+                'sms'     => '',
+            );
+        }
+
+        $settings = wp_parse_args(
+            $stored[ $template_id ],
+            array(
+                'subject' => '',
+                'body'    => '',
+                'sms'     => '',
+            )
+        );
+
+        foreach ( $settings as $key => $value ) {
+            $settings[ $key ] = is_string( $value ) ? $value : '';
+        }
+
+        return $settings;
     }
 
     private function get_first_main_entity_preview_data() {

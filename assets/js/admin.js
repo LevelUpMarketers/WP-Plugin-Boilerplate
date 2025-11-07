@@ -1059,6 +1059,91 @@ jQuery(document).ready(function($){
         }
     }
 
+    $(document).on('click', '.cpb-template-save', function(e){
+        e.preventDefault();
+
+        var $button = $(this);
+
+        if ($button.prop('disabled')){
+            return;
+        }
+
+        var templateId = $button.data('template');
+        var $editor = $button.closest('.cpb-template-editor');
+
+        if (!templateId || !$editor.length){
+            return;
+        }
+
+        var spinnerSelector = $button.data('spinner');
+        var feedbackSelector = $button.data('feedback');
+        var $spinner = spinnerSelector ? $(spinnerSelector) : $editor.find('.cpb-template-spinner').first();
+        var $feedback = feedbackSelector ? $(feedbackSelector) : $editor.find('.cpb-template-feedback').first();
+
+        if ($feedback.length){
+            $feedback.removeClass('is-visible').text('');
+        }
+
+        if ($spinner.length){
+            $spinner.addClass('is-active');
+        }
+
+        $button.prop('disabled', true);
+
+        var payload = {
+            action: 'cpb_save_email_template',
+            _ajax_nonce: cpbAjax.nonce,
+            template_id: templateId,
+            subject: $editor.find('[data-token-context="subject"]').first().val() || '',
+            body: $editor.find('[data-token-context="body"]').first().val() || '',
+            sms: $editor.find('[data-token-context="sms"]').first().val() || ''
+        };
+
+        $.post(cpbAjax.ajaxurl, payload)
+            .done(function(response){
+                var isSuccess = response && response.success;
+                var message = '';
+
+                if (response && response.data){
+                    if (isSuccess && response.data.message){
+                        message = response.data.message;
+                    } else if (!isSuccess && (response.data.error || response.data.message)){
+                        message = response.data.error || response.data.message;
+                    }
+                }
+
+                if (!isSuccess && !message && typeof cpbAdmin !== 'undefined' && cpbAdmin.error){
+                    message = cpbAdmin.error;
+                }
+
+                if ($feedback.length){
+                    if (message){
+                        $feedback.text(message).addClass('is-visible');
+                    } else {
+                        $feedback.removeClass('is-visible').text('');
+                    }
+                }
+
+                if (isSuccess){
+                    updateTemplatePreview($editor);
+                }
+            })
+            .fail(function(){
+                if ($feedback.length && typeof cpbAdmin !== 'undefined' && cpbAdmin.error){
+                    $feedback.text(cpbAdmin.error).addClass('is-visible');
+                }
+            })
+            .always(function(){
+                if ($spinner.length){
+                    setTimeout(function(){
+                        $spinner.removeClass('is-active');
+                    }, 150);
+                }
+
+                $button.prop('disabled', false);
+            });
+    });
+
     $(document).on('blur', '.cpb-template-editor [data-token-context="subject"], .cpb-template-editor [data-token-context="body"]', function(){
         var $editor = $(this).closest('.cpb-template-editor');
         updateTemplatePreview($editor);
