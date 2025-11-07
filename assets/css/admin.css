@@ -350,9 +350,9 @@
 
 .cpb-communications--email-templates .cpb-accordion__cell--actions {
     display: block;
-    justify-content: initial;
-    align-items: initial;
-    gap: 0;
+    width: auto;
+    min-width: auto;
+    text-align: left;
 }
 
 .cpb-communications--email-templates .cpb-accordion__summary-row > .cpb-accordion__cell {

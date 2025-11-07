@@ -61,4 +61,5 @@
 59. 2025-11-05: Restyled the Email Templates accordion shells to mirror Main Entity cards with padded headers, rounded borders, and coordinated open-state shadows.
 60. 2025-11-05: Reverted the email template accordion styling to the baseline list-table treatment so it matches the proven Main Entity appearance.
 61. 2025-11-05: Scoped email template header cells to remove flex alignment and enforce a 50px row height without affecting other accordion tabs.
+62. 2025-11-05: Cleared the email template action cell width constraints so the tab inherits the default table alignment.
 
