@@ -240,6 +240,12 @@ class CPB_Admin {
         $body_id       = $field_prefix . '-body';
         $sms_id        = $field_prefix . '-sms';
         $token_groups  = $this->get_main_entity_token_groups();
+        $preview_data  = $this->get_first_main_entity_preview_data();
+        $has_preview   = ! empty( $preview_data );
+
+        $preview_notice = $has_preview
+            ? __( 'Enter a subject or body to generate the preview.', 'codex-plugin-boilerplate' )
+            : __( 'Add a Main Entity entry to generate a preview.', 'codex-plugin-boilerplate' );
 
         echo '<div class="cpb-template-editor" data-template="' . esc_attr( $template_id ) . '">';
 
@@ -265,6 +271,15 @@ class CPB_Admin {
             esc_html__( 'SMS Text', 'codex-plugin-boilerplate' ),
             esc_attr( $template_id )
         );
+
+        echo '<div class="cpb-template-preview" aria-live="polite">';
+        echo '<h3 class="cpb-template-preview__title">' . esc_html__( 'Email Preview', 'codex-plugin-boilerplate' ) . '</h3>';
+        echo '<p class="cpb-template-preview__notice">' . esc_html( $preview_notice ) . '</p>';
+        echo '<div class="cpb-template-preview__content" data-preview-role="content">';
+        echo '<p class="cpb-template-preview__subject"><span class="cpb-template-preview__label">' . esc_html__( 'Subject:', 'codex-plugin-boilerplate' ) . '</span> <span class="cpb-template-preview__value" data-preview-field="subject"></span></p>';
+        echo '<div class="cpb-template-preview__body" data-preview-field="body"></div>';
+        echo '</div>';
+        echo '</div>';
 
         echo '</div>';
 
@@ -337,6 +352,117 @@ class CPB_Admin {
         $groups = apply_filters( 'cpb_communications_token_groups', array( $token_group ) );
 
         return array_map( array( $this, 'normalize_token_group' ), $groups );
+    }
+
+    private function get_first_main_entity_preview_data() {
+        static $preview_data = null;
+
+        if ( null !== $preview_data ) {
+            return $preview_data;
+        }
+
+        global $wpdb;
+
+        $table_name = $wpdb->prefix . 'cpb_main_entity';
+        $like       = $wpdb->esc_like( $table_name );
+        $found      = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $like ) );
+
+        if ( $found !== $table_name ) {
+            $preview_data = array();
+            return $preview_data;
+        }
+
+        $row = $wpdb->get_row( "SELECT * FROM $table_name ORDER BY id ASC LIMIT 1", ARRAY_A );
+
+        if ( ! $row ) {
+            $preview_data = array();
+            return $preview_data;
+        }
+
+        $prepared = array();
+
+        foreach ( $row as $key => $value ) {
+            $prepared[ $key ] = $this->normalize_preview_token_value( $key, $value );
+        }
+
+        $preview_data = $prepared;
+
+        return $preview_data;
+    }
+
+    private function normalize_preview_token_value( $key, $value ) {
+        if ( null === $value ) {
+            return '';
+        }
+
+        if ( 'placeholder_3' === $key ) {
+            $value = (string) $value;
+
+            if ( '' === $value || '0000-00-00' === $value ) {
+                return '';
+            }
+
+            $date = date_create( $value );
+
+            return $date ? $date->format( 'Y-m-d' ) : '';
+        }
+
+        if ( in_array( $key, array( 'placeholder_5', 'placeholder_6' ), true ) ) {
+            $value = (string) $value;
+
+            if ( preg_match( '/^(\d{2}:\d{2})/', $value, $matches ) ) {
+                return $matches[1];
+            }
+
+            return '';
+        }
+
+        if ( in_array( $key, array( 'placeholder_16', 'placeholder_17', 'placeholder_18' ), true ) ) {
+            return number_format( (float) $value, 2, '.', '' );
+        }
+
+        if ( in_array( $key, array( 'placeholder_24', 'placeholder_25' ), true ) ) {
+            if ( is_array( $value ) ) {
+                $items = $value;
+            } else {
+                $decoded = json_decode( (string) $value, true );
+                $items   = is_array( $decoded ) ? $decoded : array();
+            }
+
+            if ( empty( $items ) ) {
+                return '';
+            }
+
+            $items = array_map( 'strval', $items );
+            $items = array_map( 'wp_kses_post', $items );
+            $items = array_filter( $items, 'strlen' );
+
+            return implode( ', ', $items );
+        }
+
+        if ( 'placeholder_26' === $key ) {
+            $color = sanitize_hex_color( (string) $value );
+            return $color ? $color : '';
+        }
+
+        if ( 'placeholder_27' === $key ) {
+            $attachment_id = absint( $value );
+            $url           = $attachment_id ? wp_get_attachment_url( $attachment_id ) : '';
+
+            return $url ? esc_url_raw( $url ) : '';
+        }
+
+        if ( 'placeholder_28' === $key ) {
+            return wp_kses_post( (string) $value );
+        }
+
+        if ( is_scalar( $value ) ) {
+            $string_value = (string) $value;
+
+            return wp_kses_post( $string_value );
+        }
+
+        return '';
     }
 
     private function normalize_token_group( $group ) {
@@ -464,6 +590,9 @@ class CPB_Admin {
             'saveChanges'  => __( 'Save Changes', 'codex-plugin-boilerplate' ),
             'entityFields' => $field_definitions,
             'editorSettings' => $this->get_inline_editor_settings(),
+            'previewEntity' => $this->get_first_main_entity_preview_data(),
+            'previewEmptyMessage' => __( 'Enter a subject or body to generate the preview.', 'codex-plugin-boilerplate' ),
+            'previewUnavailableMessage' => __( 'Add a Main Entity entry to generate a preview.', 'codex-plugin-boilerplate' ),
         ) );
     }
 

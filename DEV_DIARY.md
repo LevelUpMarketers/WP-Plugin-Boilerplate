@@ -53,4 +53,5 @@
 51. 2025-11-05: Added a 50px minimum height to Main Entity accordion summary cells to eliminate row shifts when toggling panels.
 52. 2025-11-05: Evened accordion header column widths and mirrored the action-cell treatment on Communications templates for a consistent layout across tabs.
 53. 2025-11-05: Built the Welcome Aboard template editor with subject, body, SMS fields, and token buttons sourced from Main Entity placeholders.
+54. 2025-11-05: Added a live Welcome Aboard email preview fed by the first Main Entity record with blur-based updates and styled it alongside the existing template controls.
 

@@ -973,4 +973,98 @@ jQuery(document).ready(function($){
 
         insertTokenIntoField($target, token);
     });
+
+    var previewEntity = cpbAdmin.previewEntity || {};
+    var previewEmptyMessage = cpbAdmin.previewEmptyMessage || '';
+    var previewUnavailableMessage = cpbAdmin.previewUnavailableMessage || '';
+    var previewEntityKeys = Object.keys(previewEntity);
+    var previewHasEntity = previewEntityKeys.length > 0;
+
+    function applyPreviewTokens(template){
+        if (typeof template !== 'string' || !template){
+            return '';
+        }
+
+        return template.replace(/\{([^\{\}\s]+)\}/g, function(match, token){
+            if (Object.prototype.hasOwnProperty.call(previewEntity, token)){
+                return previewEntity[token];
+            }
+
+            return '';
+        });
+    }
+
+    function formatPreviewBody(content){
+        if (!content){
+            return '';
+        }
+
+        if (/<[a-z][\s\S]*>/i.test(content)){
+            return content;
+        }
+
+        return String(content).replace(/\r?\n/g, '<br>');
+    }
+
+    function updateTemplatePreview($editor){
+        if (!$editor || !$editor.length){
+            return;
+        }
+
+        var $notice = $editor.find('.cpb-template-preview__notice');
+        var $content = $editor.find('.cpb-template-preview__content');
+
+        if (!$content.length || !$notice.length){
+            return;
+        }
+
+        if (!previewHasEntity){
+            $content.removeClass('is-visible');
+
+            if (previewUnavailableMessage){
+                $notice.text(previewUnavailableMessage).show();
+            } else {
+                $notice.show();
+            }
+
+        } else {
+            var $subjectField = $editor.find('[data-token-context="subject"]').first();
+            var $bodyField = $editor.find('[data-token-context="body"]').first();
+            var subjectValue = $subjectField.length ? $subjectField.val() : '';
+            var bodyValue = $bodyField.length ? $bodyField.val() : '';
+            var hasSubject = subjectValue && subjectValue.trim() !== '';
+            var hasBody = bodyValue && bodyValue.trim() !== '';
+
+            if (!hasSubject && !hasBody){
+                $content.removeClass('is-visible');
+
+                if (previewEmptyMessage){
+                    $notice.text(previewEmptyMessage).show();
+                } else {
+                    $notice.show();
+                }
+
+                return;
+            }
+
+            var renderedSubject = applyPreviewTokens(subjectValue);
+            var renderedBody = applyPreviewTokens(bodyValue);
+
+            $notice.hide();
+
+            $content.find('[data-preview-field="subject"]').text(renderedSubject);
+            $content.find('[data-preview-field="body"]').html(formatPreviewBody(renderedBody));
+
+            $content.addClass('is-visible');
+        }
+    }
+
+    $(document).on('blur', '.cpb-template-editor [data-token-context="subject"], .cpb-template-editor [data-token-context="body"]', function(){
+        var $editor = $(this).closest('.cpb-template-editor');
+        updateTemplatePreview($editor);
+    });
+
+    $('.cpb-template-editor').each(function(){
+        updateTemplatePreview($(this));
+    });
 });
