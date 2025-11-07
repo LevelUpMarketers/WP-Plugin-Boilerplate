@@ -210,7 +210,7 @@ class CPB_Admin {
                 absint( $column_count )
             );
             echo '<div class="cpb-accordion__panel">';
-            echo '<p>' . esc_html( $template['content'] ) . '</p>';
+            $this->render_email_template_panel( $template );
             echo '</div>';
             echo '</td>';
             echo '</tr>';
@@ -220,6 +220,153 @@ class CPB_Admin {
         echo '</table>';
         echo '</div>';
         echo '</div>';
+    }
+
+    private function render_email_template_panel( $template ) {
+        if ( isset( $template['id'] ) && 'cpb-email-welcome' === $template['id'] ) {
+            $this->render_welcome_email_template_panel( $template );
+            return;
+        }
+
+        if ( isset( $template['content'] ) ) {
+            echo '<p>' . esc_html( $template['content'] ) . '</p>';
+        }
+    }
+
+    private function render_welcome_email_template_panel( $template ) {
+        $template_id   = isset( $template['id'] ) ? $template['id'] : 'cpb-email-welcome';
+        $field_prefix  = sanitize_html_class( $template_id );
+        $subject_id    = $field_prefix . '-subject';
+        $body_id       = $field_prefix . '-body';
+        $sms_id        = $field_prefix . '-sms';
+        $token_groups  = $this->get_main_entity_token_groups();
+
+        echo '<div class="cpb-template-editor" data-template="' . esc_attr( $template_id ) . '">';
+
+        echo '<div class="cpb-template-editor__fields">';
+
+        printf(
+            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><input type="text" id="%1$s" name="templates[%3$s][subject]" class="regular-text cpb-token-target" data-token-context="subject"></div>',
+            esc_attr( $subject_id ),
+            esc_html__( 'Email Subject', 'codex-plugin-boilerplate' ),
+            esc_attr( $template_id )
+        );
+
+        printf(
+            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><textarea id="%1$s" name="templates[%3$s][body]" rows="8" class="widefat cpb-token-target" data-token-context="body"></textarea></div>',
+            esc_attr( $body_id ),
+            esc_html__( 'Email Body', 'codex-plugin-boilerplate' ),
+            esc_attr( $template_id )
+        );
+
+        printf(
+            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><textarea id="%1$s" name="templates[%3$s][sms]" rows="4" class="widefat cpb-token-target" data-token-context="sms"></textarea></div>',
+            esc_attr( $sms_id ),
+            esc_html__( 'SMS Text', 'codex-plugin-boilerplate' ),
+            esc_attr( $template_id )
+        );
+
+        echo '</div>';
+
+        if ( ! empty( $token_groups ) ) {
+            echo '<div class="cpb-template-editor__tokens">';
+            echo '<h3 class="cpb-template-editor__tokens-heading">' . esc_html__( 'Tokens', 'codex-plugin-boilerplate' ) . '</h3>';
+
+            foreach ( $token_groups as $group ) {
+                if ( empty( $group['tokens'] ) ) {
+                    continue;
+                }
+
+                echo '<div class="cpb-token-group">';
+
+                if ( ! empty( $group['title'] ) ) {
+                    echo '<h4 class="cpb-token-group__title">' . esc_html( $group['title'] ) . '</h4>';
+                }
+
+                echo '<div class="cpb-token-group__buttons">';
+
+                foreach ( $group['tokens'] as $token ) {
+                    if ( empty( $token['value'] ) ) {
+                        continue;
+                    }
+
+                    $label = isset( $token['label'] ) ? $token['label'] : $token['value'];
+
+                    printf(
+                        '<button type="button" class="button button-secondary cpb-token-button" data-token="%1$s">%2$s</button>',
+                        esc_attr( $token['value'] ),
+                        esc_html( $label )
+                    );
+                }
+
+                echo '</div>';
+                echo '</div>';
+            }
+
+            echo '</div>';
+        }
+
+        echo '</div>';
+    }
+
+    private function get_main_entity_token_groups() {
+        $labels      = $this->get_placeholder_labels();
+        $token_group = array(
+            'title'  => __( 'Main Entity Information', 'codex-plugin-boilerplate' ),
+            'tokens' => array(),
+        );
+
+        foreach ( $labels as $key => $label ) {
+            $token_group['tokens'][] = array(
+                'value' => '{' . $key . '}',
+                'label' => $label,
+            );
+        }
+
+        /**
+         * Filter the token groups displayed for communications templates.
+         *
+         * This filter allows child plugins to add new token collections or adjust
+         * the existing Main Entity defaults when repurposing the boilerplate for
+         * client-specific data models.
+         *
+         * @param array $groups Array of token group definitions. Each group should contain
+         *                      a `title` and a `tokens` list where every token includes
+         *                      `value` (the merge tag) and `label` (the admin-facing text).
+         */
+        $groups = apply_filters( 'cpb_communications_token_groups', array( $token_group ) );
+
+        return array_map( array( $this, 'normalize_token_group' ), $groups );
+    }
+
+    private function normalize_token_group( $group ) {
+        if ( ! is_array( $group ) ) {
+            return array(
+                'title'  => '',
+                'tokens' => array(),
+            );
+        }
+
+        $title  = isset( $group['title'] ) ? $group['title'] : '';
+        $tokens = isset( $group['tokens'] ) && is_array( $group['tokens'] ) ? $group['tokens'] : array();
+
+        $normalized_tokens = array();
+
+        foreach ( $tokens as $token ) {
+            if ( ! is_array( $token ) || empty( $token['value'] ) ) {
+                continue;
+            }
+
+            $normalized_tokens[] = array(
+                'value' => (string) $token['value'],
+                'label' => isset( $token['label'] ) ? (string) $token['label'] : (string) $token['value'],
+            );
+        }
+
+        return array(
+            'title'  => (string) $title,
+            'tokens' => $normalized_tokens,
+        );
     }
 
     private function render_communications_placeholder_tab( $message ) {

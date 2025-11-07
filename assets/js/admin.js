@@ -885,4 +885,92 @@ jQuery(document).ready(function($){
             });
         }
     });
+
+    var $activeTokenTarget = null;
+
+    function resolveTokenTarget($button){
+        var selector = $button.data('token-target');
+
+        if (selector){
+            var $explicitTarget = $(selector);
+
+            if ($explicitTarget.length){
+                return $explicitTarget;
+            }
+        }
+
+        if ($activeTokenTarget && $activeTokenTarget.length){
+            return $activeTokenTarget;
+        }
+
+        var $editor = $button.closest('.cpb-template-editor');
+
+        if ($editor.length){
+            var $fallback = $editor.find('.cpb-token-target').first();
+
+            if ($fallback.length){
+                return $fallback;
+            }
+        }
+
+        return $();
+    }
+
+    function insertTokenIntoField($field, token){
+        if (!$field || !$field.length || !token){
+            return;
+        }
+
+        var field = $field.get(0);
+
+        if (!field){
+            return;
+        }
+
+        if (typeof field.value === 'string'){
+            var start = field.selectionStart;
+            var end = field.selectionEnd;
+            var value = field.value;
+
+            if (typeof start === 'number' && typeof end === 'number'){
+                field.value = value.slice(0, start) + token + value.slice(end);
+                var newPosition = start + token.length;
+                field.selectionStart = newPosition;
+                field.selectionEnd = newPosition;
+            } else {
+                field.value = value + token;
+            }
+
+            $field.trigger('input');
+            $field.trigger('change');
+
+            if (typeof field.focus === 'function'){
+                field.focus();
+            }
+
+            return;
+        }
+
+        if (window.tinyMCE && typeof field.id === 'string'){ // Fallback for rich text editors.
+            var editor = window.tinyMCE.get(field.id);
+
+            if (editor && typeof editor.execCommand === 'function'){
+                editor.execCommand('mceInsertContent', false, token);
+            }
+        }
+    }
+
+    $(document).on('focus', '.cpb-token-target', function(){
+        $activeTokenTarget = $(this);
+    });
+
+    $(document).on('click', '.cpb-token-button', function(e){
+        e.preventDefault();
+
+        var $button = $(this);
+        var token = $button.data('token');
+        var $target = resolveTokenTarget($button);
+
+        insertTokenIntoField($target, token);
+    });
 });
