@@ -937,3 +937,67 @@
     min-width: 140px;
     text-align: center;
 }
+
+.cpb-error-logs {
+    display: grid;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.cpb-error-logs__section {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 20px;
+}
+
+.cpb-error-logs__heading {
+    margin: 0 0 8px;
+    font-size: 18px;
+}
+
+.cpb-error-logs__description {
+    margin: 0 0 16px;
+    color: #50575e;
+}
+
+.cpb-error-logs__empty {
+    margin: 0 0 12px;
+    color: #646970;
+}
+
+.cpb-error-logs__textarea {
+    width: 100%;
+    min-height: 220px;
+    background: #f6f7f7;
+    color: #1d2327;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    font-family: Menlo, Consolas, Monaco, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.cpb-error-logs__textarea:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+.cpb-error-logs__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.cpb-log-actions__form {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cpb-log-actions__form .cpb-feedback-area {
+    min-width: 0;
+}

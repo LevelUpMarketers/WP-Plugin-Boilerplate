@@ -41,6 +41,102 @@ jQuery(document).ready(function($){
     handleForm('#cpb-style-settings-form','cpb_save_main_entity');
     handleForm('.cpb-api-settings__form','cpb_save_api_settings');
 
+    function handleLogActionForms(){
+        $('.cpb-log-actions__form').on('submit', function(e){
+            e.preventDefault();
+            var $form = $(this);
+            var ajaxAction = $form.data('ajaxAction');
+
+            if (!ajaxAction){
+                return;
+            }
+
+            var serialized = $form.serialize();
+            var spinnerHideTimer = $form.data('spinnerHideTimer');
+            var $spinner = $form.find('.cpb-feedback-area .spinner').first();
+            var $feedback = $form.find('.cpb-feedback-area [role="status"]').first();
+            var logAction = $form.data('logAction');
+            var targetSelector = $form.data('logTarget');
+
+            if ($feedback.length){
+                $feedback.removeClass('is-visible').text('');
+            }
+
+            if (spinnerHideTimer){
+                clearTimeout(spinnerHideTimer);
+            }
+
+            if ($spinner.length){
+                $spinner.addClass('is-active');
+            }
+
+            $.post(cpbAjax.ajaxurl, serialized + '&action=' + ajaxAction + '&_ajax_nonce=' + cpbAjax.nonce)
+                .done(function(response){
+                    var message = '';
+                    var wasSuccessful = response && response.success;
+
+                    if (response && response.data){
+                        if (response.data.message){
+                            message = response.data.message;
+                        } else if (response.data.error){
+                            message = response.data.error;
+                        }
+
+                        if (wasSuccessful && targetSelector && typeof response.data.content !== 'undefined'){
+                            var $target = $(targetSelector);
+
+                            if ($target.length){
+                                $target.val(response.data.content);
+                            }
+                        }
+
+                        if (wasSuccessful && logAction === 'download'){
+                            var filename = response.data.filename || 'cpb-error-log.txt';
+                            var content = typeof response.data.content === 'string' ? response.data.content : '';
+                            var blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                            var url = window.URL.createObjectURL(blob);
+                            var link = document.createElement('a');
+                            link.href = url;
+                            link.download = filename;
+                            document.body.appendChild(link);
+                            link.click();
+                            setTimeout(function(){
+                                document.body.removeChild(link);
+                                window.URL.revokeObjectURL(url);
+                            }, 100);
+
+                            if (!message && cpbAdmin.logDownloadReady){
+                                message = cpbAdmin.logDownloadReady;
+                            }
+                        }
+                    }
+
+                    if ($feedback.length){
+                        if (message){
+                            $feedback.text(message).addClass('is-visible');
+                        } else if (!wasSuccessful && cpbAdmin.error){
+                            $feedback.text(cpbAdmin.error).addClass('is-visible');
+                        }
+                    }
+                })
+                .fail(function(){
+                    if ($feedback.length && cpbAdmin.error){
+                        $feedback.text(cpbAdmin.error).addClass('is-visible');
+                    }
+                })
+                .always(function(){
+                    spinnerHideTimer = setTimeout(function(){
+                        if ($spinner.length){
+                            $spinner.removeClass('is-active');
+                        }
+                    }, 150);
+                    $form.data('spinnerHideTimer', spinnerHideTimer);
+                });
+        });
+    }
+
+    handleLogActionForms();
+
     function formatString(template){
         if (typeof template !== 'string') {
             return '';

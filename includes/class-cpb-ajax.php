@@ -15,6 +15,8 @@ class CPB_Ajax {
         add_action( 'wp_ajax_cpb_send_test_email', array( $this, 'send_test_email' ) );
         add_action( 'wp_ajax_cpb_clear_email_log', array( $this, 'clear_email_log' ) );
         add_action( 'wp_ajax_cpb_save_api_settings', array( $this, 'save_api_settings' ) );
+        add_action( 'wp_ajax_cpb_clear_error_log', array( $this, 'clear_error_log' ) );
+        add_action( 'wp_ajax_cpb_download_error_log', array( $this, 'download_error_log' ) );
     }
 
     private function maybe_delay( $start, $minimum_time = CPB_MIN_EXECUTION_TIME ) {
@@ -234,6 +236,101 @@ class CPB_Ajax {
         wp_send_json_success(
             array(
                 'message' => __( 'API settings saved.', 'codex-plugin-boilerplate' ),
+            )
+        );
+    }
+
+    public function clear_error_log() {
+        $start = microtime( true );
+        check_ajax_referer( 'cpb_ajax_nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'You are not allowed to modify error logs.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $scope = isset( $_POST['scope'] ) ? CPB_Error_Log_Helper::normalize_scope( wp_unslash( $_POST['scope'] ) ) : '';
+
+        if ( '' === $scope ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Unknown log scope.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $cleared = CPB_Error_Log_Helper::clear_log( $scope );
+
+        if ( ! $cleared ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Unable to clear the requested log. Please check file permissions.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $message = ( CPB_Error_Log_Helper::SCOPE_PLUGIN === $scope )
+            ? __( 'CPB error log cleared.', 'codex-plugin-boilerplate' )
+            : __( 'Sitewide error log cleared.', 'codex-plugin-boilerplate' );
+
+        $this->maybe_delay( $start );
+        wp_send_json_success(
+            array(
+                'message' => $message,
+                'content' => CPB_Error_Log_Helper::get_log_contents( $scope ),
+            )
+        );
+    }
+
+    public function download_error_log() {
+        $start = microtime( true );
+        check_ajax_referer( 'cpb_ajax_nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'You are not allowed to download error logs.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $scope = isset( $_POST['scope'] ) ? CPB_Error_Log_Helper::normalize_scope( wp_unslash( $_POST['scope'] ) ) : '';
+
+        if ( '' === $scope ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Unknown log scope.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $filename = CPB_Error_Log_Helper::get_download_filename( $scope );
+
+        if ( '' === $filename ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Unable to prepare the download filename.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $contents = CPB_Error_Log_Helper::get_log_contents( $scope );
+
+        $this->maybe_delay( $start );
+        wp_send_json_success(
+            array(
+                'message'  => __( 'Log download ready.', 'codex-plugin-boilerplate' ),
+                'filename' => sanitize_file_name( $filename ),
+                'content'  => (string) $contents,
             )
         );
     }

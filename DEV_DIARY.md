@@ -69,3 +69,4 @@
 67. 2025-11-10: Wired API Settings forms to AJAX persistence with per-integration sanitization, inline feedback reuse, and saved credential prefills.
 68. 2025-11-10: Added an SMS Service accordion with generic messaging credentials and select-driven environments alongside existing API settings.
 
+69. 2025-11-10: Introduced error logging with sitewide and CPB-specific tabs, AJAX clear/download controls, and global handlers that track current and future plugin features.
