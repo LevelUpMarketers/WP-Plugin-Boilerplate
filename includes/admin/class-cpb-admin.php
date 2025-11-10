@@ -2111,10 +2111,6 @@ class CPB_Admin {
 
         $this->render_tab_intro( $title, $description );
 
-        if ( 'payment_logs' === $active_tab ) {
-            $this->render_logging_status_notice( CPB_Settings_Helper::FIELD_LOG_PAYMENTS );
-        }
-
         if ( 'generated_content' === $active_tab ) {
             $this->render_generated_content_log();
         } elseif ( 'error_logs' === $active_tab ) {
@@ -2187,6 +2183,7 @@ class CPB_Admin {
                 /* translators: description for the payment log textarea. */
                 'description' => __( 'Tracks payment gateway notices, API responses, and transaction diagnostics without storing sensitive card data.', 'codex-plugin-boilerplate' ),
                 'empty'       => __( 'No payment activity logged yet.', 'codex-plugin-boilerplate' ),
+                'channel'     => CPB_Settings_Helper::FIELD_LOG_PAYMENTS,
             ),
         );
 
