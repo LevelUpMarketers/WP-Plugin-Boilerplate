@@ -360,6 +360,10 @@
     min-height: 50px;
 }
 
+.cpb-communications--api-settings .cpb-accordion__summary-row > .cpb-accordion__cell {
+    height: 50px;
+}
+
 .cpb-accordion__summary-row:not(:first-of-type) > .cpb-accordion__cell {
     border-top: 10px solid #f6f7f7;
 }
@@ -386,6 +390,11 @@
     gap: 8px;
 }
 
+.cpb-communications--api-settings .cpb-accordion__cell--title,
+.cpb-communications--api-settings .cpb-accordion__cell--actions {
+    display: table-cell;
+}
+
 .cpb-accordion__cell--actions {
     display: flex;
     justify-content: flex-end;
@@ -393,6 +402,10 @@
     gap: 8px;
     width: 120px;
     min-width: 120px;
+    text-align: right;
+}
+
+.cpb-communications--api-settings .cpb-accordion__heading--actions {
     text-align: right;
 }
 
