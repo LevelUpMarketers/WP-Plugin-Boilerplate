@@ -1492,6 +1492,55 @@ class CPB_Admin {
                     ),
                 ),
             ),
+            'sms_service' => array(
+                'title'    => __( 'SMS Service', 'codex-plugin-boilerplate' ),
+                'category' => __( 'Messaging', 'codex-plugin-boilerplate' ),
+                'fields'   => array(
+                    array(
+                        'type'    => 'select',
+                        'name'    => 'sms_environment',
+                        'label'   => __( 'Environment', 'codex-plugin-boilerplate' ),
+                        'options' => array(
+                            'live'    => __( 'Live', 'codex-plugin-boilerplate' ),
+                            'sandbox' => __( 'Sandbox', 'codex-plugin-boilerplate' ),
+                        ),
+                    ),
+                    array(
+                        'type'   => 'password',
+                        'name'   => 'sms_messaging_service_sid',
+                        'label'  => __( 'Messaging Service SID', 'codex-plugin-boilerplate' ),
+                        'reveal' => true,
+                    ),
+                    array(
+                        'type'  => 'text',
+                        'name'  => 'sms_sending_number',
+                        'label' => __( 'Sending Number', 'codex-plugin-boilerplate' ),
+                    ),
+                    array(
+                        'type'  => 'text',
+                        'name'  => 'sms_sandbox_number',
+                        'label' => __( 'Sandbox Number', 'codex-plugin-boilerplate' ),
+                    ),
+                    array(
+                        'type'   => 'password',
+                        'name'   => 'sms_user_sid',
+                        'label'  => __( 'User SID', 'codex-plugin-boilerplate' ),
+                        'reveal' => true,
+                    ),
+                    array(
+                        'type'   => 'password',
+                        'name'   => 'sms_api_sid',
+                        'label'  => __( 'API SID', 'codex-plugin-boilerplate' ),
+                        'reveal' => true,
+                    ),
+                    array(
+                        'type'   => 'password',
+                        'name'   => 'sms_api_key',
+                        'label'  => __( 'API Key', 'codex-plugin-boilerplate' ),
+                        'reveal' => true,
+                    ),
+                ),
+            ),
         );
 
         echo '<div class="cpb-api-settings cpb-communications cpb-communications--api-settings">';

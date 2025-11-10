@@ -157,6 +157,33 @@ class CPB_Ajax {
                     ),
                 ),
             ),
+            'sms_service' => array(
+                'fields' => array(
+                    'sms_environment' => array(
+                        'type'    => 'select',
+                        'options' => array( 'live', 'sandbox' ),
+                        'default' => 'live',
+                    ),
+                    'sms_messaging_service_sid' => array(
+                        'type' => 'text',
+                    ),
+                    'sms_sending_number' => array(
+                        'type' => 'text',
+                    ),
+                    'sms_sandbox_number' => array(
+                        'type' => 'text',
+                    ),
+                    'sms_user_sid' => array(
+                        'type' => 'text',
+                    ),
+                    'sms_api_sid' => array(
+                        'type' => 'text',
+                    ),
+                    'sms_api_key' => array(
+                        'type' => 'text',
+                    ),
+                ),
+            ),
         );
 
         if ( ! $api_key || ! isset( $api_definitions[ $api_key ] ) ) {
