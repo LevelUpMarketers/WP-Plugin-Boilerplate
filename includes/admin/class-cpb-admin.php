@@ -1453,6 +1453,12 @@ class CPB_Admin {
     }
 
     private function render_api_settings_tab() {
+        $saved_settings = get_option( 'cpb_api_settings', array() );
+
+        if ( ! is_array( $saved_settings ) ) {
+            $saved_settings = array();
+        }
+
         $apis = array(
             'payment_gateway' => array(
                 'title'    => __( 'Payment Gateway', 'codex-plugin-boilerplate' ),
@@ -1506,6 +1512,7 @@ class CPB_Admin {
             $form_id    = 'cpb-api-form-' . sanitize_html_class( $api_key );
             $spinner_id = $form_id . '-spinner';
             $feedback_id = $form_id . '-feedback';
+            $saved_api_settings = isset( $saved_settings[ $api_key ] ) && is_array( $saved_settings[ $api_key ] ) ? $saved_settings[ $api_key ] : array();
 
             echo '<tr id="' . esc_attr( $summary_id ) . '" class="cpb-accordion__summary-row" tabindex="0" role="button" aria-expanded="false" aria-controls="' . esc_attr( $panel_id ) . '">';
             echo '<td class="cpb-accordion__cell cpb-accordion__cell--title">';
@@ -1524,34 +1531,38 @@ class CPB_Admin {
             echo '<tr id="' . esc_attr( $panel_id ) . '" class="cpb-accordion__panel-row" role="region" aria-labelledby="' . esc_attr( $summary_id ) . '" aria-hidden="true">';
             echo '<td colspan="3">';
             echo '<div class="cpb-accordion__panel">';
-            echo '<form id="' . esc_attr( $form_id ) . '" class="cpb-api-settings__form">';
+            echo '<form id="' . esc_attr( $form_id ) . '" class="cpb-api-settings__form" method="post">';
+            echo '<input type="hidden" name="cpb_api_key" value="' . esc_attr( $api_key ) . '" />';
             echo '<div class="cpb-api-settings__fields">';
 
             foreach ( $api['fields'] as $field ) {
                 $field_id = $field['name'];
+                $saved_value = isset( $saved_api_settings[ $field['name'] ] ) ? $saved_api_settings[ $field['name'] ] : '';
                 echo '<div class="cpb-api-settings__field">';
                 echo '<label for="' . esc_attr( $field_id ) . '">' . esc_html( $field['label'] ) . '</label>';
 
                 if ( 'select' === $field['type'] ) {
                     echo '<select id="' . esc_attr( $field_id ) . '" name="' . esc_attr( $field['name'] ) . '">';
                     foreach ( $field['options'] as $option_value => $option_label ) {
-                        echo '<option value="' . esc_attr( $option_value ) . '">' . esc_html( $option_label ) . '</option>';
+                        $selected = selected( $saved_value, $option_value, false );
+                        echo '<option value="' . esc_attr( $option_value ) . '"' . $selected . '>' . esc_html( $option_label ) . '</option>';
                     }
                     echo '</select>';
                 } else {
                     $input_type = esc_attr( $field['type'] );
                     $input_classes = 'regular-text';
                     $input_attributes = ' id="' . esc_attr( $field_id ) . '" name="' . esc_attr( $field['name'] ) . '"';
+                    $input_value = esc_attr( $saved_value );
 
                     if ( ! empty( $field['reveal'] ) ) {
                         $show_label = __( 'Reveal', 'codex-plugin-boilerplate' );
                         $hide_label = __( 'Hide', 'codex-plugin-boilerplate' );
                         echo '<div class="cpb-api-settings__input-group">';
-                        echo '<input type="' . $input_type . '" class="' . esc_attr( $input_classes ) . '"' . $input_attributes . ' autocomplete="off" />';
+                        echo '<input type="' . $input_type . '" class="' . esc_attr( $input_classes ) . '"' . $input_attributes . ' value="' . $input_value . '" autocomplete="off" />';
                         echo '<button type="button" class="button button-secondary cpb-api-settings__toggle-visibility" data-target="#' . esc_attr( $field_id ) . '" data-label-show="' . esc_attr( $show_label ) . '" data-label-hide="' . esc_attr( $hide_label ) . '" aria-pressed="false">' . esc_html( $show_label ) . '</button>';
                         echo '</div>';
                     } else {
-                        echo '<input type="' . $input_type . '" class="' . esc_attr( $input_classes ) . '"' . $input_attributes . ' />';
+                        echo '<input type="' . $input_type . '" class="' . esc_attr( $input_classes ) . '"' . $input_attributes . ' value="' . $input_value . '" />';
                     }
                 }
 

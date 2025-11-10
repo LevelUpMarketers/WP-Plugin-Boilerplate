@@ -14,6 +14,7 @@ class CPB_Ajax {
         add_action( 'wp_ajax_cpb_save_email_template', array( $this, 'save_email_template' ) );
         add_action( 'wp_ajax_cpb_send_test_email', array( $this, 'send_test_email' ) );
         add_action( 'wp_ajax_cpb_clear_email_log', array( $this, 'clear_email_log' ) );
+        add_action( 'wp_ajax_cpb_save_api_settings', array( $this, 'save_api_settings' ) );
     }
 
     private function maybe_delay( $start, $minimum_time = CPB_MIN_EXECUTION_TIME ) {
@@ -120,6 +121,94 @@ class CPB_Ajax {
 
         $this->maybe_delay( $start );
         wp_send_json_success( array( 'message' => $message ) );
+    }
+
+    public function save_api_settings() {
+        $start = microtime( true );
+        check_ajax_referer( 'cpb_ajax_nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'You do not have permission to save these settings.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $api_key = isset( $_POST['cpb_api_key'] ) ? sanitize_key( wp_unslash( $_POST['cpb_api_key'] ) ) : '';
+
+        $api_definitions = array(
+            'payment_gateway' => array(
+                'fields' => array(
+                    'payment_gateway_environment'   => array(
+                        'type'    => 'select',
+                        'options' => array( 'live', 'sandbox' ),
+                        'default' => 'live',
+                    ),
+                    'payment_gateway_login_id'      => array(
+                        'type' => 'text',
+                    ),
+                    'payment_gateway_transaction_key' => array(
+                        'type' => 'text',
+                    ),
+                    'payment_gateway_client_key'    => array(
+                        'type' => 'text',
+                    ),
+                ),
+            ),
+        );
+
+        if ( ! $api_key || ! isset( $api_definitions[ $api_key ] ) ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Unknown API configuration.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $definition = $api_definitions[ $api_key ];
+        $sanitized  = array();
+
+        foreach ( $definition['fields'] as $field_key => $field_definition ) {
+            $raw_value = isset( $_POST[ $field_key ] ) ? wp_unslash( $_POST[ $field_key ] ) : '';
+            $field_type = isset( $field_definition['type'] ) ? $field_definition['type'] : 'text';
+
+            switch ( $field_type ) {
+                case 'select':
+                    $allowed_values = isset( $field_definition['options'] ) ? (array) $field_definition['options'] : array();
+                    $default_value  = isset( $field_definition['default'] ) ? $field_definition['default'] : '';
+                    $raw_value      = sanitize_key( $raw_value );
+
+                    if ( ! in_array( $raw_value, $allowed_values, true ) ) {
+                        $raw_value = $default_value;
+                    }
+
+                    $sanitized[ $field_key ] = $raw_value;
+                    break;
+                default:
+                    $sanitized[ $field_key ] = sanitize_text_field( $raw_value );
+                    break;
+            }
+        }
+
+        $all_settings = get_option( 'cpb_api_settings', array() );
+
+        if ( ! is_array( $all_settings ) ) {
+            $all_settings = array();
+        }
+
+        $all_settings[ $api_key ] = $sanitized;
+
+        update_option( 'cpb_api_settings', $all_settings );
+
+        $this->maybe_delay( $start );
+        wp_send_json_success(
+            array(
+                'message' => __( 'API settings saved.', 'codex-plugin-boilerplate' ),
+            )
+        );
     }
 
     public function delete_main_entity() {

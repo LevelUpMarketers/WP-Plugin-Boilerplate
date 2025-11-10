@@ -1,11 +1,12 @@
 jQuery(document).ready(function($){
     function handleForm(selector, action){
-        var spinnerHideTimer;
         $(selector).on('submit', function(e){
             e.preventDefault();
-            var data = $(this).serialize();
-            var $spinner = $('#cpb-spinner');
-            var $feedback = $('#cpb-feedback');
+            var $form = $(this);
+            var data = $form.serialize();
+            var spinnerHideTimer = $form.data('spinnerHideTimer');
+            var $spinner = $form.find('.cpb-feedback-area .spinner').first();
+            var $feedback = $form.find('.cpb-feedback-area [role="status"]').first();
             if ($feedback.length) {
                 $feedback.removeClass('is-visible').text('');
             }
@@ -31,12 +32,14 @@ jQuery(document).ready(function($){
                     spinnerHideTimer = setTimeout(function(){
                         $spinner.removeClass('is-active');
                     }, 150);
+                    $form.data('spinnerHideTimer', spinnerHideTimer);
                 });
         });
     }
     handleForm('#cpb-create-form','cpb_save_main_entity');
     handleForm('#cpb-general-settings-form','cpb_save_main_entity');
     handleForm('#cpb-style-settings-form','cpb_save_main_entity');
+    handleForm('.cpb-api-settings__form','cpb_save_api_settings');
 
     function formatString(template){
         if (typeof template !== 'string') {

@@ -66,4 +66,5 @@
 64. 2025-11-10: Introduced the API Settings tab with accordion-styled credential forms, reveal toggles, and inline feedback controls mirroring other admin sections.
 65. 2025-11-10: Added a Category column to the API Settings accordion headers and styled the cells to accommodate service group labels.
 66. 2025-11-10: Scoped the API Settings accordion headers to use table-cell alignment, enforced a 50px row height, and right-aligned the action heading for consistent spacing.
+67. 2025-11-10: Wired API Settings forms to AJAX persistence with per-integration sanitization, inline feedback reuse, and saved credential prefills.
 
