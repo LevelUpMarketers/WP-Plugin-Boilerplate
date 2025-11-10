@@ -75,3 +75,4 @@
 72. 2025-11-10: Added a Main Entity search dashboard with placeholder filters, inline spinner feedback, and paginated AJAX reads that honor active criteria.
 73. 2025-11-10: Added a Clear Search control to reset Main Entity filters and reload the default paginated results.
 74. 2025-11-10: Added general settings toggles for all logging channels, persisted preferences via AJAX, and gated email/error log writers behind the new helper so disabled logs stop recording immediately.
+75. 2025-11-10: Surfaced logging status indicators across communications and log tabs with styled settings links so admins can confirm which channels are currently recording entries.

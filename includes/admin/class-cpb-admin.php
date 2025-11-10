@@ -97,6 +97,12 @@ class CPB_Admin {
 
         $this->render_tab_intro( $tabs[ $active_tab ], $description );
 
+        if ( 'email-logs' === $active_tab ) {
+            $this->render_logging_status_notice( CPB_Settings_Helper::FIELD_LOG_EMAIL );
+        } elseif ( 'sms-logs' === $active_tab ) {
+            $this->render_logging_status_notice( CPB_Settings_Helper::FIELD_LOG_SMS );
+        }
+
         if ( 'email-templates' === $active_tab ) {
             $this->render_email_templates_tab();
         } elseif ( 'email-logs' === $active_tab ) {
@@ -942,6 +948,60 @@ class CPB_Admin {
             echo '<p class="cpb-tab-intro__description">' . esc_html( $description ) . '</p>';
         }
 
+        echo '</div>';
+    }
+
+    private function render_logging_status_notice( $channel ) {
+        if ( ! class_exists( 'CPB_Settings_Helper' ) ) {
+            return;
+        }
+
+        if ( ! $channel ) {
+            return;
+        }
+
+        $enabled = CPB_Settings_Helper::is_logging_enabled( $channel );
+
+        $status_class = $enabled ? 'cpb-log-status--enabled' : 'cpb-log-status--disabled';
+        $link         = add_query_arg(
+            array(
+                'page' => 'cpb-settings',
+                'tab'  => 'general',
+            ),
+            admin_url( 'admin.php' )
+        );
+
+        $link_markup = sprintf(
+            '<a href="%1$s">%2$s</a>',
+            esc_url( $link ),
+            esc_html__( 'Visit the CPB Settings page', 'codex-plugin-boilerplate' )
+        );
+
+        if ( $enabled ) {
+            /* translators: %s: Link to the CPB general settings tab. */
+            $message = sprintf(
+                __( 'Logging is currently enabled. %s to change this preference.', 'codex-plugin-boilerplate' ),
+                $link_markup
+            );
+            $indicator_label = __( 'Logging enabled', 'codex-plugin-boilerplate' );
+        } else {
+            /* translators: %s: Link to the CPB general settings tab. */
+            $message = sprintf(
+                __( 'Logging is currently disabled. %s to change this preference.', 'codex-plugin-boilerplate' ),
+                $link_markup
+            );
+            $indicator_label = __( 'Logging disabled', 'codex-plugin-boilerplate' );
+        }
+
+        echo '<div class="cpb-log-status ' . esc_attr( $status_class ) . '">';
+        printf(
+            '<span class="cpb-log-status__indicator" role="img" aria-label="%s"></span>',
+            esc_attr( $indicator_label )
+        );
+        printf(
+            '<p class="cpb-log-status__message">%s</p>',
+            wp_kses_post( $message )
+        );
         echo '</div>';
     }
 
@@ -2051,6 +2111,10 @@ class CPB_Admin {
 
         $this->render_tab_intro( $title, $description );
 
+        if ( 'payment_logs' === $active_tab ) {
+            $this->render_logging_status_notice( CPB_Settings_Helper::FIELD_LOG_PAYMENTS );
+        }
+
         if ( 'generated_content' === $active_tab ) {
             $this->render_generated_content_log();
         } elseif ( 'error_logs' === $active_tab ) {
@@ -2101,12 +2165,14 @@ class CPB_Admin {
                 'title'       => __( 'Sitewide errors/notices/warnings', 'codex-plugin-boilerplate' ),
                 /* translators: description for the sitewide error log textarea. */
                 'description' => __( 'Displays every PHP error, warning, and notice triggered anywhere on this site.', 'codex-plugin-boilerplate' ),
+                'channel'     => CPB_Settings_Helper::FIELD_LOG_SITE_ERRORS,
             ),
             array(
                 'scope'       => CPB_Error_Log_Helper::SCOPE_PLUGIN,
                 'title'       => __( 'CPB-Related errors/notices/warnings', 'codex-plugin-boilerplate' ),
                 /* translators: description for the plugin scoped error log textarea. */
                 'description' => __( 'Focused on Codex Plugin Boilerplate functionality—covering all current features and anything we build in the future.', 'codex-plugin-boilerplate' ),
+                'channel'     => CPB_Settings_Helper::FIELD_LOG_PLUGIN_ERRORS,
             ),
         );
 
@@ -2152,9 +2218,14 @@ class CPB_Admin {
             $description  = isset( $section['description'] ) ? $section['description'] : '';
             $empty_text   = isset( $section['empty'] ) ? $section['empty'] : __( 'No log entries recorded yet.', 'codex-plugin-boilerplate' );
             $empty_notice = '' === trim( $log_contents ) ? $empty_text : '';
+            $channel      = isset( $section['channel'] ) ? $section['channel'] : '';
 
             echo '<section class="cpb-error-logs__section">';
             echo '<h3 id="' . esc_attr( $heading_id ) . '" class="cpb-error-logs__heading">' . esc_html( $title ) . '</h3>';
+
+            if ( $channel ) {
+                $this->render_logging_status_notice( $channel );
+            }
 
             if ( $description ) {
                 echo '<p class="cpb-error-logs__description">' . esc_html( $description ) . '</p>';
