@@ -367,7 +367,55 @@ class CPB_Ajax {
 
         $per_page = min( $per_page, 100 );
 
-        $total       = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table" );
+        $raw_search = isset( $_POST['search'] ) ? wp_unslash( $_POST['search'] ) : array();
+
+        if ( ! is_array( $raw_search ) ) {
+            $raw_search = array();
+        }
+
+        $searchable_columns = array(
+            'placeholder_1',
+            'placeholder_2',
+            'placeholder_3',
+        );
+
+        $search_terms = array();
+
+        foreach ( $searchable_columns as $column ) {
+            if ( isset( $raw_search[ $column ] ) ) {
+                $value = sanitize_text_field( $raw_search[ $column ] );
+
+                if ( '' !== $value ) {
+                    $search_terms[ $column ] = $value;
+                }
+            }
+        }
+
+        $where_clauses = array();
+        $where_params  = array();
+
+        foreach ( $search_terms as $column => $value ) {
+            $where_clauses[] = $column . ' LIKE %s';
+            $where_params[]  = '%' . $wpdb->esc_like( $value ) . '%';
+        }
+
+        $where_sql = '';
+
+        if ( $where_clauses ) {
+            $where_sql = 'WHERE ' . implode( ' AND ', $where_clauses );
+        }
+
+        $total_query = "SELECT COUNT(*) FROM $table";
+
+        if ( $where_sql ) {
+            $total_query .= ' ' . $where_sql;
+        }
+
+        if ( $where_params ) {
+            $total = (int) $wpdb->get_var( $wpdb->prepare( $total_query, $where_params ) );
+        } else {
+            $total = (int) $wpdb->get_var( $total_query );
+        }
         $total_pages = $per_page > 0 ? (int) ceil( $total / $per_page ) : 1;
 
         if ( $total_pages < 1 ) {
@@ -394,11 +442,22 @@ class CPB_Ajax {
                 'opt_in_event_update_sms',
             );
 
+            $select_query = "SELECT * FROM $table";
+
+            if ( $where_sql ) {
+                $select_query .= ' ' . $where_sql;
+            }
+
+            $select_query .= ' ORDER BY placeholder_1 ASC, id ASC LIMIT %d OFFSET %d';
+
+            $select_params = $where_params;
+            $select_params[] = $per_page;
+            $select_params[] = $offset;
+
             $entities = $wpdb->get_results(
                 $wpdb->prepare(
-                    "SELECT * FROM $table ORDER BY placeholder_1 ASC, id ASC LIMIT %d OFFSET %d",
-                    $per_page,
-                    $offset
+                    $select_query,
+                    $select_params
                 ),
                 ARRAY_A
             );

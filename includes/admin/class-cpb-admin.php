@@ -741,6 +741,7 @@ class CPB_Admin {
             'emailLogError'     => __( 'Unable to clear the email log. Please try again.', 'codex-plugin-boilerplate' ),
             'emailLogEmpty'     => __( 'No email activity has been recorded yet.', 'codex-plugin-boilerplate' ),
             'logDownloadReady'  => __( 'Log download ready.', 'codex-plugin-boilerplate' ),
+            'searchFiltersApplied' => __( 'Showing filtered results.', 'codex-plugin-boilerplate' ),
         ) );
     }
 
@@ -1385,6 +1386,35 @@ class CPB_Admin {
         $column_count = 6; // Five placeholder columns plus actions.
 
         echo '<div class="cpb-communications cpb-communications--main-entities">';
+        echo '<div class="cpb-entity-search" role="search">';
+        echo '<form id="cpb-main-entity-search" class="cpb-entity-search__form" method="post">';
+        echo '<h3 class="cpb-entity-search__title">' . esc_html__( 'Search Main Entities', 'codex-plugin-boilerplate' ) . '</h3>';
+        echo '<p class="cpb-entity-search__description">' . esc_html__( 'Filter records by placeholder values to quickly locate the entries you need.', 'codex-plugin-boilerplate' ) . '</p>';
+        echo '<div class="cpb-entity-search__fields">';
+
+        for ( $i = 1; $i <= 3; $i++ ) {
+            $field_key = 'placeholder_' . $i;
+            $label     = $this->get_placeholder_label( $i );
+            $field_id  = 'cpb-entity-search-' . $field_key;
+
+            echo '<div class="cpb-entity-search__field">';
+            echo '<label class="cpb-entity-search__label" for="' . esc_attr( $field_id ) . '">';
+            echo esc_html( $label );
+            echo '</label>';
+            echo '<input type="text" id="' . esc_attr( $field_id ) . '" name="' . esc_attr( $field_key ) . '" class="regular-text" />';
+            echo '</div>';
+        }
+
+        echo '</div>';
+        echo '<div class="cpb-entity-search__actions">';
+        echo '<button type="submit" class="button button-primary">' . esc_html__( 'Search', 'codex-plugin-boilerplate' ) . '</button>';
+        echo '<span class="cpb-feedback-area cpb-feedback-area--inline">';
+        echo '<span id="cpb-entity-search-spinner" class="spinner" aria-hidden="true"></span>';
+        echo '<span id="cpb-entity-search-feedback" role="status" aria-live="polite"></span>';
+        echo '</span>';
+        echo '</div>';
+        echo '</form>';
+        echo '</div>';
         echo '<div class="cpb-accordion-group cpb-accordion-group--table" data-cpb-accordion-group="main-entities">';
         echo '<table class="wp-list-table widefat striped cpb-accordion-table">';
         echo '<thead>';

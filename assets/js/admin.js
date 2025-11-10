@@ -189,12 +189,20 @@ jQuery(document).ready(function($){
         var $pagination = $('#cpb-entity-pagination');
         var $paginationContainer = $pagination.closest('.tablenav');
         var $entityFeedback = $('#cpb-entity-feedback');
+        var $searchForm = $('#cpb-main-entity-search');
+        var $searchSpinner = $('#cpb-entity-search-spinner');
+        var $searchFeedback = $('#cpb-entity-search-feedback');
         var placeholderMap = cpbAdmin.placeholderMap || {};
         var placeholderList = Array.isArray(cpbAdmin.placeholders) ? cpbAdmin.placeholders : [];
         var entityFields = Array.isArray(cpbAdmin.entityFields) ? cpbAdmin.entityFields : [];
         var pendingFeedbackMessage = '';
         var currentPage = 1;
         var emptyValue = '—';
+        var currentFilters = {
+            placeholder_1: '',
+            placeholder_2: '',
+            placeholder_3: ''
+        };
 
         if ($entityFeedback.length){
             $entityFeedback.hide().removeClass('is-visible');
@@ -208,6 +216,44 @@ jQuery(document).ready(function($){
             if ($entityFeedback.length){
                 $entityFeedback.text('').hide().removeClass('is-visible');
             }
+        }
+
+        function clearSearchFeedback(){
+            if ($searchFeedback.length){
+                $searchFeedback.removeClass('is-visible').text('');
+            }
+        }
+
+        function showSearchFeedback(message){
+            if (!$searchFeedback.length){
+                return;
+            }
+
+            if (message){
+                $searchFeedback.text(message).addClass('is-visible');
+            } else {
+                clearSearchFeedback();
+            }
+        }
+
+        function setSearchLoading(isLoading){
+            if (!$searchSpinner.length){
+                return;
+            }
+
+            if (isLoading){
+                $searchSpinner.addClass('is-active');
+            } else {
+                $searchSpinner.removeClass('is-active');
+            }
+        }
+
+        function isSearchActive(){
+            return Object.keys(currentFilters).some(function(key){
+                var value = currentFilters[key];
+
+                return typeof value === 'string' && value.trim() !== '';
+            });
         }
 
         function showFeedback(message){
@@ -723,12 +769,19 @@ jQuery(document).ready(function($){
         function fetchEntities(page){
             var targetPage = page || 1;
             clearFeedback();
+            clearSearchFeedback();
+            setSearchLoading(true);
 
             $.post(cpbAjax.ajaxurl, {
                 action: 'cpb_read_main_entity',
                 _ajax_nonce: cpbAjax.nonce,
                 page: targetPage,
-                per_page: perPage
+                per_page: perPage,
+                search: {
+                    placeholder_1: currentFilters.placeholder_1,
+                    placeholder_2: currentFilters.placeholder_2,
+                    placeholder_3: currentFilters.placeholder_3
+                }
             })
                 .done(function(response){
                     if (response && response.success && response.data){
@@ -737,13 +790,24 @@ jQuery(document).ready(function($){
                             showFeedback(pendingFeedbackMessage);
                             pendingFeedbackMessage = '';
                         }
+
+                        if (isSearchActive()){
+                            showSearchFeedback(cpbAdmin.searchFiltersApplied || '');
+                        } else {
+                            clearSearchFeedback();
+                        }
                     } else {
                         showFeedback(cpbAdmin.loadError || cpbAdmin.error);
+                        showSearchFeedback(cpbAdmin.loadError || cpbAdmin.error);
                     }
                 })
                 .fail(function(){
                     showFeedback(cpbAdmin.loadError || cpbAdmin.error);
+                    showSearchFeedback(cpbAdmin.loadError || cpbAdmin.error);
                     pendingFeedbackMessage = '';
+                })
+                .always(function(){
+                    setSearchLoading(false);
                 });
         }
 
@@ -759,6 +823,30 @@ jQuery(document).ready(function($){
                 }
 
                 fetchEntities(targetPage);
+            });
+        }
+
+        if ($searchForm.length){
+            $searchForm.on('submit', function(e){
+                e.preventDefault();
+
+                var newFilters = {
+                    placeholder_1: '',
+                    placeholder_2: '',
+                    placeholder_3: ''
+                };
+
+                $searchForm.serializeArray().forEach(function(field){
+                    if (!Object.prototype.hasOwnProperty.call(newFilters, field.name)){
+                        return;
+                    }
+
+                    var value = typeof field.value === 'string' ? field.value.trim() : '';
+                    newFilters[field.name] = value;
+                });
+
+                currentFilters = newFilters;
+                fetchEntities(1);
             });
         }
 
