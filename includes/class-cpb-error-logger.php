@@ -362,12 +362,14 @@ class CPB_Error_Logger {
         $message    = isset( $entry['message'] ) ? $entry['message'] : '';
         $stack      = isset( $entry['stack'] ) ? $entry['stack'] : '';
         $is_plugin  = $this->is_plugin_related( $file, $message, $stack );
-        $site_entry = $entry;
-        $site_entry['scope'] = CPB_Error_Log_Helper::get_scope_label( CPB_Error_Log_Helper::SCOPE_SITEWIDE );
-        CPB_Error_Log_Helper::append_entry( CPB_Error_Log_Helper::SCOPE_SITEWIDE, $site_entry );
+        if ( CPB_Settings_Helper::is_logging_enabled( CPB_Settings_Helper::FIELD_LOG_SITE_ERRORS ) ) {
+            $site_entry           = $entry;
+            $site_entry['scope'] = CPB_Error_Log_Helper::get_scope_label( CPB_Error_Log_Helper::SCOPE_SITEWIDE );
+            CPB_Error_Log_Helper::append_entry( CPB_Error_Log_Helper::SCOPE_SITEWIDE, $site_entry );
+        }
 
-        if ( $is_plugin ) {
-            $plugin_entry         = $entry;
+        if ( $is_plugin && CPB_Settings_Helper::is_logging_enabled( CPB_Settings_Helper::FIELD_LOG_PLUGIN_ERRORS ) ) {
+            $plugin_entry          = $entry;
             $plugin_entry['scope'] = CPB_Error_Log_Helper::get_scope_label( CPB_Error_Log_Helper::SCOPE_PLUGIN );
             CPB_Error_Log_Helper::append_entry( CPB_Error_Log_Helper::SCOPE_PLUGIN, $plugin_entry );
         }

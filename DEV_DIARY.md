@@ -74,3 +74,4 @@
 71. 2025-11-10: Normalized placeholder label and value sanitization so apostrophes, dashes, and other legitimate characters save and render consistently across Main Entity forms and related tooling.
 72. 2025-11-10: Added a Main Entity search dashboard with placeholder filters, inline spinner feedback, and paginated AJAX reads that honor active criteria.
 73. 2025-11-10: Added a Clear Search control to reset Main Entity filters and reload the default paginated results.
+74. 2025-11-10: Added general settings toggles for all logging channels, persisted preferences via AJAX, and gated email/error log writers behind the new helper so disabled logs stop recording immediately.

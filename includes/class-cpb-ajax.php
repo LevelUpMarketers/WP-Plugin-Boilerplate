@@ -9,6 +9,7 @@ class CPB_Ajax {
 
     public function register() {
         add_action( 'wp_ajax_cpb_save_main_entity', array( $this, 'save_main_entity' ) );
+        add_action( 'wp_ajax_cpb_save_general_settings', array( $this, 'save_general_settings' ) );
         add_action( 'wp_ajax_cpb_delete_main_entity', array( $this, 'delete_main_entity' ) );
         add_action( 'wp_ajax_cpb_read_main_entity', array( $this, 'read_main_entity' ) );
         add_action( 'wp_ajax_cpb_save_email_template', array( $this, 'save_email_template' ) );
@@ -128,6 +129,43 @@ class CPB_Ajax {
 
         $this->maybe_delay( $start );
         wp_send_json_success( array( 'message' => $message ) );
+    }
+
+    public function save_general_settings() {
+        $start = microtime( true );
+        check_ajax_referer( 'cpb_ajax_nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'You do not have permission to save these settings.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $sanitized = CPB_Settings_Helper::sanitize_general_settings( $_POST );
+        $result    = CPB_Settings_Helper::save_general_settings( $_POST );
+
+        if ( false === $result ) {
+            $stored = CPB_Settings_Helper::get_general_settings();
+
+            if ( $stored !== $sanitized ) {
+                $this->maybe_delay( $start );
+                wp_send_json_error(
+                    array(
+                        'message' => __( 'Settings could not be saved. Please try again.', 'codex-plugin-boilerplate' ),
+                    )
+                );
+            }
+        }
+
+        $this->maybe_delay( $start );
+        wp_send_json_success(
+            array(
+                'message' => __( 'Settings saved.', 'codex-plugin-boilerplate' ),
+            )
+        );
     }
 
     public function save_api_settings() {

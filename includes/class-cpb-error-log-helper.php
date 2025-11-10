@@ -108,6 +108,16 @@ class CPB_Error_Log_Helper {
      * @return bool
      */
     public static function append_entry( $scope, array $entry ) {
+        $scope = self::normalize_scope( $scope );
+
+        if ( '' === $scope ) {
+            return false;
+        }
+
+        if ( ! self::is_scope_enabled( $scope ) ) {
+            return false;
+        }
+
         $path = self::get_log_file_path( $scope );
 
         if ( '' === $path ) {
@@ -302,6 +312,26 @@ class CPB_Error_Log_Helper {
         }
 
         return '';
+    }
+
+    /**
+     * Determine whether the provided scope is permitted to write entries.
+     *
+     * @param string $scope Normalized log scope identifier.
+     *
+     * @return bool
+     */
+    protected static function is_scope_enabled( $scope ) {
+        switch ( $scope ) {
+            case self::SCOPE_SITEWIDE:
+                return CPB_Settings_Helper::is_logging_enabled( CPB_Settings_Helper::FIELD_LOG_SITE_ERRORS );
+            case self::SCOPE_PLUGIN:
+                return CPB_Settings_Helper::is_logging_enabled( CPB_Settings_Helper::FIELD_LOG_PLUGIN_ERRORS );
+            case self::SCOPE_PAYMENTS:
+                return CPB_Settings_Helper::is_logging_enabled( CPB_Settings_Helper::FIELD_LOG_PAYMENTS );
+        }
+
+        return true;
     }
 
     /**

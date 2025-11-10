@@ -1496,9 +1496,68 @@ class CPB_Admin {
     }
 
     private function render_general_settings_tab() {
-        echo '<form id="cpb-general-settings-form">';
-        echo '<label>' . esc_html__( 'Option', 'codex-plugin-boilerplate' ) . ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr__( 'Tooltip placeholder text for Option', 'codex-plugin-boilerplate' ) . '"></span></label>';
-        echo '<input type="text" name="option" />';
+        $settings = CPB_Settings_Helper::get_general_settings();
+
+        $logging_fields = array(
+            CPB_Settings_Helper::FIELD_LOG_EMAIL => array(
+                'label'       => __( 'Email Logs', 'codex-plugin-boilerplate' ),
+                'description' => __( 'Capture email delivery activity so you can audit messages from the Email Logs tab.', 'codex-plugin-boilerplate' ),
+            ),
+            CPB_Settings_Helper::FIELD_LOG_SMS => array(
+                'label'       => __( 'SMS Logs', 'codex-plugin-boilerplate' ),
+                'description' => __( 'Store outbound SMS activity for future messaging diagnostics.', 'codex-plugin-boilerplate' ),
+            ),
+            CPB_Settings_Helper::FIELD_LOG_SITE_ERRORS => array(
+                'label'       => __( 'Sitewide errors, notices, and warnings', 'codex-plugin-boilerplate' ),
+                'description' => __( 'Record PHP notices from the entire site inside the Error Logs tab.', 'codex-plugin-boilerplate' ),
+            ),
+            CPB_Settings_Helper::FIELD_LOG_PLUGIN_ERRORS => array(
+                'label'       => __( 'Errors, notices, and warnings specific to this plugin only', 'codex-plugin-boilerplate' ),
+                'description' => __( 'Limit error tracking to issues related to Codex Plugin Boilerplate for targeted troubleshooting.', 'codex-plugin-boilerplate' ),
+            ),
+            CPB_Settings_Helper::FIELD_LOG_PAYMENTS => array(
+                'label'       => __( 'Payment logs', 'codex-plugin-boilerplate' ),
+                'description' => __( 'Retain payment gateway diagnostics and transaction context within the Payment Logs tab.', 'codex-plugin-boilerplate' ),
+            ),
+        );
+
+        echo '<form id="cpb-general-settings-form" class="cpb-settings-form">';
+        echo '<table class="form-table" role="presentation">';
+
+        $option_tooltip = esc_attr__( 'Tooltip placeholder text for Option', 'codex-plugin-boilerplate' );
+        $option_value   = isset( $settings[ CPB_Settings_Helper::FIELD_OPTION ] ) ? $settings[ CPB_Settings_Helper::FIELD_OPTION ] : '';
+
+        echo '<tr>';
+        echo '<th scope="row">';
+        echo '<label for="cpb-general-option">' . esc_html__( 'Option', 'codex-plugin-boilerplate' ) . ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . $option_tooltip . '"></span></label>';
+        echo '</th>';
+        echo '<td>';
+        echo '<input type="text" id="cpb-general-option" name="' . esc_attr( CPB_Settings_Helper::FIELD_OPTION ) . '" value="' . esc_attr( $option_value ) . '" class="regular-text" />';
+        echo '</td>';
+        echo '</tr>';
+
+        foreach ( $logging_fields as $field_key => $field ) {
+            $field_id   = 'cpb-general-' . str_replace( '_', '-', $field_key );
+            $is_enabled = ! empty( $settings[ $field_key ] );
+
+            echo '<tr>';
+            echo '<th scope="row">' . esc_html( $field['label'] ) . '</th>';
+            echo '<td>';
+            echo '<label for="' . esc_attr( $field_id ) . '">';
+            echo '<input type="checkbox" id="' . esc_attr( $field_id ) . '" name="' . esc_attr( $field_key ) . '" value="1" ' . checked( $is_enabled, true, false ) . ' />';
+            echo ' ' . esc_html__( 'Enable logging', 'codex-plugin-boilerplate' );
+            echo '</label>';
+
+            if ( ! empty( $field['description'] ) ) {
+                echo '<p class="description">' . esc_html( $field['description'] ) . '</p>';
+            }
+
+            echo '</td>';
+            echo '</tr>';
+        }
+
+        echo '</table>';
+
         $submit_button = get_submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ), 'primary', 'submit', false );
         echo '<p class="submit">' . $submit_button;
         echo '<span class="cpb-feedback-area cpb-feedback-area--inline"><span id="cpb-spinner" class="spinner" aria-hidden="true"></span><span id="cpb-feedback" role="status" aria-live="polite"></span></span>';

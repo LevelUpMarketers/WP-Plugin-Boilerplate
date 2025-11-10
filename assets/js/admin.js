@@ -37,7 +37,7 @@ jQuery(document).ready(function($){
         });
     }
     handleForm('#cpb-create-form','cpb_save_main_entity');
-    handleForm('#cpb-general-settings-form','cpb_save_main_entity');
+    handleForm('#cpb-general-settings-form','cpb_save_general_settings');
     handleForm('#cpb-style-settings-form','cpb_save_main_entity');
     handleForm('.cpb-api-settings__form','cpb_save_api_settings');
 
