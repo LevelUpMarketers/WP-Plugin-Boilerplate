@@ -13,6 +13,7 @@ class CPB_Admin {
         add_action( 'admin_post_cpb_delete_generated_content', array( $this, 'handle_delete_generated_content' ) );
         add_action( 'admin_post_cpb_delete_cron_event', array( $this, 'handle_delete_cron_event' ) );
         add_action( 'admin_post_cpb_run_cron_event', array( $this, 'handle_run_cron_event' ) );
+        add_action( 'admin_post_cpb_download_email_log', array( $this, 'handle_download_email_log' ) );
     }
 
     public function add_menu() {
@@ -87,7 +88,7 @@ class CPB_Admin {
 
         $tab_descriptions = array(
             'email-templates' => __( 'Review placeholder email templates that demonstrate how communications can be grouped for future automation requests.', 'codex-plugin-boilerplate' ),
-            'email-logs'      => __( 'Monitor outgoing email history and export records once log tooling is connected.', 'codex-plugin-boilerplate' ),
+            'email-logs'      => __( 'Review detailed delivery history for plugin-generated emails and export the log for troubleshooting.', 'codex-plugin-boilerplate' ),
             'sms-templates'   => __( 'Prepare SMS templates that mirror your email workflows so every touchpoint stays consistent.', 'codex-plugin-boilerplate' ),
             'sms-logs'        => __( 'Audit sent SMS messages and spot delivery issues as soon as log data becomes available.', 'codex-plugin-boilerplate' ),
         );
@@ -99,9 +100,7 @@ class CPB_Admin {
         if ( 'email-templates' === $active_tab ) {
             $this->render_email_templates_tab();
         } elseif ( 'email-logs' === $active_tab ) {
-            $this->render_communications_placeholder_tab(
-                __( 'Email history tooling is coming soon.', 'codex-plugin-boilerplate' )
-            );
+            $this->render_email_logs_tab();
         } elseif ( 'sms-templates' === $active_tab ) {
             $this->render_communications_placeholder_tab(
                 __( 'SMS template management is coming soon.', 'codex-plugin-boilerplate' )
@@ -118,6 +117,11 @@ class CPB_Admin {
 
     private function render_email_templates_tab() {
         $templates   = $this->get_sample_email_templates();
+        foreach ( $templates as $template ) {
+            if ( isset( $template['id'], $template['title'] ) ) {
+                CPB_Email_Template_Helper::register_template_label( $template['id'], $template['title'] );
+            }
+        }
         $meta_labels = array(
             'trigger'             => __( 'Trigger', 'codex-plugin-boilerplate' ),
             'communication_type'  => __( 'Communication Type', 'codex-plugin-boilerplate' ),
@@ -126,7 +130,7 @@ class CPB_Admin {
         $meta_order  = array( 'trigger', 'communication_type', 'category' );
         $column_count = count( $meta_order ) + 2; // Title and actions columns.
 
-        echo '<div class="cpb-communications">';
+        echo '<div class="cpb-communications cpb-communications--email-templates">';
         echo '<div class="cpb-accordion-group cpb-accordion-group--table" data-cpb-accordion-group="communications">';
         echo '<table class="wp-list-table widefat striped cpb-accordion-table">';
         echo '<thead>';
@@ -210,7 +214,7 @@ class CPB_Admin {
                 absint( $column_count )
             );
             echo '<div class="cpb-accordion__panel">';
-            echo '<p>' . esc_html( $template['content'] ) . '</p>';
+            $this->render_email_template_panel( $template );
             echo '</div>';
             echo '</td>';
             echo '</tr>';
@@ -218,6 +222,417 @@ class CPB_Admin {
 
         echo '</tbody>';
         echo '</table>';
+        echo '</div>';
+        echo '</div>';
+    }
+
+    private function render_email_template_panel( $template ) {
+        if ( isset( $template['id'] ) && 'cpb-email-welcome' === $template['id'] ) {
+            $this->render_welcome_email_template_panel( $template );
+            return;
+        }
+
+        if ( isset( $template['content'] ) ) {
+            echo '<p>' . esc_html( $template['content'] ) . '</p>';
+        }
+    }
+
+    private function render_welcome_email_template_panel( $template ) {
+        $template_id   = isset( $template['id'] ) ? $template['id'] : 'cpb-email-welcome';
+        $field_prefix  = sanitize_html_class( $template_id );
+        $from_name_id  = $field_prefix . '-from-name';
+        $from_email_id = $field_prefix . '-from-email';
+        $subject_id    = $field_prefix . '-subject';
+        $body_id       = $field_prefix . '-body';
+        $sms_id        = $field_prefix . '-sms';
+        $token_groups       = $this->get_main_entity_token_groups();
+        $template_settings  = $this->get_email_template_settings( $template_id );
+        $from_name_value    = isset( $template_settings['from_name'] ) ? $template_settings['from_name'] : '';
+        $from_email_value   = isset( $template_settings['from_email'] ) ? $template_settings['from_email'] : '';
+        $subject_value      = isset( $template_settings['subject'] ) ? $template_settings['subject'] : '';
+        $body_value         = isset( $template_settings['body'] ) ? $template_settings['body'] : '';
+        $sms_value          = isset( $template_settings['sms'] ) ? $template_settings['sms'] : '';
+        $default_from_name  = CPB_Email_Template_Helper::get_default_from_name();
+        $default_from_email = CPB_Email_Template_Helper::get_default_from_email();
+        $preview_data       = CPB_Main_Entity_Helper::get_first_preview_data();
+        $has_preview        = ! empty( $preview_data );
+        $save_spinner_id    = $field_prefix . '-save-spinner';
+        $save_feedback_id   = $field_prefix . '-save-feedback';
+        $test_email_id      = $field_prefix . '-test-email';
+        $test_spinner_id    = $field_prefix . '-test-spinner';
+        $test_feedback_id   = $field_prefix . '-test-feedback';
+
+        $preview_notice = $has_preview
+            ? __( 'Enter a subject or body to generate the preview.', 'codex-plugin-boilerplate' )
+            : __( 'Add a Main Entity entry to generate a preview.', 'codex-plugin-boilerplate' );
+
+        echo '<div class="cpb-template-editor" data-template="' . esc_attr( $template_id ) . '">';
+
+        echo '<div class="cpb-template-editor__fields">';
+
+        printf(
+            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><input type="text" id="%1$s" name="templates[%3$s][from_name]" class="regular-text" data-template-field="from_name" value="%4$s" placeholder="%5$s" autocomplete="name"></div>',
+            esc_attr( $from_name_id ),
+            esc_html__( 'Email From Name', 'codex-plugin-boilerplate' ),
+            esc_attr( $template_id ),
+            esc_attr( $from_name_value ),
+            esc_attr( $default_from_name )
+        );
+
+        printf(
+            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><input type="email" id="%1$s" name="templates[%3$s][from_email]" class="regular-text" data-template-field="from_email" value="%4$s" placeholder="%5$s" autocomplete="email"></div>',
+            esc_attr( $from_email_id ),
+            esc_html__( 'Email From Address', 'codex-plugin-boilerplate' ),
+            esc_attr( $template_id ),
+            esc_attr( $from_email_value ),
+            esc_attr( $default_from_email )
+        );
+
+        printf(
+            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><input type="text" id="%1$s" name="templates[%3$s][subject]" class="regular-text cpb-token-target" data-token-context="subject" value="%4$s"></div>',
+            esc_attr( $subject_id ),
+            esc_html__( 'Email Subject', 'codex-plugin-boilerplate' ),
+            esc_attr( $template_id ),
+            esc_attr( $subject_value )
+        );
+
+        printf(
+            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><textarea id="%1$s" name="templates[%3$s][body]" rows="8" class="widefat cpb-token-target" data-token-context="body">%4$s</textarea></div>',
+            esc_attr( $body_id ),
+            esc_html__( 'Email Body', 'codex-plugin-boilerplate' ),
+            esc_attr( $template_id ),
+            esc_textarea( $body_value )
+        );
+
+        printf(
+            '<div class="cpb-template-editor__field"><label for="%1$s">%2$s</label><textarea id="%1$s" name="templates[%3$s][sms]" rows="4" class="widefat cpb-token-target" data-token-context="sms">%4$s</textarea></div>',
+            esc_attr( $sms_id ),
+            esc_html__( 'SMS Text', 'codex-plugin-boilerplate' ),
+            esc_attr( $template_id ),
+            esc_textarea( $sms_value )
+        );
+
+        echo '<div class="cpb-template-preview" aria-live="polite">';
+        echo '<h3 class="cpb-template-preview__title">' . esc_html__( 'Email Preview', 'codex-plugin-boilerplate' ) . '</h3>';
+        echo '<p class="cpb-template-preview__notice">' . esc_html( $preview_notice ) . '</p>';
+        echo '<div class="cpb-template-preview__content" data-preview-role="content">';
+        echo '<p class="cpb-template-preview__subject"><span class="cpb-template-preview__label">' . esc_html__( 'Subject:', 'codex-plugin-boilerplate' ) . '</span> <span class="cpb-template-preview__value" data-preview-field="subject"></span></p>';
+        echo '<div class="cpb-template-preview__body" data-preview-field="body"></div>';
+        echo '</div>';
+        echo '</div>';
+
+        echo '<div class="cpb-template-editor__test">';
+        printf(
+            '<button type="button" class="button button-primary cpb-template-test-send" data-template="%1$s" data-email-input="#%2$s" data-spinner="#%3$s" data-feedback="#%4$s">%5$s</button>',
+            esc_attr( $template_id ),
+            esc_attr( $test_email_id ),
+            esc_attr( $test_spinner_id ),
+            esc_attr( $test_feedback_id ),
+            esc_html__( 'Send Test Email', 'codex-plugin-boilerplate' )
+        );
+        echo '<div class="cpb-template-editor__test-input">';
+        printf(
+            '<label class="screen-reader-text" for="%1$s">%2$s</label><input type="email" id="%1$s" class="regular-text cpb-template-test-email" placeholder="%3$s" autocomplete="off">',
+            esc_attr( $test_email_id ),
+            esc_html__( 'Test email address', 'codex-plugin-boilerplate' ),
+            esc_attr__( 'Enter an Email Address', 'codex-plugin-boilerplate' )
+        );
+        echo '</div>';
+        printf(
+            '<span class="cpb-feedback-area cpb-feedback-area--inline"><span id="%1$s" class="spinner cpb-template-spinner" aria-hidden="true"></span><span id="%2$s" class="cpb-template-feedback" role="status" aria-live="polite"></span></span>',
+            esc_attr( $test_spinner_id ),
+            esc_attr( $test_feedback_id )
+        );
+        echo '</div>';
+
+        echo '<div class="cpb-template-editor__actions">';
+        printf(
+            '<button type="button" class="button button-primary cpb-template-save" data-template="%1$s" data-spinner="#%2$s" data-feedback="#%3$s">%4$s</button>',
+            esc_attr( $template_id ),
+            esc_attr( $save_spinner_id ),
+            esc_attr( $save_feedback_id ),
+            esc_html__( 'Save Template', 'codex-plugin-boilerplate' )
+        );
+        printf(
+            '<span class="cpb-feedback-area cpb-feedback-area--inline"><span id="%1$s" class="spinner cpb-template-spinner" aria-hidden="true"></span><span id="%2$s" class="cpb-template-feedback" role="status" aria-live="polite"></span></span>',
+            esc_attr( $save_spinner_id ),
+            esc_attr( $save_feedback_id )
+        );
+        echo '</div>';
+
+        echo '</div>';
+
+        if ( ! empty( $token_groups ) ) {
+            echo '<div class="cpb-template-editor__tokens">';
+            echo '<h3 class="cpb-template-editor__tokens-heading">' . esc_html__( 'Tokens', 'codex-plugin-boilerplate' ) . '</h3>';
+
+            foreach ( $token_groups as $group ) {
+                if ( empty( $group['tokens'] ) ) {
+                    continue;
+                }
+
+                echo '<div class="cpb-token-group">';
+
+                if ( ! empty( $group['title'] ) ) {
+                    echo '<h4 class="cpb-token-group__title">' . esc_html( $group['title'] ) . '</h4>';
+                }
+
+                echo '<div class="cpb-token-group__buttons">';
+
+                foreach ( $group['tokens'] as $token ) {
+                    if ( empty( $token['value'] ) ) {
+                        continue;
+                    }
+
+                    $label = isset( $token['label'] ) ? $token['label'] : $token['value'];
+
+                    printf(
+                        '<button type="button" class="button button-secondary cpb-token-button" data-token="%1$s">%2$s</button>',
+                        esc_attr( $token['value'] ),
+                        esc_html( $label )
+                    );
+                }
+
+                echo '</div>';
+                echo '</div>';
+            }
+
+            echo '</div>';
+        }
+
+        echo '</div>';
+    }
+
+    private function get_main_entity_token_groups() {
+        $labels      = $this->get_placeholder_labels();
+        $token_group = array(
+            'title'  => __( 'Main Entity Information', 'codex-plugin-boilerplate' ),
+            'tokens' => array(),
+        );
+
+        foreach ( $labels as $key => $label ) {
+            $token_group['tokens'][] = array(
+                'value' => '{' . $key . '}',
+                'label' => $label,
+            );
+        }
+
+        /**
+         * Filter the token groups displayed for communications templates.
+         *
+         * This filter allows child plugins to add new token collections or adjust
+         * the existing Main Entity defaults when repurposing the boilerplate for
+         * client-specific data models.
+         *
+         * @param array $groups Array of token group definitions. Each group should contain
+         *                      a `title` and a `tokens` list where every token includes
+         *                      `value` (the merge tag) and `label` (the admin-facing text).
+         */
+        $groups = apply_filters( 'cpb_communications_token_groups', array( $token_group ) );
+
+        return array_map( array( $this, 'normalize_token_group' ), $groups );
+    }
+
+    private function get_email_templates_option_name() {
+        return CPB_Email_Template_Helper::get_option_name();
+    }
+
+    private function get_email_template_settings( $template_id ) {
+        $template_id = sanitize_key( $template_id );
+
+        if ( '' === $template_id ) {
+            return array();
+        }
+
+        return CPB_Email_Template_Helper::get_template_settings( $template_id );
+    }
+
+    private function normalize_token_group( $group ) {
+        if ( ! is_array( $group ) ) {
+            return array(
+                'title'  => '',
+                'tokens' => array(),
+            );
+        }
+
+        $title  = isset( $group['title'] ) ? $group['title'] : '';
+        $tokens = isset( $group['tokens'] ) && is_array( $group['tokens'] ) ? $group['tokens'] : array();
+
+        $normalized_tokens = array();
+
+        foreach ( $tokens as $token ) {
+            if ( ! is_array( $token ) || empty( $token['value'] ) ) {
+                continue;
+            }
+
+            $normalized_tokens[] = array(
+                'value' => (string) $token['value'],
+                'label' => isset( $token['label'] ) ? (string) $token['label'] : (string) $token['value'],
+            );
+        }
+
+        return array(
+            'title'  => (string) $title,
+            'tokens' => $normalized_tokens,
+        );
+    }
+
+    private function render_email_logs_tab() {
+        $log_available = CPB_Email_Log_Helper::is_log_available();
+        $entries       = $log_available ? CPB_Email_Log_Helper::get_log_entries() : array();
+        $empty_message = __( 'No email activity has been recorded yet.', 'codex-plugin-boilerplate' );
+        $time_notice   = __( 'Timestamps display Eastern United States time.', 'codex-plugin-boilerplate' );
+        $clear_label   = __( 'Clear log', 'codex-plugin-boilerplate' );
+        $download_label = __( 'Download log file', 'codex-plugin-boilerplate' );
+        $sent_format   = __( 'Sent %s', 'codex-plugin-boilerplate' );
+        $not_available = __( 'Email logging is unavailable. Confirm that WordPress can write to the uploads directory.', 'codex-plugin-boilerplate' );
+        $body_empty    = __( 'No body content recorded.', 'codex-plugin-boilerplate' );
+
+        $empty_classes = 'cpb-email-log__empty';
+        $empty_hidden  = '';
+
+        if ( empty( $entries ) ) {
+            $empty_classes .= ' is-visible';
+        } else {
+            $empty_hidden = ' hidden';
+        }
+
+        echo '<div class="cpb-communications cpb-communications--email-logs">';
+
+        if ( ! $log_available ) {
+            echo '<div class="notice notice-error inline"><p>' . esc_html( $not_available ) . '</p></div>';
+        }
+
+        echo '<div class="cpb-email-log">';
+        echo '<p class="description">' . esc_html( $time_notice ) . '</p>';
+        echo '<div id="cpb-email-log-list" class="cpb-email-log__list" data-empty-message="' . esc_attr( $empty_message ) . '">';
+        echo '<p id="cpb-email-log-empty" class="' . esc_attr( $empty_classes ) . '"' . $empty_hidden . '>' . esc_html( $empty_message ) . '</p>';
+
+        foreach ( $entries as $entry ) {
+            $template_title   = isset( $entry['template_title'] ) ? trim( $entry['template_title'] ) : '';
+            $template_id      = isset( $entry['template_id'] ) ? $entry['template_id'] : '';
+            $template_display = $template_title;
+
+            if ( '' === $template_display && isset( $entry['template_display'] ) ) {
+                $template_display = trim( $entry['template_display'] );
+            }
+
+            if ( '' === $template_display ) {
+                $template_display = $template_id ? $template_id : __( 'Email template', 'codex-plugin-boilerplate' );
+            }
+
+            if ( $template_id && false === strpos( $template_display, $template_id ) ) {
+                $template_display .= ' (' . $template_id . ')';
+            }
+
+            $time_display = isset( $entry['time_display'] ) ? $entry['time_display'] : '';
+            $recipient    = isset( $entry['recipient'] ) ? $entry['recipient'] : '';
+            $from_name    = isset( $entry['from_name'] ) ? $entry['from_name'] : '';
+            $from_email   = isset( $entry['from_email'] ) ? $entry['from_email'] : '';
+            $subject      = isset( $entry['subject'] ) ? $entry['subject'] : '';
+            $context      = isset( $entry['context'] ) ? $entry['context'] : '';
+            $triggered_by = isset( $entry['triggered_by'] ) ? $entry['triggered_by'] : '';
+            $body         = isset( $entry['body'] ) ? $entry['body'] : '';
+
+            echo '<article class="cpb-email-log__entry">';
+            echo '<header class="cpb-email-log__header">';
+            echo '<h3 class="cpb-email-log__title">' . esc_html( $template_display ) . '</h3>';
+
+            if ( $time_display ) {
+                printf(
+                    '<p class="cpb-email-log__time">%s</p>',
+                    esc_html( sprintf( $sent_format, $time_display ) )
+                );
+            }
+
+            echo '</header>';
+
+            $meta_items = array(
+                array(
+                    'label' => __( 'Sent (ET)', 'codex-plugin-boilerplate' ),
+                    'value' => $time_display,
+                ),
+                array(
+                    'label' => __( 'Recipient', 'codex-plugin-boilerplate' ),
+                    'value' => $recipient,
+                ),
+                array(
+                    'label' => __( 'From name', 'codex-plugin-boilerplate' ),
+                    'value' => $from_name,
+                ),
+                array(
+                    'label' => __( 'From email', 'codex-plugin-boilerplate' ),
+                    'value' => $from_email,
+                ),
+                array(
+                    'label' => __( 'Subject', 'codex-plugin-boilerplate' ),
+                    'value' => $subject,
+                ),
+            );
+
+            if ( $template_id ) {
+                $meta_items[] = array(
+                    'label' => __( 'Template ID', 'codex-plugin-boilerplate' ),
+                    'value' => $template_id,
+                );
+            }
+
+            if ( $context ) {
+                $meta_items[] = array(
+                    'label' => __( 'Context', 'codex-plugin-boilerplate' ),
+                    'value' => $context,
+                );
+            }
+
+            if ( $triggered_by ) {
+                $meta_items[] = array(
+                    'label' => __( 'Initiated by', 'codex-plugin-boilerplate' ),
+                    'value' => $triggered_by,
+                );
+            }
+
+            echo '<dl class="cpb-email-log__meta">';
+
+            foreach ( $meta_items as $item ) {
+                $label = isset( $item['label'] ) ? $item['label'] : '';
+                $value = isset( $item['value'] ) ? $item['value'] : '';
+
+                echo '<div class="cpb-email-log__meta-item">';
+                echo '<dt>' . esc_html( $label ) . '</dt>';
+                echo '<dd>' . esc_html( '' !== trim( $value ) ? $value : '—' ) . '</dd>';
+                echo '</div>';
+            }
+
+            echo '</dl>';
+
+            if ( '' !== $body ) {
+                echo '<div class="cpb-email-log__body" aria-label="' . esc_attr__( 'Email body', 'codex-plugin-boilerplate' ) . '">';
+                echo wp_kses_post( nl2br( esc_html( $body ) ) );
+                echo '</div>';
+            } else {
+                echo '<div class="cpb-email-log__body cpb-email-log__body--empty">' . esc_html( $body_empty ) . '</div>';
+            }
+
+            echo '</article>';
+        }
+
+        echo '</div>';
+
+        $disabled_attr      = ' disabled="disabled" aria-disabled="true"';
+        $clear_disabled    = $log_available ? '' : $disabled_attr;
+        $download_disabled = $log_available ? '' : $disabled_attr;
+
+        echo '<div class="cpb-email-log__actions">';
+        echo '<button type="button" class="button button-secondary cpb-email-log__clear" data-spinner="#cpb-email-log-spinner" data-feedback="#cpb-email-log-feedback"' . $clear_disabled . '>' . esc_html( $clear_label ) . '</button>';
+        echo '<form method="post" class="cpb-email-log__download" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+        wp_nonce_field( 'cpb_download_email_log', 'cpb_email_log_nonce' );
+        echo '<input type="hidden" name="action" value="cpb_download_email_log" />';
+        echo '<button type="submit" class="button button-secondary"' . $download_disabled . '>' . esc_html( $download_label ) . '</button>';
+        echo '</form>';
+        echo '<span class="spinner cpb-email-log__spinner" id="cpb-email-log-spinner"></span>';
+        echo '<p class="cpb-email-log__feedback" id="cpb-email-log-feedback" aria-live="polite"></p>';
+        echo '</div>';
+
         echo '</div>';
         echo '</div>';
     }
@@ -317,6 +732,14 @@ class CPB_Admin {
             'saveChanges'  => __( 'Save Changes', 'codex-plugin-boilerplate' ),
             'entityFields' => $field_definitions,
             'editorSettings' => $this->get_inline_editor_settings(),
+            'previewEntity' => CPB_Main_Entity_Helper::get_first_preview_data(),
+            'previewEmptyMessage' => __( 'Enter a subject or body to generate the preview.', 'codex-plugin-boilerplate' ),
+            'previewUnavailableMessage' => __( 'Add a Main Entity entry to generate a preview.', 'codex-plugin-boilerplate' ),
+            'testEmailRequired' => __( 'Enter an email address before sending a test.', 'codex-plugin-boilerplate' ),
+            'testEmailSuccess'  => __( 'Test email sent.', 'codex-plugin-boilerplate' ),
+            'emailLogCleared'   => __( 'Email log cleared.', 'codex-plugin-boilerplate' ),
+            'emailLogError'     => __( 'Unable to clear the email log. Please try again.', 'codex-plugin-boilerplate' ),
+            'emailLogEmpty'     => __( 'No email activity has been recorded yet.', 'codex-plugin-boilerplate' ),
         ) );
     }
 
@@ -1332,6 +1755,39 @@ class CPB_Admin {
             echo '<tr><td colspan="3">' . esc_html__( 'No generated content found.', 'codex-plugin-boilerplate' ) . '</td></tr>';
         }
         echo '</tbody></table>';
+    }
+
+    public function handle_download_email_log() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'You are not allowed to download the email log.', 'codex-plugin-boilerplate' ) );
+        }
+
+        check_admin_referer( 'cpb_download_email_log', 'cpb_email_log_nonce' );
+
+        if ( ! CPB_Email_Log_Helper::is_log_available() ) {
+            wp_die( esc_html__( 'The email log could not be found. Check upload directory permissions.', 'codex-plugin-boilerplate' ) );
+        }
+
+        $contents = CPB_Email_Log_Helper::get_log_contents();
+        $filename = CPB_Email_Log_Helper::get_download_filename();
+
+        if ( '' === $filename ) {
+            $filename = 'cpb-email-log.txt';
+        }
+
+        $filename = sanitize_file_name( $filename );
+
+        if ( '' === $contents ) {
+            $contents = '';
+        }
+
+        nocache_headers();
+        header( 'Content-Type: text/plain; charset=utf-8' );
+        header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+        header( 'Content-Length: ' . strlen( $contents ) );
+
+        echo $contents;
+        exit;
     }
 
     public function handle_delete_generated_content() {

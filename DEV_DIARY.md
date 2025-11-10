@@ -52,4 +52,15 @@
 50. 2025-11-05: Top-aligned Main Entity accordion summary cells so row heights stay consistent when toggling inline editors.
 51. 2025-11-05: Added a 50px minimum height to Main Entity accordion summary cells to eliminate row shifts when toggling panels.
 52. 2025-11-05: Evened accordion header column widths and mirrored the action-cell treatment on Communications templates for a consistent layout across tabs.
+53. 2025-11-05: Built the Welcome Aboard template editor with subject, body, SMS fields, and token buttons sourced from Main Entity placeholders.
+54. 2025-11-05: Added a live Welcome Aboard email preview fed by the first Main Entity record with blur-based updates and styled it alongside the existing template controls.
+55. 2025-11-05: Added Save Template controls that persist Welcome Aboard subject, body, and SMS text via AJAX with inline spinner feedback and prefilled fields.
+56. 2025-11-05: Enabled Welcome Aboard test emails with inline validation, shared preview helpers, and spinner-backed messaging.
+57. 2025-11-05: Added configurable From name and email fields with sensible defaults, persisted them with template saves, and applied the values to test email headers.
+58. 2025-11-05: Standardized email template buttons to a 165px minimum width and let token labels wrap so token grids stay aligned when text breaks.
+59. 2025-11-05: Restyled the Email Templates accordion shells to mirror Main Entity cards with padded headers, rounded borders, and coordinated open-state shadows.
+60. 2025-11-05: Reverted the email template accordion styling to the baseline list-table treatment so it matches the proven Main Entity appearance.
+61. 2025-11-05: Scoped email template header cells to remove flex alignment and enforce a 50px row height without affecting other accordion tabs.
+62. 2025-11-05: Cleared the email template action cell width constraints so the tab inherits the default table alignment.
+63. 2025-11-05: Built the Email Logs tab with file-backed delivery history, styled entry cards, and clear/download controls wired to AJAX and admin-post handlers.
 

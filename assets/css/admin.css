@@ -205,7 +205,8 @@
 }
 
 #cpb-spinner,
-.cpb-entity-spinner {
+.cpb-entity-spinner,
+.cpb-template-spinner {
     display: inline-block;
     flex-shrink: 0;
     opacity: 0;
@@ -214,26 +215,30 @@
 }
 
 #cpb-spinner.is-active,
-.cpb-entity-spinner.is-active {
+.cpb-entity-spinner.is-active,
+.cpb-template-spinner.is-active {
     opacity: 1;
     visibility: visible;
 }
 
 #cpb-feedback,
-.cpb-entity-feedback {
+.cpb-entity-feedback,
+.cpb-template-feedback {
     min-height: 1em;
     opacity: 0;
     transition: opacity 0.25s ease-in-out;
 }
 
 #cpb-feedback.is-visible,
-.cpb-entity-feedback.is-visible {
+.cpb-entity-feedback.is-visible,
+.cpb-template-feedback.is-visible {
     opacity: 1;
     transition-delay: 0.1s;
 }
 
 #cpb-feedback:not(.is-visible),
-.cpb-entity-feedback:not(.is-visible) {
+.cpb-entity-feedback:not(.is-visible),
+.cpb-template-feedback:not(.is-visible) {
     transition-delay: 0s;
 }
 
@@ -338,6 +343,139 @@
     text-align: right;
 }
 
+.cpb-communications--email-templates .cpb-accordion__cell--title {
+    display: block;
+    gap: 0;
+}
+
+.cpb-communications--email-templates .cpb-accordion__cell--actions {
+    display: block;
+    width: auto;
+    min-width: auto;
+    text-align: left;
+}
+
+.cpb-communications--email-templates .cpb-accordion__summary-row > .cpb-accordion__cell {
+    min-height: 50px !important;
+    height: 50px;
+}
+
+.cpb-communications--email-logs .cpb-email-log {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.cpb-communications--email-logs .cpb-email-log__list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin: 0;
+}
+
+.cpb-email-log__empty {
+    display: none;
+    margin: 0;
+    color: #50575e;
+    font-style: italic;
+}
+
+.cpb-email-log__empty.is-visible {
+    display: block;
+}
+
+.cpb-communications--email-logs .cpb-email-log__entry {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    padding: 20px 24px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.cpb-email-log__header {
+    margin: 0 0 16px;
+}
+
+.cpb-email-log__title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.cpb-email-log__time {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #50575e;
+}
+
+.cpb-email-log__meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px 24px;
+    margin: 0 0 16px;
+}
+
+.cpb-email-log__meta-item dt {
+    margin: 0 0 4px;
+    font-weight: 600;
+    color: #1d2327;
+    font-size: 13px;
+}
+
+.cpb-email-log__meta-item dd {
+    margin: 0;
+    word-break: break-word;
+    color: #2c3338;
+}
+
+.cpb-email-log__body {
+    background: #f6f7f7;
+    border-radius: 4px;
+    padding: 16px;
+    font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+    font-size: 13px;
+    color: #1d2327;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.cpb-email-log__body--empty {
+    background: transparent;
+    padding: 0;
+    font-style: italic;
+    color: #50575e;
+}
+
+.cpb-email-log__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.cpb-email-log__actions .button {
+    min-width: 165px;
+}
+
+.cpb-email-log__download {
+    margin: 0;
+}
+
+.cpb-email-log__spinner {
+    margin: 0;
+}
+
+.cpb-email-log__feedback {
+    margin: 0;
+    color: #1d2327;
+    min-height: 20px;
+}
+
+.cpb-email-log__feedback.is-visible {
+    font-weight: 500;
+}
+
 .cpb-accordion__title-text {
     display: inline-block;
     min-width: 0;
@@ -408,6 +546,187 @@
     padding: 20px;
     font-size: 14px;
     line-height: 1.6;
+}
+
+.cpb-template-editor {
+    display: grid;
+    gap: 24px;
+}
+
+@media (min-width: 960px) {
+    .cpb-template-editor {
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        align-items: start;
+    }
+}
+
+.cpb-template-editor__fields {
+    display: grid;
+    gap: 20px;
+}
+
+.cpb-template-editor__field label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.cpb-template-editor__field .regular-text,
+.cpb-template-editor__field textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.cpb-template-editor__field textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.cpb-template-preview {
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    background: #f6f7f7;
+    padding: 20px;
+    display: grid;
+    gap: 12px;
+}
+
+.cpb-template-preview__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.cpb-template-preview__notice {
+    margin: 0;
+    color: #50575e;
+    font-style: italic;
+}
+
+.cpb-template-preview__content {
+    display: none;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 16px;
+    background: #fff;
+    box-shadow: inset 0 1px 0 rgba(0,0,0,0.02);
+}
+
+.cpb-template-preview__content.is-visible {
+    display: block;
+}
+
+.cpb-template-preview__subject {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.cpb-template-preview__label {
+    display: inline-block;
+    margin-right: 6px;
+}
+
+.cpb-template-preview__value {
+    font-weight: 400;
+}
+
+.cpb-template-preview__body {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.cpb-template-preview__body p {
+    margin-top: 0;
+}
+
+.cpb-template-preview__body p:last-child {
+    margin-bottom: 0;
+}
+
+.cpb-template-editor__test {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.cpb-template-editor__test .button {
+    min-width: 165px;
+}
+
+.cpb-template-editor__test-input {
+    flex: 1 1 240px;
+    max-width: 320px;
+}
+
+.cpb-template-editor__test-input .regular-text {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.cpb-template-editor__test .cpb-feedback-area--inline {
+    margin-left: 0;
+}
+
+.cpb-template-editor__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.cpb-template-editor__actions .button {
+    min-width: 165px;
+}
+
+.cpb-template-editor__actions .cpb-feedback-area--inline {
+    margin-left: 0;
+}
+
+.cpb-template-editor__tokens {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 20px;
+    box-shadow: inset 0 1px 0 rgba(0,0,0,0.02);
+}
+
+.cpb-template-editor__tokens-heading {
+    margin: 0 0 16px;
+    font-size: 16px;
+}
+
+.cpb-token-group + .cpb-token-group {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #ececec;
+}
+
+.cpb-token-group__title {
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.cpb-token-group__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.cpb-token-group__buttons .cpb-token-button {
+    cursor: pointer;
+    min-width: 165px;
+    flex: 1 1 165px;
+    white-space: normal;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .cpb-communications--placeholder {
