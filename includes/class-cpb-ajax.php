@@ -27,7 +27,12 @@ class CPB_Ajax {
         $elapsed = microtime( true ) - $start;
 
         if ( $elapsed < $minimum_time ) {
-            usleep( ( $minimum_time - $elapsed ) * 1000000 );
+            $remaining    = $minimum_time - $elapsed;
+            $microseconds = (int) ceil( max( 0, $remaining ) * 1000000 );
+
+            if ( $microseconds > 0 ) {
+                usleep( $microseconds );
+            }
         }
     }
 
@@ -275,9 +280,11 @@ class CPB_Ajax {
             );
         }
 
-        $message = ( CPB_Error_Log_Helper::SCOPE_PLUGIN === $scope )
-            ? __( 'CPB error log cleared.', 'codex-plugin-boilerplate' )
-            : __( 'Sitewide error log cleared.', 'codex-plugin-boilerplate' );
+        $message = CPB_Error_Log_Helper::get_clear_success_message( $scope );
+
+        if ( '' === $message ) {
+            $message = __( 'Log cleared.', 'codex-plugin-boilerplate' );
+        }
 
         $this->maybe_delay( $start );
         wp_send_json_success(

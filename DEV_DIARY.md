@@ -70,3 +70,4 @@
 68. 2025-11-10: Added an SMS Service accordion with generic messaging credentials and select-driven environments alongside existing API settings.
 
 69. 2025-11-10: Introduced error logging with sitewide and CPB-specific tabs, AJAX clear/download controls, and global handlers that track current and future plugin features.
+70. 2025-11-10: Eliminated deprecated sleep warnings, extended the log helper for payment scopes, and added Payment Logs with clear/download tools; future payment integrations should capture full transaction context (names, contact info, purchase details, WordPress user data, allowed card fragments) while excluding sensitive card numbers.

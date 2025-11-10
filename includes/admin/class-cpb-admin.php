@@ -1895,25 +1895,46 @@ class CPB_Admin {
     }
 
     public function render_logs_page() {
-        $active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( $_GET['tab'] ) : 'generated_content';
-        echo '<div class="wrap"><h1>' . esc_html__( 'CPB Logs', 'codex-plugin-boilerplate' ) . '</h1>';
-        echo '<h2 class="nav-tab-wrapper">';
-        echo '<a href="?page=cpb-logs&tab=generated_content" class="nav-tab ' . ( 'generated_content' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Generated Content', 'codex-plugin-boilerplate' ) . '</a>';
-        echo '<a href="?page=cpb-logs&tab=error_logs" class="nav-tab ' . ( 'error_logs' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Error Logs', 'codex-plugin-boilerplate' ) . '</a>';
-        echo '</h2>';
-        $this->top_message_center();
-
-        $tab_titles = array(
+        $tabs = array(
             'generated_content' => __( 'Generated Content', 'codex-plugin-boilerplate' ),
             'error_logs'        => __( 'Error Logs', 'codex-plugin-boilerplate' ),
+            'payment_logs'      => __( 'Payment Logs', 'codex-plugin-boilerplate' ),
         );
+
+        $active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'generated_content';
+
+        if ( ! array_key_exists( $active_tab, $tabs ) ) {
+            $active_tab = 'generated_content';
+        }
+
+        echo '<div class="wrap"><h1>' . esc_html__( 'CPB Logs', 'codex-plugin-boilerplate' ) . '</h1>';
+        echo '<h2 class="nav-tab-wrapper">';
+
+        foreach ( $tabs as $tab_slug => $label ) {
+            $classes = array( 'nav-tab' );
+
+            if ( $tab_slug === $active_tab ) {
+                $classes[] = 'nav-tab-active';
+            }
+
+            printf(
+                '<a href="%1$s" class="%2$s">%3$s</a>',
+                esc_url( add_query_arg( array( 'page' => 'cpb-logs', 'tab' => $tab_slug ), admin_url( 'admin.php' ) ) ),
+                esc_attr( implode( ' ', $classes ) ),
+                esc_html( $label )
+            );
+        }
+
+        echo '</h2>';
+        $this->top_message_center();
 
         $tab_descriptions = array(
             'generated_content' => __( 'Inspect saved content entries and jump to editing, viewing, or deleting items created by the logger.', 'codex-plugin-boilerplate' ),
             'error_logs'        => __( 'Review PHP and WordPress notices captured for this site and the Codex Plugin Boilerplate features.', 'codex-plugin-boilerplate' ),
+            'payment_logs'      => __( 'Monitor payment-related activity and capture diagnostics for future transaction workflows.', 'codex-plugin-boilerplate' ),
         );
 
-        $title       = isset( $tab_titles[ $active_tab ] ) ? $tab_titles[ $active_tab ] : '';
+        $title       = isset( $tabs[ $active_tab ] ) ? $tabs[ $active_tab ] : '';
         $description = isset( $tab_descriptions[ $active_tab ] ) ? $tab_descriptions[ $active_tab ] : '';
 
         $this->render_tab_intro( $title, $description );
@@ -1922,6 +1943,8 @@ class CPB_Admin {
             $this->render_generated_content_log();
         } elseif ( 'error_logs' === $active_tab ) {
             $this->render_error_logs_tab();
+        } elseif ( 'payment_logs' === $active_tab ) {
+            $this->render_payment_logs_tab();
         }
 
         $this->bottom_message_center();
@@ -1961,31 +1984,68 @@ class CPB_Admin {
 
     private function render_error_logs_tab() {
         $sections = array(
-            CPB_Error_Log_Helper::SCOPE_SITEWIDE => array(
+            array(
+                'scope'       => CPB_Error_Log_Helper::SCOPE_SITEWIDE,
                 'title'       => __( 'Sitewide errors/notices/warnings', 'codex-plugin-boilerplate' ),
                 /* translators: description for the sitewide error log textarea. */
                 'description' => __( 'Displays every PHP error, warning, and notice triggered anywhere on this site.', 'codex-plugin-boilerplate' ),
             ),
-            CPB_Error_Log_Helper::SCOPE_PLUGIN   => array(
+            array(
+                'scope'       => CPB_Error_Log_Helper::SCOPE_PLUGIN,
                 'title'       => __( 'CPB-Related errors/notices/warnings', 'codex-plugin-boilerplate' ),
                 /* translators: description for the plugin scoped error log textarea. */
                 'description' => __( 'Focused on Codex Plugin Boilerplate functionality—covering all current features and anything we build in the future.', 'codex-plugin-boilerplate' ),
             ),
         );
 
+        $this->render_log_sections( $sections );
+    }
+
+    private function render_payment_logs_tab() {
+        $sections = array(
+            array(
+                'scope'       => CPB_Error_Log_Helper::SCOPE_PAYMENTS,
+                'title'       => __( 'Payment activity logs', 'codex-plugin-boilerplate' ),
+                /* translators: description for the payment log textarea. */
+                'description' => __( 'Tracks payment gateway notices, API responses, and transaction diagnostics without storing sensitive card data.', 'codex-plugin-boilerplate' ),
+                'empty'       => __( 'No payment activity logged yet.', 'codex-plugin-boilerplate' ),
+            ),
+        );
+
+        $this->render_log_sections( $sections );
+    }
+
+    private function render_log_sections( array $sections ) {
+        if ( empty( $sections ) ) {
+            return;
+        }
+
         echo '<div class="cpb-error-logs">';
 
-        foreach ( $sections as $scope => $meta ) {
+        foreach ( $sections as $section ) {
+            if ( empty( $section['scope'] ) ) {
+                continue;
+            }
+
+            $scope = CPB_Error_Log_Helper::normalize_scope( $section['scope'] );
+
+            if ( '' === $scope ) {
+                continue;
+            }
+
             $log_contents = CPB_Error_Log_Helper::get_log_contents( $scope );
-            $textarea_id  = 'cpb-error-log-' . $scope;
-            $heading_id   = 'cpb-error-log-heading-' . $scope;
-            $empty_notice = '' === trim( $log_contents ) ? __( 'No log entries recorded yet.', 'codex-plugin-boilerplate' ) : '';
+            $textarea_id  = 'cpb-log-' . $scope;
+            $heading_id   = 'cpb-log-heading-' . $scope;
+            $title        = isset( $section['title'] ) ? $section['title'] : '';
+            $description  = isset( $section['description'] ) ? $section['description'] : '';
+            $empty_text   = isset( $section['empty'] ) ? $section['empty'] : __( 'No log entries recorded yet.', 'codex-plugin-boilerplate' );
+            $empty_notice = '' === trim( $log_contents ) ? $empty_text : '';
 
             echo '<section class="cpb-error-logs__section">';
-            echo '<h3 id="' . esc_attr( $heading_id ) . '" class="cpb-error-logs__heading">' . esc_html( $meta['title'] ) . '</h3>';
+            echo '<h3 id="' . esc_attr( $heading_id ) . '" class="cpb-error-logs__heading">' . esc_html( $title ) . '</h3>';
 
-            if ( ! empty( $meta['description'] ) ) {
-                echo '<p class="cpb-error-logs__description">' . esc_html( $meta['description'] ) . '</p>';
+            if ( $description ) {
+                echo '<p class="cpb-error-logs__description">' . esc_html( $description ) . '</p>';
             }
 
             if ( $empty_notice ) {

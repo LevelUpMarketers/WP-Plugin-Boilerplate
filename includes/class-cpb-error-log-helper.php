@@ -13,6 +13,7 @@ class CPB_Error_Log_Helper {
 
     const SCOPE_SITEWIDE = 'sitewide';
     const SCOPE_PLUGIN   = 'plugin';
+    const SCOPE_PAYMENTS = 'payments';
 
     /**
      * Mapping of scopes to log filenames.
@@ -22,6 +23,7 @@ class CPB_Error_Log_Helper {
     protected static $filenames = array(
         self::SCOPE_SITEWIDE => 'cpb-sitewide-errors.log',
         self::SCOPE_PLUGIN   => 'cpb-plugin-errors.log',
+        self::SCOPE_PAYMENTS => 'cpb-payment-activity.log',
     );
 
     /**
@@ -242,6 +244,28 @@ class CPB_Error_Log_Helper {
     }
 
     /**
+     * Retrieve the success message shown after clearing a log scope.
+     *
+     * @param string $scope Log scope identifier.
+     *
+     * @return string
+     */
+    public static function get_clear_success_message( $scope ) {
+        $scope = self::normalize_scope( $scope );
+
+        switch ( $scope ) {
+            case self::SCOPE_PLUGIN:
+                return __( 'CPB error log cleared.', 'codex-plugin-boilerplate' );
+            case self::SCOPE_SITEWIDE:
+                return __( 'Sitewide error log cleared.', 'codex-plugin-boilerplate' );
+            case self::SCOPE_PAYMENTS:
+                return __( 'Payment log cleared.', 'codex-plugin-boilerplate' );
+        }
+
+        return '';
+    }
+
+    /**
      * Normalize the provided scope to a known value.
      *
      * @param string $scope Raw scope value.
@@ -273,6 +297,8 @@ class CPB_Error_Log_Helper {
                 return __( 'CPB-Related', 'codex-plugin-boilerplate' );
             case self::SCOPE_SITEWIDE:
                 return __( 'Sitewide', 'codex-plugin-boilerplate' );
+            case self::SCOPE_PAYMENTS:
+                return __( 'Payment', 'codex-plugin-boilerplate' );
         }
 
         return '';

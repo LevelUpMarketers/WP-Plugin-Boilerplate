@@ -91,7 +91,7 @@ jQuery(document).ready(function($){
                         }
 
                         if (wasSuccessful && logAction === 'download'){
-                            var filename = response.data.filename || 'cpb-error-log.txt';
+                            var filename = response.data.filename || 'cpb-log.txt';
                             var content = typeof response.data.content === 'string' ? response.data.content : '';
                             var blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
                             var url = window.URL.createObjectURL(blob);
