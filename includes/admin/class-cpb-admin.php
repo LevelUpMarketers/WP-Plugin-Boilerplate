@@ -1455,7 +1455,8 @@ class CPB_Admin {
     private function render_api_settings_tab() {
         $apis = array(
             'payment_gateway' => array(
-                'title'  => __( 'Payment Gateway', 'codex-plugin-boilerplate' ),
+                'title'    => __( 'Payment Gateway', 'codex-plugin-boilerplate' ),
+                'category' => __( 'Payments', 'codex-plugin-boilerplate' ),
                 'fields' => array(
                     array(
                         'type'    => 'select',
@@ -1493,6 +1494,7 @@ class CPB_Admin {
         echo '<thead>';
         echo '<tr>';
         echo '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--title">' . esc_html__( 'API', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--category">' . esc_html__( 'Category', 'codex-plugin-boilerplate' ) . '</th>';
         echo '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--actions">' . esc_html__( 'Actions', 'codex-plugin-boilerplate' ) . '</th>';
         echo '</tr>';
         echo '</thead>';
@@ -1509,6 +1511,10 @@ class CPB_Admin {
             echo '<td class="cpb-accordion__cell cpb-accordion__cell--title">';
             echo '<span class="cpb-accordion__title-text">' . esc_html( $api['title'] ) . '</span>';
             echo '</td>';
+            echo '<td class="cpb-accordion__cell cpb-accordion__cell--category">';
+            $category = isset( $api['category'] ) ? $api['category'] : '';
+            echo $category ? esc_html( $category ) : '&mdash;';
+            echo '</td>';
             echo '<td class="cpb-accordion__cell cpb-accordion__cell--actions">';
             echo '<span class="cpb-accordion__action-link" aria-hidden="true">' . esc_html__( 'Configure', 'codex-plugin-boilerplate' ) . '</span>';
             echo '<span class="dashicons dashicons-arrow-down-alt2 cpb-accordion__icon" aria-hidden="true"></span>';
@@ -1516,7 +1522,7 @@ class CPB_Admin {
             echo '</tr>';
 
             echo '<tr id="' . esc_attr( $panel_id ) . '" class="cpb-accordion__panel-row" role="region" aria-labelledby="' . esc_attr( $summary_id ) . '" aria-hidden="true">';
-            echo '<td colspan="2">';
+            echo '<td colspan="3">';
             echo '<div class="cpb-accordion__panel">';
             echo '<form id="' . esc_attr( $form_id ) . '" class="cpb-api-settings__form">';
             echo '<div class="cpb-api-settings__fields">';

@@ -333,8 +333,18 @@
     width: 20%;
 }
 
+.cpb-accordion__heading--category {
+    width: 18%;
+    min-width: 160px;
+}
+
 .cpb-accordion__heading--actions {
     text-align: right;
+}
+
+.cpb-accordion__cell--category {
+    color: #3c434a;
+    min-width: 160px;
 }
 
 
