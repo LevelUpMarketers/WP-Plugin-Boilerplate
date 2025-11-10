@@ -744,6 +744,40 @@ jQuery(document).ready(function($){
         $(this).parent().toggleClass('open');
     });
 
+    $(document).on('click', '.cpb-api-settings__toggle-visibility', function(e){
+        e.preventDefault();
+
+        var $button = $(this);
+        var targetSelector = $button.data('target');
+        var $input = targetSelector ? $(targetSelector) : $button.closest('.cpb-api-settings__input-group').find('input').first();
+
+        if (!$input.length) {
+            return;
+        }
+
+        var wasPassword = $input.attr('type') === 'password';
+        var showLabel = $button.data('label-show') || $button.data('labelShow');
+        var hideLabel = $button.data('label-hide') || $button.data('labelHide');
+
+        if (wasPassword) {
+            $input.attr('type', 'text');
+
+            if (hideLabel) {
+                $button.text(hideLabel);
+            }
+
+            $button.attr('aria-pressed', 'true');
+        } else {
+            $input.attr('type', 'password');
+
+            if (showLabel) {
+                $button.text(showLabel);
+            }
+
+            $button.attr('aria-pressed', 'false');
+        }
+    });
+
     function initAccordionGroups(){
         $('[data-cpb-accordion-group]').each(function(){
             var $group = $(this);

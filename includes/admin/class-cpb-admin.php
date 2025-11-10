@@ -940,6 +940,10 @@ class CPB_Admin {
             'edit'   => __( 'Review saved entities to confirm their data, trigger edits, or remove records you no longer need.', 'codex-plugin-boilerplate' ),
         );
 
+        if ( ! array_key_exists( $active_tab, $tab_titles ) ) {
+            $active_tab = 'create';
+        }
+
         $title       = isset( $tab_titles[ $active_tab ] ) ? $tab_titles[ $active_tab ] : '';
         $description = isset( $tab_descriptions[ $active_tab ] ) ? $tab_descriptions[ $active_tab ] : '';
 
@@ -1395,6 +1399,7 @@ class CPB_Admin {
         echo '<h2 class="nav-tab-wrapper">';
         echo '<a href="?page=cpb-settings&tab=general" class="nav-tab ' . ( 'general' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'General Settings', 'codex-plugin-boilerplate' ) . '</a>';
         echo '<a href="?page=cpb-settings&tab=style" class="nav-tab ' . ( 'style' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Style Settings', 'codex-plugin-boilerplate' ) . '</a>';
+        echo '<a href="?page=cpb-settings&tab=api" class="nav-tab ' . ( 'api' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'API Settings', 'codex-plugin-boilerplate' ) . '</a>';
         echo '<a href="?page=cpb-settings&tab=cron" class="nav-tab ' . ( 'cron' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Cron Jobs', 'codex-plugin-boilerplate' ) . '</a>';
         echo '</h2>';
         $this->top_message_center();
@@ -1402,14 +1407,20 @@ class CPB_Admin {
         $tab_titles = array(
             'general' => __( 'General Settings', 'codex-plugin-boilerplate' ),
             'style'   => __( 'Style Settings', 'codex-plugin-boilerplate' ),
+            'api'     => __( 'API Settings', 'codex-plugin-boilerplate' ),
             'cron'    => __( 'Cron Jobs', 'codex-plugin-boilerplate' ),
         );
 
         $tab_descriptions = array(
             'general' => __( 'Adjust the baseline configuration values that control how Codex Plugin Boilerplate behaves across your site.', 'codex-plugin-boilerplate' ),
             'style'   => __( 'Apply design tweaks and CSS overrides to align the boilerplate output with your brand guidelines.', 'codex-plugin-boilerplate' ),
+            'api'     => __( 'Store external service credentials behind collapsible sections so each integration can be updated without leaving this page.', 'codex-plugin-boilerplate' ),
             'cron'    => __( 'Review and manage every scheduled cron event created by Codex Plugin Boilerplate, including running or deleting hooks on demand.', 'codex-plugin-boilerplate' ),
         );
+
+        if ( ! array_key_exists( $active_tab, $tab_titles ) ) {
+            $active_tab = 'general';
+        }
 
         $title       = isset( $tab_titles[ $active_tab ] ) ? $tab_titles[ $active_tab ] : '';
         $description = isset( $tab_descriptions[ $active_tab ] ) ? $tab_descriptions[ $active_tab ] : '';
@@ -1418,6 +1429,8 @@ class CPB_Admin {
 
         if ( 'style' === $active_tab ) {
             $this->render_style_settings_tab();
+        } elseif ( 'api' === $active_tab ) {
+            $this->render_api_settings_tab();
         } elseif ( 'cron' === $active_tab ) {
             $this->render_cron_jobs_tab();
         } else {
@@ -1437,6 +1450,123 @@ class CPB_Admin {
         echo '<span class="cpb-feedback-area cpb-feedback-area--inline"><span id="cpb-spinner" class="spinner" aria-hidden="true"></span><span id="cpb-feedback" role="status" aria-live="polite"></span></span>';
         echo '</p>';
         echo '</form>';
+    }
+
+    private function render_api_settings_tab() {
+        $apis = array(
+            'payment_gateway' => array(
+                'title'  => __( 'Payment Gateway', 'codex-plugin-boilerplate' ),
+                'fields' => array(
+                    array(
+                        'type'    => 'select',
+                        'name'    => 'payment_gateway_environment',
+                        'label'   => __( 'Environment', 'codex-plugin-boilerplate' ),
+                        'options' => array(
+                            'live'    => __( 'Live', 'codex-plugin-boilerplate' ),
+                            'sandbox' => __( 'Sandbox', 'codex-plugin-boilerplate' ),
+                        ),
+                    ),
+                    array(
+                        'type'  => 'text',
+                        'name'  => 'payment_gateway_login_id',
+                        'label' => __( 'Login ID', 'codex-plugin-boilerplate' ),
+                    ),
+                    array(
+                        'type'    => 'password',
+                        'name'    => 'payment_gateway_transaction_key',
+                        'label'   => __( 'Transaction Key', 'codex-plugin-boilerplate' ),
+                        'reveal'  => true,
+                    ),
+                    array(
+                        'type'    => 'password',
+                        'name'    => 'payment_gateway_client_key',
+                        'label'   => __( 'Client Key', 'codex-plugin-boilerplate' ),
+                        'reveal'  => true,
+                    ),
+                ),
+            ),
+        );
+
+        echo '<div class="cpb-api-settings cpb-communications cpb-communications--api-settings">';
+        echo '<div class="cpb-accordion-group cpb-accordion-group--table" data-cpb-accordion-group="api-settings">';
+        echo '<table class="wp-list-table widefat striped cpb-accordion-table cpb-accordion-table--api">';
+        echo '<thead>';
+        echo '<tr>';
+        echo '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--title">' . esc_html__( 'API', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--actions">' . esc_html__( 'Actions', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '</tr>';
+        echo '</thead>';
+        echo '<tbody>';
+
+        foreach ( $apis as $api_key => $api ) {
+            $summary_id = 'cpb-api-' . sanitize_html_class( $api_key ) . '-header';
+            $panel_id   = 'cpb-api-' . sanitize_html_class( $api_key ) . '-panel';
+            $form_id    = 'cpb-api-form-' . sanitize_html_class( $api_key );
+            $spinner_id = $form_id . '-spinner';
+            $feedback_id = $form_id . '-feedback';
+
+            echo '<tr id="' . esc_attr( $summary_id ) . '" class="cpb-accordion__summary-row" tabindex="0" role="button" aria-expanded="false" aria-controls="' . esc_attr( $panel_id ) . '">';
+            echo '<td class="cpb-accordion__cell cpb-accordion__cell--title">';
+            echo '<span class="cpb-accordion__title-text">' . esc_html( $api['title'] ) . '</span>';
+            echo '</td>';
+            echo '<td class="cpb-accordion__cell cpb-accordion__cell--actions">';
+            echo '<span class="cpb-accordion__action-link" aria-hidden="true">' . esc_html__( 'Configure', 'codex-plugin-boilerplate' ) . '</span>';
+            echo '<span class="dashicons dashicons-arrow-down-alt2 cpb-accordion__icon" aria-hidden="true"></span>';
+            echo '</td>';
+            echo '</tr>';
+
+            echo '<tr id="' . esc_attr( $panel_id ) . '" class="cpb-accordion__panel-row" role="region" aria-labelledby="' . esc_attr( $summary_id ) . '" aria-hidden="true">';
+            echo '<td colspan="2">';
+            echo '<div class="cpb-accordion__panel">';
+            echo '<form id="' . esc_attr( $form_id ) . '" class="cpb-api-settings__form">';
+            echo '<div class="cpb-api-settings__fields">';
+
+            foreach ( $api['fields'] as $field ) {
+                $field_id = $field['name'];
+                echo '<div class="cpb-api-settings__field">';
+                echo '<label for="' . esc_attr( $field_id ) . '">' . esc_html( $field['label'] ) . '</label>';
+
+                if ( 'select' === $field['type'] ) {
+                    echo '<select id="' . esc_attr( $field_id ) . '" name="' . esc_attr( $field['name'] ) . '">';
+                    foreach ( $field['options'] as $option_value => $option_label ) {
+                        echo '<option value="' . esc_attr( $option_value ) . '">' . esc_html( $option_label ) . '</option>';
+                    }
+                    echo '</select>';
+                } else {
+                    $input_type = esc_attr( $field['type'] );
+                    $input_classes = 'regular-text';
+                    $input_attributes = ' id="' . esc_attr( $field_id ) . '" name="' . esc_attr( $field['name'] ) . '"';
+
+                    if ( ! empty( $field['reveal'] ) ) {
+                        $show_label = __( 'Reveal', 'codex-plugin-boilerplate' );
+                        $hide_label = __( 'Hide', 'codex-plugin-boilerplate' );
+                        echo '<div class="cpb-api-settings__input-group">';
+                        echo '<input type="' . $input_type . '" class="' . esc_attr( $input_classes ) . '"' . $input_attributes . ' autocomplete="off" />';
+                        echo '<button type="button" class="button button-secondary cpb-api-settings__toggle-visibility" data-target="#' . esc_attr( $field_id ) . '" data-label-show="' . esc_attr( $show_label ) . '" data-label-hide="' . esc_attr( $hide_label ) . '" aria-pressed="false">' . esc_html( $show_label ) . '</button>';
+                        echo '</div>';
+                    } else {
+                        echo '<input type="' . $input_type . '" class="' . esc_attr( $input_classes ) . '"' . $input_attributes . ' />';
+                    }
+                }
+
+                echo '</div>';
+            }
+
+            echo '</div>';
+            $submit_button = get_submit_button( __( 'Save API Settings', 'codex-plugin-boilerplate' ), 'primary', 'submit', false );
+            echo '<p class="submit">' . $submit_button;
+            echo '<span class="cpb-feedback-area cpb-feedback-area--inline"><span id="' . esc_attr( $spinner_id ) . '" class="spinner" aria-hidden="true"></span><span id="' . esc_attr( $feedback_id ) . '" role="status" aria-live="polite"></span></span>';
+            echo '</p>';
+            echo '</form>';
+            echo '</div>';
+            echo '</td>';
+            echo '</tr>';
+        }
+
+        echo '</tbody>';
+        echo '</table>';
+        echo '</div>';
+        echo '</div>';
     }
 
     private function render_style_settings_tab() {

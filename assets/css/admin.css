@@ -173,7 +173,8 @@
 #cpb-create-form .submit,
 #cpb-general-settings-form .submit,
 #cpb-style-settings-form .submit,
-.cpb-entity-edit-form .submit {
+.cpb-entity-edit-form .submit,
+.cpb-api-settings__form .submit {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -195,8 +196,50 @@
 #cpb-create-form .submit .cpb-feedback-area--inline,
 #cpb-general-settings-form .submit .cpb-feedback-area--inline,
 #cpb-style-settings-form .submit .cpb-feedback-area--inline,
-.cpb-entity-edit-form .submit .cpb-feedback-area--inline {
+.cpb-entity-edit-form .submit .cpb-feedback-area--inline,
+.cpb-api-settings__form .submit .cpb-feedback-area--inline {
     margin-left: 0;
+}
+
+.cpb-api-settings__fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.cpb-api-settings__field {
+    flex: 1 1 220px;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cpb-api-settings__field label {
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.cpb-api-settings__form select,
+.cpb-api-settings__form .regular-text {
+    width: 100%;
+    max-width: 100%;
+}
+
+.cpb-api-settings__input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cpb-api-settings__input-group .regular-text {
+    flex: 1 1 auto;
+}
+
+.cpb-api-settings__input-group .button {
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .cpb-feedback-area--block {
