@@ -71,3 +71,4 @@
 
 69. 2025-11-10: Introduced error logging with sitewide and CPB-specific tabs, AJAX clear/download controls, and global handlers that track current and future plugin features.
 70. 2025-11-10: Eliminated deprecated sleep warnings, extended the log helper for payment scopes, and added Payment Logs with clear/download tools; future payment integrations should capture full transaction context (names, contact info, purchase details, WordPress user data, allowed card fragments) while excluding sensitive card numbers.
+71. 2025-11-10: Normalized placeholder label and value sanitization so apostrophes, dashes, and other legitimate characters save and render consistently across Main Entity forms and related tooling.

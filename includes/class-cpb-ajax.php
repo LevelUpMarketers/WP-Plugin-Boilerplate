@@ -711,7 +711,7 @@ class CPB_Ajax {
             $value = implode( ',', $value );
         }
 
-        return sanitize_text_field( $value );
+        return $this->normalize_plain_text( $value );
     }
 
     private function replace_template_tokens( $content, $tokens ) {
@@ -912,7 +912,7 @@ class CPB_Ajax {
 
         if ( is_array( $value ) ) {
             foreach ( $value as $item ) {
-                $item = sanitize_text_field( $item );
+                $item = $this->normalize_plain_text( $item );
 
                 if ( '' !== $item ) {
                     $items[] = $item;
@@ -924,7 +924,7 @@ class CPB_Ajax {
 
             if ( is_array( $split ) ) {
                 foreach ( $split as $item ) {
-                    $item = trim( $item );
+                    $item = $this->normalize_plain_text( $item );
 
                     if ( '' !== $item ) {
                         $items[] = $item;
@@ -934,6 +934,24 @@ class CPB_Ajax {
         }
 
         return wp_json_encode( $items );
+    }
+
+    private function normalize_plain_text( $value ) {
+        if ( null === $value ) {
+            return '';
+        }
+
+        if ( is_array( $value ) ) {
+            $value = reset( $value );
+        }
+
+        $value = sanitize_text_field( (string) wp_unslash( $value ) );
+
+        if ( '' === $value ) {
+            return '';
+        }
+
+        return wp_specialchars_decode( $value, ENT_QUOTES );
     }
 
     private function sanitize_color_value( $key ) {

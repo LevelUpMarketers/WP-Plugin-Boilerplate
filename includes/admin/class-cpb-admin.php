@@ -763,9 +763,31 @@ class CPB_Admin {
              * @param array $labels Associative array of placeholder slugs to labels.
              */
             $labels = apply_filters( 'cpb_main_entity_placeholder_labels', $labels );
+
+            $labels = $this->sanitize_placeholder_label_map( $labels );
         }
 
         return $labels;
+    }
+
+    private function sanitize_placeholder_label_map( array $labels ) {
+        $sanitized = array();
+
+        foreach ( $labels as $key => $label ) {
+            if ( ! is_scalar( $label ) ) {
+                continue;
+            }
+
+            $normalized = sanitize_text_field( wp_unslash( (string) $label ) );
+
+            if ( '' === $normalized && preg_match( '/^placeholder_(\d+)$/', (string) $key, $matches ) ) {
+                $normalized = sprintf( __( 'Placeholder %d', 'codex-plugin-boilerplate' ), (int) $matches[1] );
+            }
+
+            $sanitized[ $key ] = wp_specialchars_decode( $normalized, ENT_QUOTES );
+        }
+
+        return array_merge( $labels, $sanitized );
     }
 
     private function get_placeholder_label( $index ) {
