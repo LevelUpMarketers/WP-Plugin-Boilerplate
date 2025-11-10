@@ -192,6 +192,7 @@ jQuery(document).ready(function($){
         var $searchForm = $('#cpb-main-entity-search');
         var $searchSpinner = $('#cpb-entity-search-spinner');
         var $searchFeedback = $('#cpb-entity-search-feedback');
+        var $clearSearchButton = $('#cpb-entity-search-clear');
         var placeholderMap = cpbAdmin.placeholderMap || {};
         var placeholderList = Array.isArray(cpbAdmin.placeholders) ? cpbAdmin.placeholders : [];
         var entityFields = Array.isArray(cpbAdmin.entityFields) ? cpbAdmin.entityFields : [];
@@ -847,6 +848,32 @@ jQuery(document).ready(function($){
 
                 currentFilters = newFilters;
                 fetchEntities(1);
+            });
+        }
+
+        if ($clearSearchButton.length){
+            $clearSearchButton.on('click', function(e){
+                e.preventDefault();
+
+                var hadActiveFilters = isSearchActive();
+
+                if ($searchForm.length && typeof $searchForm[0].reset === 'function'){
+                    $searchForm[0].reset();
+                } else if ($searchForm.length){
+                    $searchForm.find('input[type="text"]').val('');
+                }
+
+                currentFilters = {
+                    placeholder_1: '',
+                    placeholder_2: '',
+                    placeholder_3: ''
+                };
+
+                clearSearchFeedback();
+
+                if (hadActiveFilters || currentPage !== 1){
+                    fetchEntities(1);
+                }
             });
         }
 

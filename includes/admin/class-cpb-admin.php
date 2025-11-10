@@ -1408,6 +1408,7 @@ class CPB_Admin {
         echo '</div>';
         echo '<div class="cpb-entity-search__actions">';
         echo '<button type="submit" class="button button-primary">' . esc_html__( 'Search', 'codex-plugin-boilerplate' ) . '</button>';
+        echo '<button type="button" id="cpb-entity-search-clear" class="button button-secondary">' . esc_html__( 'Clear Search', 'codex-plugin-boilerplate' ) . '</button>';
         echo '<span class="cpb-feedback-area cpb-feedback-area--inline">';
         echo '<span id="cpb-entity-search-spinner" class="spinner" aria-hidden="true"></span>';
         echo '<span id="cpb-entity-search-feedback" role="status" aria-live="polite"></span>';

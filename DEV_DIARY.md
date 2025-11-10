@@ -73,3 +73,4 @@
 70. 2025-11-10: Eliminated deprecated sleep warnings, extended the log helper for payment scopes, and added Payment Logs with clear/download tools; future payment integrations should capture full transaction context (names, contact info, purchase details, WordPress user data, allowed card fragments) while excluding sensitive card numbers.
 71. 2025-11-10: Normalized placeholder label and value sanitization so apostrophes, dashes, and other legitimate characters save and render consistently across Main Entity forms and related tooling.
 72. 2025-11-10: Added a Main Entity search dashboard with placeholder filters, inline spinner feedback, and paginated AJAX reads that honor active criteria.
+73. 2025-11-10: Added a Clear Search control to reset Main Entity filters and reload the default paginated results.
