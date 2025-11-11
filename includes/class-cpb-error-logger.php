@@ -393,6 +393,9 @@ class CPB_Error_Logger {
             }
         }
 
+        $message = $this->stringify_for_match( $message );
+        $stack   = $this->stringify_for_match( $stack );
+
         $keywords = array(
             'codex-plugin-boilerplate',
             'cpb_',
@@ -410,6 +413,39 @@ class CPB_Error_Logger {
         }
 
         return false;
+    }
+
+    /**
+     * Normalize arbitrary values to strings for keyword matching.
+     *
+     * @param mixed $value Potentially non-string value.
+     *
+     * @return string
+     */
+    protected function stringify_for_match( $value ) {
+        if ( is_string( $value ) ) {
+            return $value;
+        }
+
+        if ( null === $value ) {
+            return '';
+        }
+
+        if ( is_scalar( $value ) ) {
+            return (string) $value;
+        }
+
+        if ( $value instanceof \Throwable ) {
+            return $value->getMessage();
+        }
+
+        if ( is_object( $value ) && method_exists( $value, '__toString' ) ) {
+            return (string) $value;
+        }
+
+        $encoded = wp_json_encode( $value );
+
+        return is_string( $encoded ) ? $encoded : '';
     }
 
     /**

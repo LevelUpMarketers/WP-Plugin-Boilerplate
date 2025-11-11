@@ -77,3 +77,4 @@
 74. 2025-11-10: Added general settings toggles for all logging channels, persisted preferences via AJAX, and gated email/error log writers behind the new helper so disabled logs stop recording immediately.
 75. 2025-11-10: Surfaced logging status indicators across communications and log tabs with styled settings links so admins can confirm which channels are currently recording entries.
 76. 2025-11-10: Moved the payment log status indicator inside the log section so its layout matches the error log scopes while keeping other tabs unchanged.
+77. 2025-11-11: Normalized error logger keyword matching to stringify stack traces and messages so array data no longer triggers PHP type errors during log writes.
