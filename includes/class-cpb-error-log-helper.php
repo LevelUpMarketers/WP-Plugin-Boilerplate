@@ -335,14 +335,53 @@ class CPB_Error_Log_Helper {
     }
 
     /**
+     * Convert arbitrary values to a printable string.
+     *
+     * @param mixed $value Raw value.
+     *
+     * @return string
+     */
+    protected static function stringify_value( $value ) {
+        if ( is_string( $value ) ) {
+            return $value;
+        }
+
+        if ( null === $value ) {
+            return '';
+        }
+
+        if ( is_scalar( $value ) ) {
+            return (string) $value;
+        }
+
+        if ( $value instanceof \Throwable ) {
+            return $value->getMessage();
+        }
+
+        if ( is_object( $value ) && method_exists( $value, '__toString' ) ) {
+            return (string) $value;
+        }
+
+        $encoded = wp_json_encode( $value );
+
+        if ( is_string( $encoded ) ) {
+            return $encoded;
+        }
+
+        $printed = print_r( $value, true );
+
+        return is_string( $printed ) ? $printed : '';
+    }
+
+    /**
      * Sanitize a single-line string for storage.
      *
-     * @param string $value Raw string.
+     * @param mixed $value Raw string.
      *
      * @return string
      */
     protected static function sanitize_line( $value ) {
-        $value = (string) $value;
+        $value = self::stringify_value( $value );
         $value = wp_strip_all_tags( $value );
         $value = preg_replace( "/[\r\n]+/", ' ', $value );
 
@@ -352,12 +391,12 @@ class CPB_Error_Log_Helper {
     /**
      * Normalize multiline text by removing disallowed tags and standardizing newlines.
      *
-     * @param string $value Raw multiline string.
+     * @param mixed $value Raw multiline string.
      *
      * @return string
      */
     protected static function normalize_multiline( $value ) {
-        $value = (string) $value;
+        $value = self::stringify_value( $value );
         $value = wp_strip_all_tags( $value );
         $value = preg_replace( "/\\r\\n?/", "\\n", $value );
         $value = preg_replace( "/\\n{3,}/", "\\n\\n", $value );
