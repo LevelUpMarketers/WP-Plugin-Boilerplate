@@ -93,6 +93,10 @@ class CPB_Email_Log_Helper {
      * @return bool
      */
     public static function log_email( array $args ) {
+        if ( ! CPB_Settings_Helper::is_logging_enabled( CPB_Settings_Helper::FIELD_LOG_EMAIL ) ) {
+            return false;
+        }
+
         $path = self::get_log_file_path();
 
         if ( '' === $path ) {

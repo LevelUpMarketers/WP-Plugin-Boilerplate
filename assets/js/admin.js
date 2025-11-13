@@ -1,11 +1,12 @@
 jQuery(document).ready(function($){
     function handleForm(selector, action){
-        var spinnerHideTimer;
         $(selector).on('submit', function(e){
             e.preventDefault();
-            var data = $(this).serialize();
-            var $spinner = $('#cpb-spinner');
-            var $feedback = $('#cpb-feedback');
+            var $form = $(this);
+            var data = $form.serialize();
+            var spinnerHideTimer = $form.data('spinnerHideTimer');
+            var $spinner = $form.find('.cpb-feedback-area .spinner').first();
+            var $feedback = $form.find('.cpb-feedback-area [role="status"]').first();
             if ($feedback.length) {
                 $feedback.removeClass('is-visible').text('');
             }
@@ -31,12 +32,110 @@ jQuery(document).ready(function($){
                     spinnerHideTimer = setTimeout(function(){
                         $spinner.removeClass('is-active');
                     }, 150);
+                    $form.data('spinnerHideTimer', spinnerHideTimer);
                 });
         });
     }
     handleForm('#cpb-create-form','cpb_save_main_entity');
-    handleForm('#cpb-general-settings-form','cpb_save_main_entity');
+    handleForm('#cpb-general-settings-form','cpb_save_general_settings');
     handleForm('#cpb-style-settings-form','cpb_save_main_entity');
+    handleForm('.cpb-api-settings__form','cpb_save_api_settings');
+
+    function handleLogActionForms(){
+        $('.cpb-log-actions__form').on('submit', function(e){
+            e.preventDefault();
+            var $form = $(this);
+            var ajaxAction = $form.data('ajaxAction');
+
+            if (!ajaxAction){
+                return;
+            }
+
+            var serialized = $form.serialize();
+            var spinnerHideTimer = $form.data('spinnerHideTimer');
+            var $spinner = $form.find('.cpb-feedback-area .spinner').first();
+            var $feedback = $form.find('.cpb-feedback-area [role="status"]').first();
+            var logAction = $form.data('logAction');
+            var targetSelector = $form.data('logTarget');
+
+            if ($feedback.length){
+                $feedback.removeClass('is-visible').text('');
+            }
+
+            if (spinnerHideTimer){
+                clearTimeout(spinnerHideTimer);
+            }
+
+            if ($spinner.length){
+                $spinner.addClass('is-active');
+            }
+
+            $.post(cpbAjax.ajaxurl, serialized + '&action=' + ajaxAction + '&_ajax_nonce=' + cpbAjax.nonce)
+                .done(function(response){
+                    var message = '';
+                    var wasSuccessful = response && response.success;
+
+                    if (response && response.data){
+                        if (response.data.message){
+                            message = response.data.message;
+                        } else if (response.data.error){
+                            message = response.data.error;
+                        }
+
+                        if (wasSuccessful && targetSelector && typeof response.data.content !== 'undefined'){
+                            var $target = $(targetSelector);
+
+                            if ($target.length){
+                                $target.val(response.data.content);
+                            }
+                        }
+
+                        if (wasSuccessful && logAction === 'download'){
+                            var filename = response.data.filename || 'cpb-log.txt';
+                            var content = typeof response.data.content === 'string' ? response.data.content : '';
+                            var blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                            var url = window.URL.createObjectURL(blob);
+                            var link = document.createElement('a');
+                            link.href = url;
+                            link.download = filename;
+                            document.body.appendChild(link);
+                            link.click();
+                            setTimeout(function(){
+                                document.body.removeChild(link);
+                                window.URL.revokeObjectURL(url);
+                            }, 100);
+
+                            if (!message && cpbAdmin.logDownloadReady){
+                                message = cpbAdmin.logDownloadReady;
+                            }
+                        }
+                    }
+
+                    if ($feedback.length){
+                        if (message){
+                            $feedback.text(message).addClass('is-visible');
+                        } else if (!wasSuccessful && cpbAdmin.error){
+                            $feedback.text(cpbAdmin.error).addClass('is-visible');
+                        }
+                    }
+                })
+                .fail(function(){
+                    if ($feedback.length && cpbAdmin.error){
+                        $feedback.text(cpbAdmin.error).addClass('is-visible');
+                    }
+                })
+                .always(function(){
+                    spinnerHideTimer = setTimeout(function(){
+                        if ($spinner.length){
+                            $spinner.removeClass('is-active');
+                        }
+                    }, 150);
+                    $form.data('spinnerHideTimer', spinnerHideTimer);
+                });
+        });
+    }
+
+    handleLogActionForms();
 
     function formatString(template){
         if (typeof template !== 'string') {
@@ -90,12 +189,21 @@ jQuery(document).ready(function($){
         var $pagination = $('#cpb-entity-pagination');
         var $paginationContainer = $pagination.closest('.tablenav');
         var $entityFeedback = $('#cpb-entity-feedback');
+        var $searchForm = $('#cpb-main-entity-search');
+        var $searchSpinner = $('#cpb-entity-search-spinner');
+        var $searchFeedback = $('#cpb-entity-search-feedback');
+        var $clearSearchButton = $('#cpb-entity-search-clear');
         var placeholderMap = cpbAdmin.placeholderMap || {};
         var placeholderList = Array.isArray(cpbAdmin.placeholders) ? cpbAdmin.placeholders : [];
         var entityFields = Array.isArray(cpbAdmin.entityFields) ? cpbAdmin.entityFields : [];
         var pendingFeedbackMessage = '';
         var currentPage = 1;
         var emptyValue = '—';
+        var currentFilters = {
+            placeholder_1: '',
+            placeholder_2: '',
+            placeholder_3: ''
+        };
 
         if ($entityFeedback.length){
             $entityFeedback.hide().removeClass('is-visible');
@@ -109,6 +217,44 @@ jQuery(document).ready(function($){
             if ($entityFeedback.length){
                 $entityFeedback.text('').hide().removeClass('is-visible');
             }
+        }
+
+        function clearSearchFeedback(){
+            if ($searchFeedback.length){
+                $searchFeedback.removeClass('is-visible').text('');
+            }
+        }
+
+        function showSearchFeedback(message){
+            if (!$searchFeedback.length){
+                return;
+            }
+
+            if (message){
+                $searchFeedback.text(message).addClass('is-visible');
+            } else {
+                clearSearchFeedback();
+            }
+        }
+
+        function setSearchLoading(isLoading){
+            if (!$searchSpinner.length){
+                return;
+            }
+
+            if (isLoading){
+                $searchSpinner.addClass('is-active');
+            } else {
+                $searchSpinner.removeClass('is-active');
+            }
+        }
+
+        function isSearchActive(){
+            return Object.keys(currentFilters).some(function(key){
+                var value = currentFilters[key];
+
+                return typeof value === 'string' && value.trim() !== '';
+            });
         }
 
         function showFeedback(message){
@@ -624,12 +770,19 @@ jQuery(document).ready(function($){
         function fetchEntities(page){
             var targetPage = page || 1;
             clearFeedback();
+            clearSearchFeedback();
+            setSearchLoading(true);
 
             $.post(cpbAjax.ajaxurl, {
                 action: 'cpb_read_main_entity',
                 _ajax_nonce: cpbAjax.nonce,
                 page: targetPage,
-                per_page: perPage
+                per_page: perPage,
+                search: {
+                    placeholder_1: currentFilters.placeholder_1,
+                    placeholder_2: currentFilters.placeholder_2,
+                    placeholder_3: currentFilters.placeholder_3
+                }
             })
                 .done(function(response){
                     if (response && response.success && response.data){
@@ -638,13 +791,24 @@ jQuery(document).ready(function($){
                             showFeedback(pendingFeedbackMessage);
                             pendingFeedbackMessage = '';
                         }
+
+                        if (isSearchActive()){
+                            showSearchFeedback(cpbAdmin.searchFiltersApplied || '');
+                        } else {
+                            clearSearchFeedback();
+                        }
                     } else {
                         showFeedback(cpbAdmin.loadError || cpbAdmin.error);
+                        showSearchFeedback(cpbAdmin.loadError || cpbAdmin.error);
                     }
                 })
                 .fail(function(){
                     showFeedback(cpbAdmin.loadError || cpbAdmin.error);
+                    showSearchFeedback(cpbAdmin.loadError || cpbAdmin.error);
                     pendingFeedbackMessage = '';
+                })
+                .always(function(){
+                    setSearchLoading(false);
                 });
         }
 
@@ -660,6 +824,56 @@ jQuery(document).ready(function($){
                 }
 
                 fetchEntities(targetPage);
+            });
+        }
+
+        if ($searchForm.length){
+            $searchForm.on('submit', function(e){
+                e.preventDefault();
+
+                var newFilters = {
+                    placeholder_1: '',
+                    placeholder_2: '',
+                    placeholder_3: ''
+                };
+
+                $searchForm.serializeArray().forEach(function(field){
+                    if (!Object.prototype.hasOwnProperty.call(newFilters, field.name)){
+                        return;
+                    }
+
+                    var value = typeof field.value === 'string' ? field.value.trim() : '';
+                    newFilters[field.name] = value;
+                });
+
+                currentFilters = newFilters;
+                fetchEntities(1);
+            });
+        }
+
+        if ($clearSearchButton.length){
+            $clearSearchButton.on('click', function(e){
+                e.preventDefault();
+
+                var hadActiveFilters = isSearchActive();
+
+                if ($searchForm.length && typeof $searchForm[0].reset === 'function'){
+                    $searchForm[0].reset();
+                } else if ($searchForm.length){
+                    $searchForm.find('input[type="text"]').val('');
+                }
+
+                currentFilters = {
+                    placeholder_1: '',
+                    placeholder_2: '',
+                    placeholder_3: ''
+                };
+
+                clearSearchFeedback();
+
+                if (hadActiveFilters || currentPage !== 1){
+                    fetchEntities(1);
+                }
             });
         }
 
@@ -742,6 +956,40 @@ jQuery(document).ready(function($){
     $('.cpb-accordion').on('click','.item-header',function(){
         $(this).next('.item-content').slideToggle();
         $(this).parent().toggleClass('open');
+    });
+
+    $(document).on('click', '.cpb-api-settings__toggle-visibility', function(e){
+        e.preventDefault();
+
+        var $button = $(this);
+        var targetSelector = $button.data('target');
+        var $input = targetSelector ? $(targetSelector) : $button.closest('.cpb-api-settings__input-group').find('input').first();
+
+        if (!$input.length) {
+            return;
+        }
+
+        var wasPassword = $input.attr('type') === 'password';
+        var showLabel = $button.data('label-show') || $button.data('labelShow');
+        var hideLabel = $button.data('label-hide') || $button.data('labelHide');
+
+        if (wasPassword) {
+            $input.attr('type', 'text');
+
+            if (hideLabel) {
+                $button.text(hideLabel);
+            }
+
+            $button.attr('aria-pressed', 'true');
+        } else {
+            $input.attr('type', 'password');
+
+            if (showLabel) {
+                $button.text(showLabel);
+            }
+
+            $button.attr('aria-pressed', 'false');
+        }
     });
 
     function initAccordionGroups(){

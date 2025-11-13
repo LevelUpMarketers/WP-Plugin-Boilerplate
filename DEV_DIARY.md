@@ -63,4 +63,19 @@
 61. 2025-11-05: Scoped email template header cells to remove flex alignment and enforce a 50px row height without affecting other accordion tabs.
 62. 2025-11-05: Cleared the email template action cell width constraints so the tab inherits the default table alignment.
 63. 2025-11-05: Built the Email Logs tab with file-backed delivery history, styled entry cards, and clear/download controls wired to AJAX and admin-post handlers.
+64. 2025-11-10: Introduced the API Settings tab with accordion-styled credential forms, reveal toggles, and inline feedback controls mirroring other admin sections.
+65. 2025-11-10: Added a Category column to the API Settings accordion headers and styled the cells to accommodate service group labels.
+66. 2025-11-10: Scoped the API Settings accordion headers to use table-cell alignment, enforced a 50px row height, and right-aligned the action heading for consistent spacing.
+67. 2025-11-10: Wired API Settings forms to AJAX persistence with per-integration sanitization, inline feedback reuse, and saved credential prefills.
+68. 2025-11-10: Added an SMS Service accordion with generic messaging credentials and select-driven environments alongside existing API settings.
 
+69. 2025-11-10: Introduced error logging with sitewide and CPB-specific tabs, AJAX clear/download controls, and global handlers that track current and future plugin features.
+70. 2025-11-10: Eliminated deprecated sleep warnings, extended the log helper for payment scopes, and added Payment Logs with clear/download tools; future payment integrations should capture full transaction context (names, contact info, purchase details, WordPress user data, allowed card fragments) while excluding sensitive card numbers.
+71. 2025-11-10: Normalized placeholder label and value sanitization so apostrophes, dashes, and other legitimate characters save and render consistently across Main Entity forms and related tooling.
+72. 2025-11-10: Added a Main Entity search dashboard with placeholder filters, inline spinner feedback, and paginated AJAX reads that honor active criteria.
+73. 2025-11-10: Added a Clear Search control to reset Main Entity filters and reload the default paginated results.
+74. 2025-11-10: Added general settings toggles for all logging channels, persisted preferences via AJAX, and gated email/error log writers behind the new helper so disabled logs stop recording immediately.
+75. 2025-11-10: Surfaced logging status indicators across communications and log tabs with styled settings links so admins can confirm which channels are currently recording entries.
+76. 2025-11-10: Moved the payment log status indicator inside the log section so its layout matches the error log scopes while keeping other tabs unchanged.
+77. 2025-11-11: Normalized error logger keyword matching to stringify stack traces and messages so array data no longer triggers PHP type errors during log writes.
+78. 2025-11-11: Hardened error log helper formatting by stringifying complex values before sanitization to prevent array-to-string warnings when writing entries.

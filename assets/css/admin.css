@@ -150,6 +150,43 @@
     color: #3c434a;
     max-width: 880px;
 }
+
+.cpb-log-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 12px 0 16px;
+}
+
+.cpb-log-status__indicator {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: #b32d2e;
+    flex-shrink: 0;
+}
+
+.cpb-log-status--enabled .cpb-log-status__indicator {
+    background-color: #008a20;
+}
+
+.cpb-log-status--disabled .cpb-log-status__indicator {
+    background-color: #b32d2e;
+}
+
+.cpb-log-status__message {
+    margin: 0;
+    font-size: 14px;
+    color: #1d2327;
+}
+
+.cpb-log-status__message a {
+    text-decoration: underline;
+}
 .cpb-upgrade-button {
     display: inline-block;
     margin-top: 8px;
@@ -173,7 +210,8 @@
 #cpb-create-form .submit,
 #cpb-general-settings-form .submit,
 #cpb-style-settings-form .submit,
-.cpb-entity-edit-form .submit {
+.cpb-entity-edit-form .submit,
+.cpb-api-settings__form .submit {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -195,8 +233,50 @@
 #cpb-create-form .submit .cpb-feedback-area--inline,
 #cpb-general-settings-form .submit .cpb-feedback-area--inline,
 #cpb-style-settings-form .submit .cpb-feedback-area--inline,
-.cpb-entity-edit-form .submit .cpb-feedback-area--inline {
+.cpb-entity-edit-form .submit .cpb-feedback-area--inline,
+.cpb-api-settings__form .submit .cpb-feedback-area--inline {
     margin-left: 0;
+}
+
+.cpb-api-settings__fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.cpb-api-settings__field {
+    flex: 1 1 220px;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cpb-api-settings__field label {
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.cpb-api-settings__form select,
+.cpb-api-settings__form .regular-text {
+    width: 100%;
+    max-width: 100%;
+}
+
+.cpb-api-settings__input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cpb-api-settings__input-group .regular-text {
+    flex: 1 1 auto;
+}
+
+.cpb-api-settings__input-group .button {
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .cpb-feedback-area--block {
@@ -263,6 +343,91 @@
     margin-top: 24px;
 }
 
+.cpb-entity-search {
+    margin-bottom: 16px;
+    padding: 16px;
+    background: #ffffff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+}
+
+.cpb-entity-search__title {
+    margin: 0 0 8px;
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.cpb-entity-search__description {
+    margin: 0 0 16px;
+    color: #50575e;
+}
+
+.cpb-entity-search__fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.cpb-entity-search__field {
+    flex: 1 1 220px;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cpb-entity-search__label {
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.cpb-entity-search__field .regular-text {
+    max-width: 100%;
+}
+
+.cpb-entity-search__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.cpb-entity-search__actions .button {
+    margin: 0;
+}
+
+.cpb-entity-search__form .cpb-feedback-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cpb-entity-search__form .cpb-feedback-area .spinner {
+    margin: 0;
+}
+
+.cpb-entity-search__form .cpb-feedback-area [role="status"] {
+    display: none;
+    font-weight: 500;
+    color: #1d2327;
+}
+
+.cpb-entity-search__form .cpb-feedback-area [role="status"].is-visible {
+    display: inline;
+}
+
+@media (max-width: 782px) {
+    .cpb-entity-search__field {
+        flex: 1 1 100%;
+    }
+
+    .cpb-entity-search__actions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
 .cpb-communications .description {
     margin-bottom: 16px;
 }
@@ -290,8 +455,18 @@
     width: 20%;
 }
 
+.cpb-accordion__heading--category {
+    width: 18%;
+    min-width: 160px;
+}
+
 .cpb-accordion__heading--actions {
     text-align: right;
+}
+
+.cpb-accordion__cell--category {
+    color: #3c434a;
+    min-width: 160px;
 }
 
 
@@ -305,6 +480,10 @@
     background-color: #fff;
     vertical-align: top;
     min-height: 50px;
+}
+
+.cpb-communications--api-settings .cpb-accordion__summary-row > .cpb-accordion__cell {
+    height: 50px;
 }
 
 .cpb-accordion__summary-row:not(:first-of-type) > .cpb-accordion__cell {
@@ -333,6 +512,11 @@
     gap: 8px;
 }
 
+.cpb-communications--api-settings .cpb-accordion__cell--title,
+.cpb-communications--api-settings .cpb-accordion__cell--actions {
+    display: table-cell;
+}
+
 .cpb-accordion__cell--actions {
     display: flex;
     justify-content: flex-end;
@@ -340,6 +524,10 @@
     gap: 8px;
     width: 120px;
     min-width: 120px;
+    text-align: right;
+}
+
+.cpb-communications--api-settings .cpb-accordion__heading--actions {
     text-align: right;
 }
 
@@ -870,4 +1058,68 @@
 .cpb-cron-actions .button {
     min-width: 140px;
     text-align: center;
+}
+
+.cpb-error-logs {
+    display: grid;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.cpb-error-logs__section {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 20px;
+}
+
+.cpb-error-logs__heading {
+    margin: 0 0 8px;
+    font-size: 18px;
+}
+
+.cpb-error-logs__description {
+    margin: 0 0 16px;
+    color: #50575e;
+}
+
+.cpb-error-logs__empty {
+    margin: 0 0 12px;
+    color: #646970;
+}
+
+.cpb-error-logs__textarea {
+    width: 100%;
+    min-height: 220px;
+    background: #f6f7f7;
+    color: #1d2327;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    font-family: Menlo, Consolas, Monaco, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.cpb-error-logs__textarea:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+.cpb-error-logs__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.cpb-log-actions__form {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cpb-log-actions__form .cpb-feedback-area {
+    min-width: 0;
 }

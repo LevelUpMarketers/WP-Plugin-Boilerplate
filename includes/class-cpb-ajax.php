@@ -9,11 +9,15 @@ class CPB_Ajax {
 
     public function register() {
         add_action( 'wp_ajax_cpb_save_main_entity', array( $this, 'save_main_entity' ) );
+        add_action( 'wp_ajax_cpb_save_general_settings', array( $this, 'save_general_settings' ) );
         add_action( 'wp_ajax_cpb_delete_main_entity', array( $this, 'delete_main_entity' ) );
         add_action( 'wp_ajax_cpb_read_main_entity', array( $this, 'read_main_entity' ) );
         add_action( 'wp_ajax_cpb_save_email_template', array( $this, 'save_email_template' ) );
         add_action( 'wp_ajax_cpb_send_test_email', array( $this, 'send_test_email' ) );
         add_action( 'wp_ajax_cpb_clear_email_log', array( $this, 'clear_email_log' ) );
+        add_action( 'wp_ajax_cpb_save_api_settings', array( $this, 'save_api_settings' ) );
+        add_action( 'wp_ajax_cpb_clear_error_log', array( $this, 'clear_error_log' ) );
+        add_action( 'wp_ajax_cpb_download_error_log', array( $this, 'download_error_log' ) );
     }
 
     private function maybe_delay( $start, $minimum_time = CPB_MIN_EXECUTION_TIME ) {
@@ -24,7 +28,12 @@ class CPB_Ajax {
         $elapsed = microtime( true ) - $start;
 
         if ( $elapsed < $minimum_time ) {
-            usleep( ( $minimum_time - $elapsed ) * 1000000 );
+            $remaining    = $minimum_time - $elapsed;
+            $microseconds = (int) ceil( max( 0, $remaining ) * 1000000 );
+
+            if ( $microseconds > 0 ) {
+                usleep( $microseconds );
+            }
         }
     }
 
@@ -122,6 +131,255 @@ class CPB_Ajax {
         wp_send_json_success( array( 'message' => $message ) );
     }
 
+    public function save_general_settings() {
+        $start = microtime( true );
+        check_ajax_referer( 'cpb_ajax_nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'You do not have permission to save these settings.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $sanitized = CPB_Settings_Helper::sanitize_general_settings( $_POST );
+        $result    = CPB_Settings_Helper::save_general_settings( $_POST );
+
+        if ( false === $result ) {
+            $stored = CPB_Settings_Helper::get_general_settings();
+
+            if ( $stored !== $sanitized ) {
+                $this->maybe_delay( $start );
+                wp_send_json_error(
+                    array(
+                        'message' => __( 'Settings could not be saved. Please try again.', 'codex-plugin-boilerplate' ),
+                    )
+                );
+            }
+        }
+
+        $this->maybe_delay( $start );
+        wp_send_json_success(
+            array(
+                'message' => __( 'Settings saved.', 'codex-plugin-boilerplate' ),
+            )
+        );
+    }
+
+    public function save_api_settings() {
+        $start = microtime( true );
+        check_ajax_referer( 'cpb_ajax_nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'You do not have permission to save these settings.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $api_key = isset( $_POST['cpb_api_key'] ) ? sanitize_key( wp_unslash( $_POST['cpb_api_key'] ) ) : '';
+
+        $api_definitions = array(
+            'payment_gateway' => array(
+                'fields' => array(
+                    'payment_gateway_environment'   => array(
+                        'type'    => 'select',
+                        'options' => array( 'live', 'sandbox' ),
+                        'default' => 'live',
+                    ),
+                    'payment_gateway_login_id'      => array(
+                        'type' => 'text',
+                    ),
+                    'payment_gateway_transaction_key' => array(
+                        'type' => 'text',
+                    ),
+                    'payment_gateway_client_key'    => array(
+                        'type' => 'text',
+                    ),
+                ),
+            ),
+            'sms_service' => array(
+                'fields' => array(
+                    'sms_environment' => array(
+                        'type'    => 'select',
+                        'options' => array( 'live', 'sandbox' ),
+                        'default' => 'live',
+                    ),
+                    'sms_messaging_service_sid' => array(
+                        'type' => 'text',
+                    ),
+                    'sms_sending_number' => array(
+                        'type' => 'text',
+                    ),
+                    'sms_sandbox_number' => array(
+                        'type' => 'text',
+                    ),
+                    'sms_user_sid' => array(
+                        'type' => 'text',
+                    ),
+                    'sms_api_sid' => array(
+                        'type' => 'text',
+                    ),
+                    'sms_api_key' => array(
+                        'type' => 'text',
+                    ),
+                ),
+            ),
+        );
+
+        if ( ! $api_key || ! isset( $api_definitions[ $api_key ] ) ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Unknown API configuration.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $definition = $api_definitions[ $api_key ];
+        $sanitized  = array();
+
+        foreach ( $definition['fields'] as $field_key => $field_definition ) {
+            $raw_value = isset( $_POST[ $field_key ] ) ? wp_unslash( $_POST[ $field_key ] ) : '';
+            $field_type = isset( $field_definition['type'] ) ? $field_definition['type'] : 'text';
+
+            switch ( $field_type ) {
+                case 'select':
+                    $allowed_values = isset( $field_definition['options'] ) ? (array) $field_definition['options'] : array();
+                    $default_value  = isset( $field_definition['default'] ) ? $field_definition['default'] : '';
+                    $raw_value      = sanitize_key( $raw_value );
+
+                    if ( ! in_array( $raw_value, $allowed_values, true ) ) {
+                        $raw_value = $default_value;
+                    }
+
+                    $sanitized[ $field_key ] = $raw_value;
+                    break;
+                default:
+                    $sanitized[ $field_key ] = sanitize_text_field( $raw_value );
+                    break;
+            }
+        }
+
+        $all_settings = get_option( 'cpb_api_settings', array() );
+
+        if ( ! is_array( $all_settings ) ) {
+            $all_settings = array();
+        }
+
+        $all_settings[ $api_key ] = $sanitized;
+
+        update_option( 'cpb_api_settings', $all_settings );
+
+        $this->maybe_delay( $start );
+        wp_send_json_success(
+            array(
+                'message' => __( 'API settings saved.', 'codex-plugin-boilerplate' ),
+            )
+        );
+    }
+
+    public function clear_error_log() {
+        $start = microtime( true );
+        check_ajax_referer( 'cpb_ajax_nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'You are not allowed to modify error logs.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $scope = isset( $_POST['scope'] ) ? CPB_Error_Log_Helper::normalize_scope( wp_unslash( $_POST['scope'] ) ) : '';
+
+        if ( '' === $scope ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Unknown log scope.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $cleared = CPB_Error_Log_Helper::clear_log( $scope );
+
+        if ( ! $cleared ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Unable to clear the requested log. Please check file permissions.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $message = CPB_Error_Log_Helper::get_clear_success_message( $scope );
+
+        if ( '' === $message ) {
+            $message = __( 'Log cleared.', 'codex-plugin-boilerplate' );
+        }
+
+        $this->maybe_delay( $start );
+        wp_send_json_success(
+            array(
+                'message' => $message,
+                'content' => CPB_Error_Log_Helper::get_log_contents( $scope ),
+            )
+        );
+    }
+
+    public function download_error_log() {
+        $start = microtime( true );
+        check_ajax_referer( 'cpb_ajax_nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'You are not allowed to download error logs.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $scope = isset( $_POST['scope'] ) ? CPB_Error_Log_Helper::normalize_scope( wp_unslash( $_POST['scope'] ) ) : '';
+
+        if ( '' === $scope ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Unknown log scope.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $filename = CPB_Error_Log_Helper::get_download_filename( $scope );
+
+        if ( '' === $filename ) {
+            $this->maybe_delay( $start );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Unable to prepare the download filename.', 'codex-plugin-boilerplate' ),
+                )
+            );
+        }
+
+        $contents = CPB_Error_Log_Helper::get_log_contents( $scope );
+
+        $this->maybe_delay( $start );
+        wp_send_json_success(
+            array(
+                'message'  => __( 'Log download ready.', 'codex-plugin-boilerplate' ),
+                'filename' => sanitize_file_name( $filename ),
+                'content'  => (string) $contents,
+            )
+        );
+    }
+
     public function delete_main_entity() {
         $start = microtime( true );
         check_ajax_referer( 'cpb_ajax_nonce' );
@@ -147,7 +405,55 @@ class CPB_Ajax {
 
         $per_page = min( $per_page, 100 );
 
-        $total       = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table" );
+        $raw_search = isset( $_POST['search'] ) ? wp_unslash( $_POST['search'] ) : array();
+
+        if ( ! is_array( $raw_search ) ) {
+            $raw_search = array();
+        }
+
+        $searchable_columns = array(
+            'placeholder_1',
+            'placeholder_2',
+            'placeholder_3',
+        );
+
+        $search_terms = array();
+
+        foreach ( $searchable_columns as $column ) {
+            if ( isset( $raw_search[ $column ] ) ) {
+                $value = sanitize_text_field( $raw_search[ $column ] );
+
+                if ( '' !== $value ) {
+                    $search_terms[ $column ] = $value;
+                }
+            }
+        }
+
+        $where_clauses = array();
+        $where_params  = array();
+
+        foreach ( $search_terms as $column => $value ) {
+            $where_clauses[] = $column . ' LIKE %s';
+            $where_params[]  = '%' . $wpdb->esc_like( $value ) . '%';
+        }
+
+        $where_sql = '';
+
+        if ( $where_clauses ) {
+            $where_sql = 'WHERE ' . implode( ' AND ', $where_clauses );
+        }
+
+        $total_query = "SELECT COUNT(*) FROM $table";
+
+        if ( $where_sql ) {
+            $total_query .= ' ' . $where_sql;
+        }
+
+        if ( $where_params ) {
+            $total = (int) $wpdb->get_var( $wpdb->prepare( $total_query, $where_params ) );
+        } else {
+            $total = (int) $wpdb->get_var( $total_query );
+        }
         $total_pages = $per_page > 0 ? (int) ceil( $total / $per_page ) : 1;
 
         if ( $total_pages < 1 ) {
@@ -174,11 +480,22 @@ class CPB_Ajax {
                 'opt_in_event_update_sms',
             );
 
+            $select_query = "SELECT * FROM $table";
+
+            if ( $where_sql ) {
+                $select_query .= ' ' . $where_sql;
+            }
+
+            $select_query .= ' ORDER BY placeholder_1 ASC, id ASC LIMIT %d OFFSET %d';
+
+            $select_params = $where_params;
+            $select_params[] = $per_page;
+            $select_params[] = $offset;
+
             $entities = $wpdb->get_results(
                 $wpdb->prepare(
-                    "SELECT * FROM $table ORDER BY placeholder_1 ASC, id ASC LIMIT %d OFFSET %d",
-                    $per_page,
-                    $offset
+                    $select_query,
+                    $select_params
                 ),
                 ARRAY_A
             );
@@ -491,7 +808,7 @@ class CPB_Ajax {
             $value = implode( ',', $value );
         }
 
-        return sanitize_text_field( $value );
+        return $this->normalize_plain_text( $value );
     }
 
     private function replace_template_tokens( $content, $tokens ) {
@@ -692,7 +1009,7 @@ class CPB_Ajax {
 
         if ( is_array( $value ) ) {
             foreach ( $value as $item ) {
-                $item = sanitize_text_field( $item );
+                $item = $this->normalize_plain_text( $item );
 
                 if ( '' !== $item ) {
                     $items[] = $item;
@@ -704,7 +1021,7 @@ class CPB_Ajax {
 
             if ( is_array( $split ) ) {
                 foreach ( $split as $item ) {
-                    $item = trim( $item );
+                    $item = $this->normalize_plain_text( $item );
 
                     if ( '' !== $item ) {
                         $items[] = $item;
@@ -714,6 +1031,24 @@ class CPB_Ajax {
         }
 
         return wp_json_encode( $items );
+    }
+
+    private function normalize_plain_text( $value ) {
+        if ( null === $value ) {
+            return '';
+        }
+
+        if ( is_array( $value ) ) {
+            $value = reset( $value );
+        }
+
+        $value = sanitize_text_field( (string) wp_unslash( $value ) );
+
+        if ( '' === $value ) {
+            return '';
+        }
+
+        return wp_specialchars_decode( $value, ENT_QUOTES );
     }
 
     private function sanitize_color_value( $key ) {

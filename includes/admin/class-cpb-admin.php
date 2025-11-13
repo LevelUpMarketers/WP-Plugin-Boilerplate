@@ -97,6 +97,12 @@ class CPB_Admin {
 
         $this->render_tab_intro( $tabs[ $active_tab ], $description );
 
+        if ( 'email-logs' === $active_tab ) {
+            $this->render_logging_status_notice( CPB_Settings_Helper::FIELD_LOG_EMAIL );
+        } elseif ( 'sms-logs' === $active_tab ) {
+            $this->render_logging_status_notice( CPB_Settings_Helper::FIELD_LOG_SMS );
+        }
+
         if ( 'email-templates' === $active_tab ) {
             $this->render_email_templates_tab();
         } elseif ( 'email-logs' === $active_tab ) {
@@ -740,6 +746,8 @@ class CPB_Admin {
             'emailLogCleared'   => __( 'Email log cleared.', 'codex-plugin-boilerplate' ),
             'emailLogError'     => __( 'Unable to clear the email log. Please try again.', 'codex-plugin-boilerplate' ),
             'emailLogEmpty'     => __( 'No email activity has been recorded yet.', 'codex-plugin-boilerplate' ),
+            'logDownloadReady'  => __( 'Log download ready.', 'codex-plugin-boilerplate' ),
+            'searchFiltersApplied' => __( 'Showing filtered results.', 'codex-plugin-boilerplate' ),
         ) );
     }
 
@@ -762,9 +770,31 @@ class CPB_Admin {
              * @param array $labels Associative array of placeholder slugs to labels.
              */
             $labels = apply_filters( 'cpb_main_entity_placeholder_labels', $labels );
+
+            $labels = $this->sanitize_placeholder_label_map( $labels );
         }
 
         return $labels;
+    }
+
+    private function sanitize_placeholder_label_map( array $labels ) {
+        $sanitized = array();
+
+        foreach ( $labels as $key => $label ) {
+            if ( ! is_scalar( $label ) ) {
+                continue;
+            }
+
+            $normalized = sanitize_text_field( wp_unslash( (string) $label ) );
+
+            if ( '' === $normalized && preg_match( '/^placeholder_(\d+)$/', (string) $key, $matches ) ) {
+                $normalized = sprintf( __( 'Placeholder %d', 'codex-plugin-boilerplate' ), (int) $matches[1] );
+            }
+
+            $sanitized[ $key ] = wp_specialchars_decode( $normalized, ENT_QUOTES );
+        }
+
+        return array_merge( $labels, $sanitized );
     }
 
     private function get_placeholder_label( $index ) {
@@ -921,6 +951,60 @@ class CPB_Admin {
         echo '</div>';
     }
 
+    private function render_logging_status_notice( $channel ) {
+        if ( ! class_exists( 'CPB_Settings_Helper' ) ) {
+            return;
+        }
+
+        if ( ! $channel ) {
+            return;
+        }
+
+        $enabled = CPB_Settings_Helper::is_logging_enabled( $channel );
+
+        $status_class = $enabled ? 'cpb-log-status--enabled' : 'cpb-log-status--disabled';
+        $link         = add_query_arg(
+            array(
+                'page' => 'cpb-settings',
+                'tab'  => 'general',
+            ),
+            admin_url( 'admin.php' )
+        );
+
+        $link_markup = sprintf(
+            '<a href="%1$s">%2$s</a>',
+            esc_url( $link ),
+            esc_html__( 'Visit the CPB Settings page', 'codex-plugin-boilerplate' )
+        );
+
+        if ( $enabled ) {
+            /* translators: %s: Link to the CPB general settings tab. */
+            $message = sprintf(
+                __( 'Logging is currently enabled. %s to change this preference.', 'codex-plugin-boilerplate' ),
+                $link_markup
+            );
+            $indicator_label = __( 'Logging enabled', 'codex-plugin-boilerplate' );
+        } else {
+            /* translators: %s: Link to the CPB general settings tab. */
+            $message = sprintf(
+                __( 'Logging is currently disabled. %s to change this preference.', 'codex-plugin-boilerplate' ),
+                $link_markup
+            );
+            $indicator_label = __( 'Logging disabled', 'codex-plugin-boilerplate' );
+        }
+
+        echo '<div class="cpb-log-status ' . esc_attr( $status_class ) . '">';
+        printf(
+            '<span class="cpb-log-status__indicator" role="img" aria-label="%s"></span>',
+            esc_attr( $indicator_label )
+        );
+        printf(
+            '<p class="cpb-log-status__message">%s</p>',
+            wp_kses_post( $message )
+        );
+        echo '</div>';
+    }
+
     public function render_main_entity_page() {
         $active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( $_GET['tab'] ) : 'create';
         echo '<div class="wrap"><h1>' . esc_html__( 'CPB Main Entity', 'codex-plugin-boilerplate' ) . '</h1>';
@@ -939,6 +1023,10 @@ class CPB_Admin {
             'create' => __( 'Build a new main entity record by completing the placeholder fields and saving your changes.', 'codex-plugin-boilerplate' ),
             'edit'   => __( 'Review saved entities to confirm their data, trigger edits, or remove records you no longer need.', 'codex-plugin-boilerplate' ),
         );
+
+        if ( ! array_key_exists( $active_tab, $tab_titles ) ) {
+            $active_tab = 'create';
+        }
 
         $title       = isset( $tab_titles[ $active_tab ] ) ? $tab_titles[ $active_tab ] : '';
         $description = isset( $tab_descriptions[ $active_tab ] ) ? $tab_descriptions[ $active_tab ] : '';
@@ -1358,6 +1446,36 @@ class CPB_Admin {
         $column_count = 6; // Five placeholder columns plus actions.
 
         echo '<div class="cpb-communications cpb-communications--main-entities">';
+        echo '<div class="cpb-entity-search" role="search">';
+        echo '<form id="cpb-main-entity-search" class="cpb-entity-search__form" method="post">';
+        echo '<h3 class="cpb-entity-search__title">' . esc_html__( 'Search Main Entities', 'codex-plugin-boilerplate' ) . '</h3>';
+        echo '<p class="cpb-entity-search__description">' . esc_html__( 'Filter records by placeholder values to quickly locate the entries you need.', 'codex-plugin-boilerplate' ) . '</p>';
+        echo '<div class="cpb-entity-search__fields">';
+
+        for ( $i = 1; $i <= 3; $i++ ) {
+            $field_key = 'placeholder_' . $i;
+            $label     = $this->get_placeholder_label( $i );
+            $field_id  = 'cpb-entity-search-' . $field_key;
+
+            echo '<div class="cpb-entity-search__field">';
+            echo '<label class="cpb-entity-search__label" for="' . esc_attr( $field_id ) . '">';
+            echo esc_html( $label );
+            echo '</label>';
+            echo '<input type="text" id="' . esc_attr( $field_id ) . '" name="' . esc_attr( $field_key ) . '" class="regular-text" />';
+            echo '</div>';
+        }
+
+        echo '</div>';
+        echo '<div class="cpb-entity-search__actions">';
+        echo '<button type="submit" class="button button-primary">' . esc_html__( 'Search', 'codex-plugin-boilerplate' ) . '</button>';
+        echo '<button type="button" id="cpb-entity-search-clear" class="button button-secondary">' . esc_html__( 'Clear Search', 'codex-plugin-boilerplate' ) . '</button>';
+        echo '<span class="cpb-feedback-area cpb-feedback-area--inline">';
+        echo '<span id="cpb-entity-search-spinner" class="spinner" aria-hidden="true"></span>';
+        echo '<span id="cpb-entity-search-feedback" role="status" aria-live="polite"></span>';
+        echo '</span>';
+        echo '</div>';
+        echo '</form>';
+        echo '</div>';
         echo '<div class="cpb-accordion-group cpb-accordion-group--table" data-cpb-accordion-group="main-entities">';
         echo '<table class="wp-list-table widefat striped cpb-accordion-table">';
         echo '<thead>';
@@ -1395,6 +1513,7 @@ class CPB_Admin {
         echo '<h2 class="nav-tab-wrapper">';
         echo '<a href="?page=cpb-settings&tab=general" class="nav-tab ' . ( 'general' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'General Settings', 'codex-plugin-boilerplate' ) . '</a>';
         echo '<a href="?page=cpb-settings&tab=style" class="nav-tab ' . ( 'style' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Style Settings', 'codex-plugin-boilerplate' ) . '</a>';
+        echo '<a href="?page=cpb-settings&tab=api" class="nav-tab ' . ( 'api' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'API Settings', 'codex-plugin-boilerplate' ) . '</a>';
         echo '<a href="?page=cpb-settings&tab=cron" class="nav-tab ' . ( 'cron' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Cron Jobs', 'codex-plugin-boilerplate' ) . '</a>';
         echo '</h2>';
         $this->top_message_center();
@@ -1402,14 +1521,20 @@ class CPB_Admin {
         $tab_titles = array(
             'general' => __( 'General Settings', 'codex-plugin-boilerplate' ),
             'style'   => __( 'Style Settings', 'codex-plugin-boilerplate' ),
+            'api'     => __( 'API Settings', 'codex-plugin-boilerplate' ),
             'cron'    => __( 'Cron Jobs', 'codex-plugin-boilerplate' ),
         );
 
         $tab_descriptions = array(
             'general' => __( 'Adjust the baseline configuration values that control how Codex Plugin Boilerplate behaves across your site.', 'codex-plugin-boilerplate' ),
             'style'   => __( 'Apply design tweaks and CSS overrides to align the boilerplate output with your brand guidelines.', 'codex-plugin-boilerplate' ),
+            'api'     => __( 'Store external service credentials behind collapsible sections so each integration can be updated without leaving this page.', 'codex-plugin-boilerplate' ),
             'cron'    => __( 'Review and manage every scheduled cron event created by Codex Plugin Boilerplate, including running or deleting hooks on demand.', 'codex-plugin-boilerplate' ),
         );
+
+        if ( ! array_key_exists( $active_tab, $tab_titles ) ) {
+            $active_tab = 'general';
+        }
 
         $title       = isset( $tab_titles[ $active_tab ] ) ? $tab_titles[ $active_tab ] : '';
         $description = isset( $tab_descriptions[ $active_tab ] ) ? $tab_descriptions[ $active_tab ] : '';
@@ -1418,6 +1543,8 @@ class CPB_Admin {
 
         if ( 'style' === $active_tab ) {
             $this->render_style_settings_tab();
+        } elseif ( 'api' === $active_tab ) {
+            $this->render_api_settings_tab();
         } elseif ( 'cron' === $active_tab ) {
             $this->render_cron_jobs_tab();
         } else {
@@ -1429,14 +1556,256 @@ class CPB_Admin {
     }
 
     private function render_general_settings_tab() {
-        echo '<form id="cpb-general-settings-form">';
-        echo '<label>' . esc_html__( 'Option', 'codex-plugin-boilerplate' ) . ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . esc_attr__( 'Tooltip placeholder text for Option', 'codex-plugin-boilerplate' ) . '"></span></label>';
-        echo '<input type="text" name="option" />';
+        $settings = CPB_Settings_Helper::get_general_settings();
+
+        $logging_fields = array(
+            CPB_Settings_Helper::FIELD_LOG_EMAIL => array(
+                'label'       => __( 'Email Logs', 'codex-plugin-boilerplate' ),
+                'description' => __( 'Capture email delivery activity so you can audit messages from the Email Logs tab.', 'codex-plugin-boilerplate' ),
+            ),
+            CPB_Settings_Helper::FIELD_LOG_SMS => array(
+                'label'       => __( 'SMS Logs', 'codex-plugin-boilerplate' ),
+                'description' => __( 'Store outbound SMS activity for future messaging diagnostics.', 'codex-plugin-boilerplate' ),
+            ),
+            CPB_Settings_Helper::FIELD_LOG_SITE_ERRORS => array(
+                'label'       => __( 'Sitewide errors, notices, and warnings', 'codex-plugin-boilerplate' ),
+                'description' => __( 'Record PHP notices from the entire site inside the Error Logs tab.', 'codex-plugin-boilerplate' ),
+            ),
+            CPB_Settings_Helper::FIELD_LOG_PLUGIN_ERRORS => array(
+                'label'       => __( 'Errors, notices, and warnings specific to this plugin only', 'codex-plugin-boilerplate' ),
+                'description' => __( 'Limit error tracking to issues related to Codex Plugin Boilerplate for targeted troubleshooting.', 'codex-plugin-boilerplate' ),
+            ),
+            CPB_Settings_Helper::FIELD_LOG_PAYMENTS => array(
+                'label'       => __( 'Payment logs', 'codex-plugin-boilerplate' ),
+                'description' => __( 'Retain payment gateway diagnostics and transaction context within the Payment Logs tab.', 'codex-plugin-boilerplate' ),
+            ),
+        );
+
+        echo '<form id="cpb-general-settings-form" class="cpb-settings-form">';
+        echo '<table class="form-table" role="presentation">';
+
+        $option_tooltip = esc_attr__( 'Tooltip placeholder text for Option', 'codex-plugin-boilerplate' );
+        $option_value   = isset( $settings[ CPB_Settings_Helper::FIELD_OPTION ] ) ? $settings[ CPB_Settings_Helper::FIELD_OPTION ] : '';
+
+        echo '<tr>';
+        echo '<th scope="row">';
+        echo '<label for="cpb-general-option">' . esc_html__( 'Option', 'codex-plugin-boilerplate' ) . ' <span class="cpb-tooltip-icon dashicons dashicons-editor-help" data-tooltip="' . $option_tooltip . '"></span></label>';
+        echo '</th>';
+        echo '<td>';
+        echo '<input type="text" id="cpb-general-option" name="' . esc_attr( CPB_Settings_Helper::FIELD_OPTION ) . '" value="' . esc_attr( $option_value ) . '" class="regular-text" />';
+        echo '</td>';
+        echo '</tr>';
+
+        foreach ( $logging_fields as $field_key => $field ) {
+            $field_id   = 'cpb-general-' . str_replace( '_', '-', $field_key );
+            $is_enabled = ! empty( $settings[ $field_key ] );
+
+            echo '<tr>';
+            echo '<th scope="row">' . esc_html( $field['label'] ) . '</th>';
+            echo '<td>';
+            echo '<label for="' . esc_attr( $field_id ) . '">';
+            echo '<input type="checkbox" id="' . esc_attr( $field_id ) . '" name="' . esc_attr( $field_key ) . '" value="1" ' . checked( $is_enabled, true, false ) . ' />';
+            echo ' ' . esc_html__( 'Enable logging', 'codex-plugin-boilerplate' );
+            echo '</label>';
+
+            if ( ! empty( $field['description'] ) ) {
+                echo '<p class="description">' . esc_html( $field['description'] ) . '</p>';
+            }
+
+            echo '</td>';
+            echo '</tr>';
+        }
+
+        echo '</table>';
+
         $submit_button = get_submit_button( __( 'Save Settings', 'codex-plugin-boilerplate' ), 'primary', 'submit', false );
         echo '<p class="submit">' . $submit_button;
         echo '<span class="cpb-feedback-area cpb-feedback-area--inline"><span id="cpb-spinner" class="spinner" aria-hidden="true"></span><span id="cpb-feedback" role="status" aria-live="polite"></span></span>';
         echo '</p>';
         echo '</form>';
+    }
+
+    private function render_api_settings_tab() {
+        $saved_settings = get_option( 'cpb_api_settings', array() );
+
+        if ( ! is_array( $saved_settings ) ) {
+            $saved_settings = array();
+        }
+
+        $apis = array(
+            'payment_gateway' => array(
+                'title'    => __( 'Payment Gateway', 'codex-plugin-boilerplate' ),
+                'category' => __( 'Payments', 'codex-plugin-boilerplate' ),
+                'fields' => array(
+                    array(
+                        'type'    => 'select',
+                        'name'    => 'payment_gateway_environment',
+                        'label'   => __( 'Environment', 'codex-plugin-boilerplate' ),
+                        'options' => array(
+                            'live'    => __( 'Live', 'codex-plugin-boilerplate' ),
+                            'sandbox' => __( 'Sandbox', 'codex-plugin-boilerplate' ),
+                        ),
+                    ),
+                    array(
+                        'type'  => 'text',
+                        'name'  => 'payment_gateway_login_id',
+                        'label' => __( 'Login ID', 'codex-plugin-boilerplate' ),
+                    ),
+                    array(
+                        'type'    => 'password',
+                        'name'    => 'payment_gateway_transaction_key',
+                        'label'   => __( 'Transaction Key', 'codex-plugin-boilerplate' ),
+                        'reveal'  => true,
+                    ),
+                    array(
+                        'type'    => 'password',
+                        'name'    => 'payment_gateway_client_key',
+                        'label'   => __( 'Client Key', 'codex-plugin-boilerplate' ),
+                        'reveal'  => true,
+                    ),
+                ),
+            ),
+            'sms_service' => array(
+                'title'    => __( 'SMS Service', 'codex-plugin-boilerplate' ),
+                'category' => __( 'Messaging', 'codex-plugin-boilerplate' ),
+                'fields'   => array(
+                    array(
+                        'type'    => 'select',
+                        'name'    => 'sms_environment',
+                        'label'   => __( 'Environment', 'codex-plugin-boilerplate' ),
+                        'options' => array(
+                            'live'    => __( 'Live', 'codex-plugin-boilerplate' ),
+                            'sandbox' => __( 'Sandbox', 'codex-plugin-boilerplate' ),
+                        ),
+                    ),
+                    array(
+                        'type'   => 'password',
+                        'name'   => 'sms_messaging_service_sid',
+                        'label'  => __( 'Messaging Service SID', 'codex-plugin-boilerplate' ),
+                        'reveal' => true,
+                    ),
+                    array(
+                        'type'  => 'text',
+                        'name'  => 'sms_sending_number',
+                        'label' => __( 'Sending Number', 'codex-plugin-boilerplate' ),
+                    ),
+                    array(
+                        'type'  => 'text',
+                        'name'  => 'sms_sandbox_number',
+                        'label' => __( 'Sandbox Number', 'codex-plugin-boilerplate' ),
+                    ),
+                    array(
+                        'type'   => 'password',
+                        'name'   => 'sms_user_sid',
+                        'label'  => __( 'User SID', 'codex-plugin-boilerplate' ),
+                        'reveal' => true,
+                    ),
+                    array(
+                        'type'   => 'password',
+                        'name'   => 'sms_api_sid',
+                        'label'  => __( 'API SID', 'codex-plugin-boilerplate' ),
+                        'reveal' => true,
+                    ),
+                    array(
+                        'type'   => 'password',
+                        'name'   => 'sms_api_key',
+                        'label'  => __( 'API Key', 'codex-plugin-boilerplate' ),
+                        'reveal' => true,
+                    ),
+                ),
+            ),
+        );
+
+        echo '<div class="cpb-api-settings cpb-communications cpb-communications--api-settings">';
+        echo '<div class="cpb-accordion-group cpb-accordion-group--table" data-cpb-accordion-group="api-settings">';
+        echo '<table class="wp-list-table widefat striped cpb-accordion-table cpb-accordion-table--api">';
+        echo '<thead>';
+        echo '<tr>';
+        echo '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--title">' . esc_html__( 'API', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--category">' . esc_html__( 'Category', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '<th scope="col" class="cpb-accordion__heading cpb-accordion__heading--actions">' . esc_html__( 'Actions', 'codex-plugin-boilerplate' ) . '</th>';
+        echo '</tr>';
+        echo '</thead>';
+        echo '<tbody>';
+
+        foreach ( $apis as $api_key => $api ) {
+            $summary_id = 'cpb-api-' . sanitize_html_class( $api_key ) . '-header';
+            $panel_id   = 'cpb-api-' . sanitize_html_class( $api_key ) . '-panel';
+            $form_id    = 'cpb-api-form-' . sanitize_html_class( $api_key );
+            $spinner_id = $form_id . '-spinner';
+            $feedback_id = $form_id . '-feedback';
+            $saved_api_settings = isset( $saved_settings[ $api_key ] ) && is_array( $saved_settings[ $api_key ] ) ? $saved_settings[ $api_key ] : array();
+
+            echo '<tr id="' . esc_attr( $summary_id ) . '" class="cpb-accordion__summary-row" tabindex="0" role="button" aria-expanded="false" aria-controls="' . esc_attr( $panel_id ) . '">';
+            echo '<td class="cpb-accordion__cell cpb-accordion__cell--title">';
+            echo '<span class="cpb-accordion__title-text">' . esc_html( $api['title'] ) . '</span>';
+            echo '</td>';
+            echo '<td class="cpb-accordion__cell cpb-accordion__cell--category">';
+            $category = isset( $api['category'] ) ? $api['category'] : '';
+            echo $category ? esc_html( $category ) : '&mdash;';
+            echo '</td>';
+            echo '<td class="cpb-accordion__cell cpb-accordion__cell--actions">';
+            echo '<span class="cpb-accordion__action-link" aria-hidden="true">' . esc_html__( 'Configure', 'codex-plugin-boilerplate' ) . '</span>';
+            echo '<span class="dashicons dashicons-arrow-down-alt2 cpb-accordion__icon" aria-hidden="true"></span>';
+            echo '</td>';
+            echo '</tr>';
+
+            echo '<tr id="' . esc_attr( $panel_id ) . '" class="cpb-accordion__panel-row" role="region" aria-labelledby="' . esc_attr( $summary_id ) . '" aria-hidden="true">';
+            echo '<td colspan="3">';
+            echo '<div class="cpb-accordion__panel">';
+            echo '<form id="' . esc_attr( $form_id ) . '" class="cpb-api-settings__form" method="post">';
+            echo '<input type="hidden" name="cpb_api_key" value="' . esc_attr( $api_key ) . '" />';
+            echo '<div class="cpb-api-settings__fields">';
+
+            foreach ( $api['fields'] as $field ) {
+                $field_id = $field['name'];
+                $saved_value = isset( $saved_api_settings[ $field['name'] ] ) ? $saved_api_settings[ $field['name'] ] : '';
+                echo '<div class="cpb-api-settings__field">';
+                echo '<label for="' . esc_attr( $field_id ) . '">' . esc_html( $field['label'] ) . '</label>';
+
+                if ( 'select' === $field['type'] ) {
+                    echo '<select id="' . esc_attr( $field_id ) . '" name="' . esc_attr( $field['name'] ) . '">';
+                    foreach ( $field['options'] as $option_value => $option_label ) {
+                        $selected = selected( $saved_value, $option_value, false );
+                        echo '<option value="' . esc_attr( $option_value ) . '"' . $selected . '>' . esc_html( $option_label ) . '</option>';
+                    }
+                    echo '</select>';
+                } else {
+                    $input_type = esc_attr( $field['type'] );
+                    $input_classes = 'regular-text';
+                    $input_attributes = ' id="' . esc_attr( $field_id ) . '" name="' . esc_attr( $field['name'] ) . '"';
+                    $input_value = esc_attr( $saved_value );
+
+                    if ( ! empty( $field['reveal'] ) ) {
+                        $show_label = __( 'Reveal', 'codex-plugin-boilerplate' );
+                        $hide_label = __( 'Hide', 'codex-plugin-boilerplate' );
+                        echo '<div class="cpb-api-settings__input-group">';
+                        echo '<input type="' . $input_type . '" class="' . esc_attr( $input_classes ) . '"' . $input_attributes . ' value="' . $input_value . '" autocomplete="off" />';
+                        echo '<button type="button" class="button button-secondary cpb-api-settings__toggle-visibility" data-target="#' . esc_attr( $field_id ) . '" data-label-show="' . esc_attr( $show_label ) . '" data-label-hide="' . esc_attr( $hide_label ) . '" aria-pressed="false">' . esc_html( $show_label ) . '</button>';
+                        echo '</div>';
+                    } else {
+                        echo '<input type="' . $input_type . '" class="' . esc_attr( $input_classes ) . '"' . $input_attributes . ' value="' . $input_value . '" />';
+                    }
+                }
+
+                echo '</div>';
+            }
+
+            echo '</div>';
+            $submit_button = get_submit_button( __( 'Save API Settings', 'codex-plugin-boilerplate' ), 'primary', 'submit', false );
+            echo '<p class="submit">' . $submit_button;
+            echo '<span class="cpb-feedback-area cpb-feedback-area--inline"><span id="' . esc_attr( $spinner_id ) . '" class="spinner" aria-hidden="true"></span><span id="' . esc_attr( $feedback_id ) . '" role="status" aria-live="polite"></span></span>';
+            echo '</p>';
+            echo '</form>';
+            echo '</div>';
+            echo '</td>';
+            echo '</tr>';
+        }
+
+        echo '</tbody>';
+        echo '</table>';
+        echo '</div>';
+        echo '</div>';
     }
 
     private function render_style_settings_tab() {
@@ -1698,28 +2067,56 @@ class CPB_Admin {
     }
 
     public function render_logs_page() {
-        $active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( $_GET['tab'] ) : 'generated_content';
+        $tabs = array(
+            'generated_content' => __( 'Generated Content', 'codex-plugin-boilerplate' ),
+            'error_logs'        => __( 'Error Logs', 'codex-plugin-boilerplate' ),
+            'payment_logs'      => __( 'Payment Logs', 'codex-plugin-boilerplate' ),
+        );
+
+        $active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'generated_content';
+
+        if ( ! array_key_exists( $active_tab, $tabs ) ) {
+            $active_tab = 'generated_content';
+        }
+
         echo '<div class="wrap"><h1>' . esc_html__( 'CPB Logs', 'codex-plugin-boilerplate' ) . '</h1>';
         echo '<h2 class="nav-tab-wrapper">';
-        echo '<a href="?page=cpb-logs&tab=generated_content" class="nav-tab ' . ( 'generated_content' === $active_tab ? 'nav-tab-active' : '' ) . '">' . esc_html__( 'Generated Content', 'codex-plugin-boilerplate' ) . '</a>';
+
+        foreach ( $tabs as $tab_slug => $label ) {
+            $classes = array( 'nav-tab' );
+
+            if ( $tab_slug === $active_tab ) {
+                $classes[] = 'nav-tab-active';
+            }
+
+            printf(
+                '<a href="%1$s" class="%2$s">%3$s</a>',
+                esc_url( add_query_arg( array( 'page' => 'cpb-logs', 'tab' => $tab_slug ), admin_url( 'admin.php' ) ) ),
+                esc_attr( implode( ' ', $classes ) ),
+                esc_html( $label )
+            );
+        }
+
         echo '</h2>';
         $this->top_message_center();
 
-        $tab_titles = array(
-            'generated_content' => __( 'Generated Content', 'codex-plugin-boilerplate' ),
-        );
-
         $tab_descriptions = array(
             'generated_content' => __( 'Inspect saved content entries and jump to editing, viewing, or deleting items created by the logger.', 'codex-plugin-boilerplate' ),
+            'error_logs'        => __( 'Review PHP and WordPress notices captured for this site and the Codex Plugin Boilerplate features.', 'codex-plugin-boilerplate' ),
+            'payment_logs'      => __( 'Monitor payment-related activity and capture diagnostics for future transaction workflows.', 'codex-plugin-boilerplate' ),
         );
 
-        $title       = isset( $tab_titles[ $active_tab ] ) ? $tab_titles[ $active_tab ] : '';
+        $title       = isset( $tabs[ $active_tab ] ) ? $tabs[ $active_tab ] : '';
         $description = isset( $tab_descriptions[ $active_tab ] ) ? $tab_descriptions[ $active_tab ] : '';
 
         $this->render_tab_intro( $title, $description );
 
         if ( 'generated_content' === $active_tab ) {
             $this->render_generated_content_log();
+        } elseif ( 'error_logs' === $active_tab ) {
+            $this->render_error_logs_tab();
+        } elseif ( 'payment_logs' === $active_tab ) {
+            $this->render_payment_logs_tab();
         }
 
         $this->bottom_message_center();
@@ -1755,6 +2152,109 @@ class CPB_Admin {
             echo '<tr><td colspan="3">' . esc_html__( 'No generated content found.', 'codex-plugin-boilerplate' ) . '</td></tr>';
         }
         echo '</tbody></table>';
+    }
+
+    private function render_error_logs_tab() {
+        $sections = array(
+            array(
+                'scope'       => CPB_Error_Log_Helper::SCOPE_SITEWIDE,
+                'title'       => __( 'Sitewide errors/notices/warnings', 'codex-plugin-boilerplate' ),
+                /* translators: description for the sitewide error log textarea. */
+                'description' => __( 'Displays every PHP error, warning, and notice triggered anywhere on this site.', 'codex-plugin-boilerplate' ),
+                'channel'     => CPB_Settings_Helper::FIELD_LOG_SITE_ERRORS,
+            ),
+            array(
+                'scope'       => CPB_Error_Log_Helper::SCOPE_PLUGIN,
+                'title'       => __( 'CPB-Related errors/notices/warnings', 'codex-plugin-boilerplate' ),
+                /* translators: description for the plugin scoped error log textarea. */
+                'description' => __( 'Focused on Codex Plugin Boilerplate functionality—covering all current features and anything we build in the future.', 'codex-plugin-boilerplate' ),
+                'channel'     => CPB_Settings_Helper::FIELD_LOG_PLUGIN_ERRORS,
+            ),
+        );
+
+        $this->render_log_sections( $sections );
+    }
+
+    private function render_payment_logs_tab() {
+        $sections = array(
+            array(
+                'scope'       => CPB_Error_Log_Helper::SCOPE_PAYMENTS,
+                'title'       => __( 'Payment activity logs', 'codex-plugin-boilerplate' ),
+                /* translators: description for the payment log textarea. */
+                'description' => __( 'Tracks payment gateway notices, API responses, and transaction diagnostics without storing sensitive card data.', 'codex-plugin-boilerplate' ),
+                'empty'       => __( 'No payment activity logged yet.', 'codex-plugin-boilerplate' ),
+                'channel'     => CPB_Settings_Helper::FIELD_LOG_PAYMENTS,
+            ),
+        );
+
+        $this->render_log_sections( $sections );
+    }
+
+    private function render_log_sections( array $sections ) {
+        if ( empty( $sections ) ) {
+            return;
+        }
+
+        echo '<div class="cpb-error-logs">';
+
+        foreach ( $sections as $section ) {
+            if ( empty( $section['scope'] ) ) {
+                continue;
+            }
+
+            $scope = CPB_Error_Log_Helper::normalize_scope( $section['scope'] );
+
+            if ( '' === $scope ) {
+                continue;
+            }
+
+            $log_contents = CPB_Error_Log_Helper::get_log_contents( $scope );
+            $textarea_id  = 'cpb-log-' . $scope;
+            $heading_id   = 'cpb-log-heading-' . $scope;
+            $title        = isset( $section['title'] ) ? $section['title'] : '';
+            $description  = isset( $section['description'] ) ? $section['description'] : '';
+            $empty_text   = isset( $section['empty'] ) ? $section['empty'] : __( 'No log entries recorded yet.', 'codex-plugin-boilerplate' );
+            $empty_notice = '' === trim( $log_contents ) ? $empty_text : '';
+            $channel      = isset( $section['channel'] ) ? $section['channel'] : '';
+
+            echo '<section class="cpb-error-logs__section">';
+            echo '<h3 id="' . esc_attr( $heading_id ) . '" class="cpb-error-logs__heading">' . esc_html( $title ) . '</h3>';
+
+            if ( $channel ) {
+                $this->render_logging_status_notice( $channel );
+            }
+
+            if ( $description ) {
+                echo '<p class="cpb-error-logs__description">' . esc_html( $description ) . '</p>';
+            }
+
+            if ( $empty_notice ) {
+                echo '<p class="cpb-error-logs__empty" role="status" aria-live="polite">' . esc_html( $empty_notice ) . '</p>';
+            }
+
+            echo '<textarea id="' . esc_attr( $textarea_id ) . '" class="cpb-error-logs__textarea" rows="12" readonly aria-labelledby="' . esc_attr( $heading_id ) . '">';
+            echo esc_textarea( $log_contents );
+            echo '</textarea>';
+
+            echo '<div class="cpb-error-logs__actions">';
+
+            echo '<form class="cpb-log-actions__form cpb-log-actions__form--clear" data-ajax-action="cpb_clear_error_log" data-log-action="clear" data-log-target="#' . esc_attr( $textarea_id ) . '">';
+            echo '<input type="hidden" name="scope" value="' . esc_attr( $scope ) . '" />';
+            echo '<button type="submit" class="button button-secondary">' . esc_html__( 'Clear Logs', 'codex-plugin-boilerplate' ) . '</button>';
+            echo '<span class="cpb-feedback-area cpb-feedback-area--inline"><span class="spinner" aria-hidden="true"></span><span role="status" aria-live="polite"></span></span>';
+            echo '</form>';
+
+            echo '<form class="cpb-log-actions__form cpb-log-actions__form--download" data-ajax-action="cpb_download_error_log" data-log-action="download">';
+            echo '<input type="hidden" name="scope" value="' . esc_attr( $scope ) . '" />';
+            echo '<button type="submit" class="button button-secondary">' . esc_html__( 'Download Logs', 'codex-plugin-boilerplate' ) . '</button>';
+            echo '<span class="cpb-feedback-area cpb-feedback-area--inline"><span class="spinner" aria-hidden="true"></span><span role="status" aria-live="polite"></span></span>';
+            echo '</form>';
+
+            echo '</div>';
+            echo '</section>';
+        }
+
+        echo '</div>';
     }
 
     public function handle_download_email_log() {

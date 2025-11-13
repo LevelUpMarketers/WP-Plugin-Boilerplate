@@ -14,6 +14,7 @@ class CPB_Plugin {
     private $block;
     private $content_logger;
     private $cron_manager;
+    private $error_logger;
 
     public function __construct() {
         $this->i18n     = new CPB_I18n();
@@ -23,10 +24,12 @@ class CPB_Plugin {
         $this->block          = new CPB_Block_Main_Entity();
         $this->content_logger = new CPB_Content_Logger();
         $this->cron_manager   = new CPB_Cron_Manager();
+        $this->error_logger   = new CPB_Error_Logger();
     }
 
     public function run() {
         $this->i18n->load_textdomain();
+        $this->error_logger->register();
         $this->admin->register();
         $this->ajax->register();
         $this->shortcode->register();
